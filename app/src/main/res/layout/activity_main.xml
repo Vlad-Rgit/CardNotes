@@ -16,4 +16,5 @@
         app:navGraph="@navigation/navigation"
         tools:layout_editor_absoluteX="1dp"
         tools:layout_editor_absoluteY="1dp" />
+
 </LinearLayout>

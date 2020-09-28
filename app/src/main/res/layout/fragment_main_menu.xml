@@ -1,10 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout>
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+        <import type="com.example.cardnotes.domain.NoteDomain"/>
+        <variable
+            name="viewModel"
+            type="com.example.cardnotes.viewmodels.MainMenuViewModel" />
+    </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <RelativeLayout
+            android:id="@+id/selection_host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            android:orientation="horizontal"
+            android:alpha="0">
+
+            <ImageButton
+                android:id="@+id/btn_end_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/white"
+                android:src="@drawable/baseline_close_black_24"
+                android:layout_alignParentLeft="true"
+                android:layout_marginRight="16dp"
+                />
+
+
+
+
+        <TextView
+            android:id="@+id/tvSelectItems"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_items"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"/>
+
+            <ImageButton
+                android:id="@+id/btn_accept_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_delete_black_24"
+                android:backgroundTint="@android:color/white"
+                android:layout_alignParentRight="true"
+                android:layout_marginLeft="16dp"/>
+
+
+        </RelativeLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvNotes"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selection_host" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/baseline_add_black_48"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.96"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.96"
+            app:borderWidth="0dp"
+            android:backgroundTint="@color/secondaryColor"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

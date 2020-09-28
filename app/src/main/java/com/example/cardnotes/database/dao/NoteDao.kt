@@ -4,15 +4,21 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.cardnotes.database.models.Note
+import com.example.cardnotes.database.models.NoteDatabase
 
 @Dao
 interface NoteDao {
 
     @Insert
-    fun insert(note: Note)
+    suspend fun insert(noteDatabase: NoteDatabase)
 
-    @Query("Select * from Note")
-    fun getAll(): LiveData<Note>
+    @Insert
+    suspend fun insertAll(notes: Iterable<NoteDatabase>)
+
+    @Query("Select * from notes")
+    fun getAll(): LiveData<List<NoteDatabase>>
+
+    @Query("Select Count(noteId) from notes")
+    suspend fun count(): Int
 
 }

@@ -9,8 +9,8 @@ import java.sql.Timestamp
 data class NoteDomain(
 
     var noteId: Int = 0,
-    var name: String,
-    var value: String,
+    var name: String = "Title",
+    var value: String = "Write here the note",
     val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
     val isSelectionEnabled: MutableLiveData<Boolean> = MutableLiveData(false),
     val isSelected: MutableLiveData<Boolean> = MutableLiveData(false)

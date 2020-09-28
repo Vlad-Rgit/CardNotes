@@ -7,6 +7,7 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.example.cardnotes.R
@@ -82,6 +83,14 @@ class MainMenuFragment: Fragment() {
         binding.btnEndEdit.setOnClickListener {
             endSelection()
             notesAdapter.cancelEdit()
+        }
+
+        binding.btnAddNote.setOnClickListener {
+
+            val action = MainMenuFragmentDirections
+                .actionMainMenuFragmentToNoteDetailFragment()
+
+            findNavController().navigate(action)
         }
 
         return binding.root

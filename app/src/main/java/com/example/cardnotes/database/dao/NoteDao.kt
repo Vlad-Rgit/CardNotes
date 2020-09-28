@@ -1,5 +1,6 @@
 package com.example.cardnotes.database.dao
 
+import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
@@ -18,7 +19,9 @@ interface NoteDao {
     @Query("Select * from notes")
     fun getAll(): LiveData<List<NoteDatabase>>
 
+    @Query("Select * from notes where noteId = :noteId")
+    suspend fun getById(noteId: Int) : NoteDatabase
+
     @Query("Select Count(noteId) from notes")
     suspend fun count(): Int
-
 }

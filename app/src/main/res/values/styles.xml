@@ -10,4 +10,13 @@
         <item name="android:textColorPrimary">@color/primaryTextColor</item>
     </style>
 
+    <style name="CardNotes.TextInputLayout"
+            parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+
+        <item name="hintEnabled">false</item>
+        <item name="boxStrokeWidth">0dp</item>
+        <item name="boxStrokeWidthFocused">0dp</item>
+
+    </style>
+
 </resources>

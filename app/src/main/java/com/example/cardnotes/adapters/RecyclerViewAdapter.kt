@@ -20,8 +20,6 @@ open class RecyclerViewAdapter<T: SortedItem<T>,
     : RecyclerView.Adapter<VH>() {
 
 
-
-
     private val sortedList= SortedList<T>(clazz,
         SortedListCallback<T>(this))
 

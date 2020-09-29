@@ -1,5 +1,6 @@
 package com.example.cardnotes.database
 
+import android.util.Log
 import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.cardnotes.NoteApp
@@ -12,7 +13,7 @@ import java.util.concurrent.Executors
 
 @Database(
     entities = [NoteDatabase::class],
-    version = 8,
+    version = 14,
     exportSchema = false)
 abstract class NotesDB: RoomDatabase() {
 
@@ -23,25 +24,25 @@ abstract class NotesDB: RoomDatabase() {
         /**
          * Instance of database
          */
-        @JvmStatic
+
         private lateinit var instance: NotesDB
 
 
         /**
          * Get instance of Room database
          */
-        @JvmStatic
+
         fun getInstance(): NotesDB {
 
             if(!::instance.isInitialized) {
+                Log.d("RoomCallback", "Creating db")
                 instance = Room.databaseBuilder(
                         NoteApp.getAppInstance(),
                         NotesDB::class.java,
                         "NotesDB")
+                    .addCallback(roomCallback)
                     .fallbackToDestructiveMigration()
                     .build()
-
-                initNotes(instance.noteDao)
             }
 
             return instance
@@ -51,19 +52,27 @@ abstract class NotesDB: RoomDatabase() {
         /**
          * Do initializations at first database creation
          */
-        @JvmStatic
-        private val createCallback = object : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                Executors.newSingleThreadExecutor().execute {
-                    initNotes(getInstance().noteDao)
-                }
+
+        private val roomCallback = object : RoomDatabase.Callback() {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                Log.d("RoomCallback", "Creating trigger")
+                db.execSQL("""
+                    Create trigger if not exists TR_notes_AfterInsert
+                    after insert on notes 
+                     begin
+                       Update notes 
+                        Set position = new.noteId
+                        Where noteId = new.noteId;
+                     end;
+                """)
+
             }
         }
 
         /**
          * Init table notes with some data
          */
-        @JvmStatic
+
         private fun initNotes(noteDao: NoteDao) {
 
             CoroutineScope(Dispatchers.IO).launch {

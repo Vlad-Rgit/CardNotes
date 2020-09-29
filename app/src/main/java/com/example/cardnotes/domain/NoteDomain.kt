@@ -4,24 +4,25 @@ package com.example.cardnotes.domain
 import androidx.lifecycle.MutableLiveData
 import com.example.cardnotes.database.models.NoteDatabase
 import com.example.cardnotes.interfaces.SortedItem
+import java.lang.IllegalArgumentException
 import java.sql.Timestamp
 
 data class NoteDomain(
-
     var noteId: Int = 0,
-    var name: String = "Title",
-    var value: String = "Write here the note",
+    var position: Int = noteId,
+    var name:  MutableLiveData<String> = MutableLiveData(""),
+    var value: MutableLiveData<String> = MutableLiveData(""),
     val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
     val isSelectionEnabled: MutableLiveData<Boolean> = MutableLiveData(false),
     val isSelected: MutableLiveData<Boolean> = MutableLiveData(false)
-
 ): SortedItem<NoteDomain> {
 
     fun asDatabase(): NoteDatabase {
         return NoteDatabase(
             noteId = this.noteId,
-            name = this.name,
-            value = this.value,
+            name = this.name.value!!,
+            position = position,
+            value = this.value.value!!,
             createdAt = this.createdAt.time)
     }
 
@@ -35,6 +36,14 @@ data class NoteDomain(
 
     override fun compareTo(other: NoteDomain): Int {
         return noteId.compareTo(other.noteId)
+    }
+
+    override fun equals(other: Any?): Boolean {
+
+        val otherNote = other as? NoteDomain
+            ?: throw IllegalArgumentException()
+
+        return this.noteId == otherNote.noteId
     }
 
 }

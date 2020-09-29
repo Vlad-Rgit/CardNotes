@@ -1,5 +1,7 @@
 package com.example.cardnotes.database.models
 
+import androidx.lifecycle.MutableLiveData
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.cardnotes.domain.NoteDomain
@@ -9,6 +11,8 @@ import java.sql.Timestamp
 data class NoteDatabase(
     @PrimaryKey(autoGenerate = true)
     var noteId: Int = 0,
+    @ColumnInfo()
+    var position: Int = noteId,
     var name: String,
     var value: String,
     val createdAt: Long = System.currentTimeMillis()) {
@@ -16,8 +20,9 @@ data class NoteDatabase(
     fun asDomain(): NoteDomain {
         return NoteDomain(
             noteId = this.noteId,
-            name = this.name,
-            value = this.value,
+            position = this.position,
+            name = MutableLiveData(this.name),
+            value = MutableLiveData(this.value),
             createdAt = Timestamp(createdAt))
     }
 }

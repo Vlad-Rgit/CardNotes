@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
+        <import type="android.view.View"/>
         <variable
             name="viewModel"
             type="com.example.cardnotes.viewmodels.NoteDetailViewModel" />
@@ -9,13 +11,70 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvTitle"
+        <RelativeLayout
+            android:id="@+id/note_detail_app_bar_host"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@{viewModel.note.name}"/>
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent">
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/baseline_close_black_24"
+                android:backgroundTint="@android:color/white"
+                android:onClick="@{() -> viewModel.onEndEditEvent()}"/>
+
+            <com.example.cardnotes.customviews.RevealedImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@android:color/white"
+                android:src="@drawable/baseline_done_black_24"
+                android:layout_alignParentRight="true"
+                android:visibility="@{viewModel.note.value.length() == 0 ? View.GONE : View.VISIBLE}"
+                android:onClick="@{() -> viewModel.saveNote()}"/>
+
+        </RelativeLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/txt_input_title_layout"
+            style="@style/CardNotes.TextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/note_detail_app_bar_host">
+            <com.google.android.material.textfield.TextInputEditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/title"
+                android:inputType="textMultiLine"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textStyle="bold"
+                android:text="@={viewModel.note.name}"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <ScrollView
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txt_input_title_layout"
+            app:layout_constraintBottom_toBottomOf="parent">
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/txt_input_note_layout"
+                style="@style/CardNotes.TextInputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine"
+                    android:gravity="top"
+                    android:hint="@string/write_here_your_note"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:text="@={viewModel.note.value}"/>
+            </com.google.android.material.textfield.TextInputLayout>
+        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

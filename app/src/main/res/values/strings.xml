@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Card Notes</string>
     <string name="select_items">Select items</string>
+    <string name="title">Title</string>
+    <string name="note">Note</string>
+    <string name="here_will_appear_your_notes">Here will appear your notes!</string>
+    <string name="write_here_your_note">Write here your note</string>
+    <string name="search_by_title_or_value">Search by title or value</string>
 </resources>

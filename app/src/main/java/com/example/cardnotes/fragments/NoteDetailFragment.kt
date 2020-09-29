@@ -6,7 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
+import com.example.cardnotes.R
 import com.example.cardnotes.databinding.FragmentNoteDetailLayoutBinding
 import com.example.cardnotes.viewmodels.NoteDetailViewModel
 import com.example.cardnotes.viewmodels.factories.NoteDetailViewModelFactory
@@ -36,8 +39,21 @@ class NoteDetailFragment: Fragment() {
         val binding = FragmentNoteDetailLayoutBinding.inflate(
             inflater, container, false)
 
+
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = viewModel
+
+        viewModel.endEditEvent.observe(viewLifecycleOwner,
+            Observer { endEdit ->
+
+                if(endEdit) {
+                    findNavController().navigate(
+                        R.id.action_noteDetailFragment_to_mainMenuFragment)
+
+                    viewModel.onEndEditEventComplete()
+                }
+
+        })
 
         return binding.root
     }

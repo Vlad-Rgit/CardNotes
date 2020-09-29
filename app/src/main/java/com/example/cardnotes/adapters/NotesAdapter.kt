@@ -24,11 +24,22 @@ class NotesAdapter(
     private var startEditCallback: Runnable? = null
     private var endEditCallback: Runnable? = null
 
+    private var removeNotesComplete
+            : ((removedNotes: List<NoteDomain>) -> Unit)? = null
+
+    private var noteUpdatedCallback
+            : ((note: NoteDomain) -> Unit)? = null
+
+    private var onNoteClickCallback
+            : ((note: NoteDomain) -> Unit)? = null
+
     private val inflater = LayoutInflater.from(context)
     private val notes = mutableListOf<NoteDomain>()
 
     var isSelection: Boolean = false
         private set
+
+    var searchQuery: String = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = NoteItemBinding.inflate(
@@ -51,25 +62,36 @@ class NotesAdapter(
 
     fun replaceAll(list: List<NoteDomain>) {
 
-        for (i in 0 until notes.size) {
-            if(!list.contains(notes[i])) {
-                notes.removeAt(i)
-                notifyItemRemoved(i)
+        for (note in notes.toList()) {
+            if(!list.contains(note)) {
+                val index = notes.indexOf(note)
+                notes.removeAt(index)
+                notifyItemRemoved(index)
             }
         }
 
-        for(i in 0 until list.size) {
-            if(!notes.contains(list[i])) {
-                notes.add(list[i])
-                notifyItemInserted(i)
+        for(note in list) {
+            if(!notes.contains(note)) {
+                notes.add(note)
+                notifyItemInserted(notes.size)
             }
         }
 
     }
 
     fun moveItem(fromIndex: Int, toIndex: Int) {
+
         Collections.swap(notes, fromIndex, toIndex)
+
+        val tempPosition = notes[fromIndex].position
+        notes[fromIndex].position = notes[toIndex].position
+        notes[toIndex].position = tempPosition
+
         notifyItemMoved(fromIndex, toIndex)
+
+
+        noteUpdatedCallback?.invoke(notes[fromIndex])
+        noteUpdatedCallback?.invoke(notes[toIndex])
     }
 
     fun setStartSelectionListener(callback: Runnable) {
@@ -78,6 +100,21 @@ class NotesAdapter(
 
     fun setEndSelectionListener(callback: Runnable) {
         endEditCallback = callback
+    }
+
+    fun setRemoveNotesComplete(
+        callback: (removedNotes: List<NoteDomain>) -> Unit) {
+        removeNotesComplete = callback
+    }
+
+    fun setNoteUpdatedCallback(
+        callback: (note: NoteDomain) -> Unit) {
+        noteUpdatedCallback = callback
+    }
+
+    fun setOnNoteClickCallback(
+        callback: (note: NoteDomain) -> Unit) {
+        onNoteClickCallback = callback
     }
 
     fun startEdit() {
@@ -97,22 +134,28 @@ class NotesAdapter(
 
         isSelection = false
 
-        for(note in notes)
+        for(note in notes) {
             note.isSelectionEnabled.value = false
+            note.isSelected.value = false
+        }
     }
 
     fun acceptEdit() {
+
         disableSelection()
 
         val temp = notes.toList()
+        val removed = mutableListOf<NoteDomain>()
 
         for(note in temp) {
             if(note.isSelected.value == true) {
                 val i = notes.indexOf(note)
-                notes.removeAt(i)
-                notifyItemRemoved(i  )
+                removed.add(notes.removeAt(i))
+                notifyItemRemoved(i)
             }
         }
+
+        removeNotesComplete?.invoke(removed)
     }
 
     fun cancelEdit() {
@@ -132,9 +175,21 @@ class NotesAdapter(
         }
 
         init {
+
             binding.noteItemHost.setOnLongClickListener {
                 startEdit()
                 return@setOnLongClickListener false
+            }
+
+            binding.noteItemHost.setOnClickListener {
+
+                val model = binding.model
+
+                if(model != null) {
+
+                    if (!isSelection)
+                        onNoteClickCallback?.invoke(model)
+                }
             }
         }
 
@@ -152,11 +207,6 @@ class NotesAdapter(
             elevationAnimation.reverse()
         }
 
-
-
-
     }
-
-
 
 }

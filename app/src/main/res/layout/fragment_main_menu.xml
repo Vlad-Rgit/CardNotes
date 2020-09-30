@@ -12,6 +12,7 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main_menu_host"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp">
@@ -20,81 +21,104 @@
             android:id="@+id/selection_host"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"
+            android:alpha="0"
             android:orientation="horizontal"
-            android:visibility="gone"
-            android:alpha="0">
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton
                 android:id="@+id/btn_end_edit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@android:color/white"
-                android:src="@drawable/baseline_close_black_24"
                 android:layout_alignParentLeft="true"
-                android:layout_marginRight="16dp" />
+                android:layout_marginRight="16dp"
+                android:backgroundTint="@android:color/white"
+                android:src="@drawable/baseline_close_black_24" />
 
 
-
-
-        <TextView
-            android:id="@+id/tvSelectItems"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/select_items"
-            android:textAppearance="?attr/textAppearanceSubtitle1"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"/>
+            <TextView
+                android:id="@+id/tvSelectItems"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:text="@string/select_items"
+                android:textAppearance="?attr/textAppearanceSubtitle1" />
 
             <ImageButton
                 android:id="@+id/btn_accept_edit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/baseline_delete_black_24"
-                android:backgroundTint="@android:color/white"
                 android:layout_alignParentRight="true"
-                android:layout_marginLeft="16dp"/>
+                android:layout_marginLeft="16dp"
+                android:backgroundTint="@android:color/white"
+                android:src="@drawable/baseline_delete_black_24" />
 
 
         </RelativeLayout>
 
-        
+
+        <TextView
+            android:id="@+id/txt_folder_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="8dp"
+            android:text="@{viewModel.currentGroup == null ? `All groups` : viewModel.currentGroup.groupName}"
+            android:textAppearance="?attr/textAppearanceSubtitle1"
+            tools:text="Group name"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/btn_folder"
+            app:layout_constraintTop_toBottomOf="@id/selection_host"
+            app:layout_constraintBottom_toTopOf="@id/barrier"
+            app:layout_constraintHorizontal_chainStyle="packed"/>
+
+        <ImageButton
+            android:id="@+id/btn_folder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="@android:color/white"
+            android:src="@drawable/baseline_folder_black_24"
+            app:layout_constraintLeft_toRightOf="@id/txt_folder_layout"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/selection_host" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/txt_search_layout"
             style="@style/CardNotes.TextInputLayout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="@string/search_by_title_or_value"
+            app:endIconDrawable="@drawable/baseline_search_black_24"
+            app:endIconMode="custom"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/selection_host"
-            android:layout_marginTop="16dp"
-            app:endIconMode="custom"
-            app:endIconDrawable="@drawable/baseline_search_black_24"
-            android:hint="@string/search_by_title_or_value">
+            app:layout_constraintTop_toBottomOf="@id/barrier">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/ed_search"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/search_bg"
+                android:hint="@string/search_by_title_or_value"
                 android:inputType="text"
                 android:maxLines="1"
-                android:textColorHint="#99000000"
-                android:hint="@string/search_by_title_or_value"
                 android:textAppearance="?attr/textAppearanceBody1"
-                android:background="@drawable/search_bg"/>
+                android:textColorHint="#99000000" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/tvNoNotes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
             android:text="@string/here_will_appear_your_notes"
             android:textAppearance="?attr/textAppearanceHeadline6"
-            android:visibility="@{viewModel.notes.size() == 0 ? View.VISIBLE : View.GONE}"/>
+            android:visibility="@{viewModel.notes.size() == 0 ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvNotes"
@@ -108,15 +132,24 @@
             android:id="@+id/btn_add_note"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="@color/secondaryColor"
             android:src="@drawable/baseline_add_black_48"
+            app:borderWidth="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.96"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.96"
-            app:borderWidth="0dp"
-            android:backgroundTint="@color/secondaryColor"/>
+            app:layout_constraintVertical_bias="0.96" />
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="bottom"
+            app:constraint_referenced_ids="txt_folder_layout,btn_folder"
+            tools:layout_editor_absoluteX="16dp"
+            tools:layout_editor_absoluteY="715dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

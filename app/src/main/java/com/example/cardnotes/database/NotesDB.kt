@@ -4,12 +4,14 @@ import android.util.Log
 import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.cardnotes.NoteApp
+import com.example.cardnotes.database.dao.GroupDao
 import com.example.cardnotes.database.dao.NoteDao
 import com.example.cardnotes.database.models.GroupDatabase
 import com.example.cardnotes.database.models.NoteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.security.acl.Group
 
 @Database(
     entities =
@@ -20,6 +22,7 @@ import kotlinx.coroutines.launch
 abstract class NotesDB: RoomDatabase() {
 
     abstract val noteDao: NoteDao
+    abstract val groupDao: GroupDao
 
     companion object {
 
@@ -65,6 +68,36 @@ abstract class NotesDB: RoomDatabase() {
                      end;
                 """)
 
+                initGroups(this@Companion.getInstance().groupDao)
+            }
+        }
+
+
+        /**
+         * Init table group with some data
+         */
+        private fun initGroups(groupDao: GroupDao) {
+            CoroutineScope(Dispatchers.IO).launch {
+
+                if(groupDao.count() == 0) {
+
+                    val groups = listOf<GroupDatabase>(
+                        GroupDatabase(
+                            groupName = "Work"
+                        ),
+                        GroupDatabase(
+                            groupName = "School"
+                        ),
+                        GroupDatabase(
+                            groupName = "Family"
+                        ),
+                        GroupDatabase(
+                            groupName = "Food"
+                        )
+                    )
+
+                    groupDao.insertAll(groups)
+                }
             }
         }
 

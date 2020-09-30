@@ -6,10 +6,14 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
+import android.widget.PopupMenu
+import android.widget.PopupWindow
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -18,6 +22,8 @@ import com.example.cardnotes.R
 import com.example.cardnotes.adapters.NotesAdapter
 import com.example.cardnotes.databinding.FragmentMainMenuBinding
 import com.example.cardnotes.decorators.PaddingDecorator
+import com.example.cardnotes.dialog.GroupDialog
+import com.example.cardnotes.dialog.GroupsPopupWindow
 import com.example.cardnotes.utils.ItemTouchHelperCallback
 import com.example.cardnotes.viewmodels.MainMenuViewModel
 
@@ -26,6 +32,12 @@ class MainMenuFragment: Fragment() {
     private lateinit var viewModel: MainMenuViewModel
     private lateinit var activity: AppCompatActivity
     private lateinit var binding: FragmentMainMenuBinding
+
+    /**
+     * Popup for choosing group or creating
+     * new group
+     */
+    private lateinit var groupsPopupWindow: GroupsPopupWindow
 
 
     /**
@@ -42,13 +54,6 @@ class MainMenuFragment: Fragment() {
         addUpdateListener {
             val animatedValue = it.animatedValue as Float
             binding.selectionHost.alpha = animatedValue
-        }
-
-        //Hide selection host on reverse
-        doOnEnd {
-            if(binding.selectionHost.alpha == 0f)
-             binding.selectionHost
-                 .visibility = View.GONE
         }
     }
 
@@ -74,6 +79,15 @@ class MainMenuFragment: Fragment() {
 
         binding.viewModel = viewModel
 
+        //Init group groups popup window
+        groupsPopupWindow = GroupsPopupWindow(
+            requireContext(), binding.mainMenuHost)
+
+        viewModel.groups.observe(viewLifecycleOwner,
+            Observer {
+                groups ->
+                groupsPopupWindow.replaceGroups(groups)
+        })
 
         //Init note adapter for recycler view
         val notesAdapter = NotesAdapter(viewLifecycleOwner,
@@ -176,6 +190,18 @@ class MainMenuFragment: Fragment() {
             findNavController().navigate(action)
         }
 
+        binding.btnFolder.setOnClickListener {
+
+            if(groupsPopupWindow.isShowing) {
+                groupsPopupWindow.dismiss()
+            }
+            else {
+                groupsPopupWindow.showAsDropDown(binding.btnFolder)
+            }
+        }
+
+
+
         return binding.root
     }
 
@@ -184,8 +210,7 @@ class MainMenuFragment: Fragment() {
      * Show the selection host
      */
     private fun startSelection() {
-        if(binding.selectionHost.visibility != View.VISIBLE) {
-            binding.selectionHost.visibility = View.VISIBLE
+        if(binding.selectionHost.alpha == 0f) {
             opacityAnimator.start()
         }
     }

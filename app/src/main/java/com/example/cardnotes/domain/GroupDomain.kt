@@ -11,4 +11,8 @@ data class GroupDomain(
             groupId = this.groupId,
             groupName = this.groupName)
     }
+
+    override fun toString(): String {
+        return this.groupName
+    }
 }

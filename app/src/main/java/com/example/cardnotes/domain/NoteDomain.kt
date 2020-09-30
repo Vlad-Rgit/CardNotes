@@ -9,9 +9,11 @@ import java.sql.Timestamp
 
 data class NoteDomain(
     var noteId: Int = 0,
+    var groupId: Int? = null,
     var position: Int = noteId,
     var name:  MutableLiveData<String> = MutableLiveData(""),
     var value: MutableLiveData<String> = MutableLiveData(""),
+    var groupName: String? = null,
     val createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
     val isSelectionEnabled: MutableLiveData<Boolean> = MutableLiveData(false),
     val isSelected: MutableLiveData<Boolean> = MutableLiveData(false)
@@ -20,7 +22,7 @@ data class NoteDomain(
     fun asDatabase(): NoteDatabase {
         return NoteDatabase(
             noteId = this.noteId,
-            name = this.name.value!!,
+            title = this.name.value!!,
             position = position,
             value = this.value.value!!,
             createdAt = this.createdAt.time)

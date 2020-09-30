@@ -7,30 +7,69 @@ import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.repos.NotesRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainMenuViewModel: ViewModel() {
 
     private val notesRepo = NotesRepo()
 
+    /**
+     * String by which filtering will be performed
+     * Each time when the property is set,
+     * the notes are updated
+     */
     var searchQuery: String = ""
+        set(value) {
+            field = value
+            refreshNotes()
+        }
 
+    /**
+     * Notes filtered with searchQuery
+     */
     val notes = notesRepo.notes
 
-    fun filterNotes(searchQuery: String) {
+    init {
+        refreshNotes()
+    }
+
+    /**
+     * Refresh notes with searchQuery
+     */
+    fun refreshNotes() {
         viewModelScope.launch {
-            notesRepo.refreshItemsByQuery(searchQuery)
+            refreshNotesImpl()
         }
     }
 
+
+    /**
+     * Remove notes and refresh
+     */
     fun removeNotes(removed: List<NoteDomain>) {
         viewModelScope.launch(Dispatchers.IO) {
             notesRepo.removeAll(removed)
+            refreshNotesImpl()
         }
     }
 
+    /**
+     * Update note and refresh
+     */
     fun updateNote(note: NoteDomain) {
         viewModelScope.launch {
             notesRepo.updateNote(note)
+            refreshNotesImpl()
+        }
+    }
+
+    /**
+     * Implementation of refreshNotes to use
+     * within a coroutine
+     */
+    private suspend fun refreshNotesImpl() {
+        withContext(Dispatchers.IO) {
+            notesRepo.refreshItemsByQuery(searchQuery)
         }
     }
 

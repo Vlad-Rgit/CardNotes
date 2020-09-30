@@ -17,7 +17,7 @@ class NoteDetailViewModel(noteId: Int): ViewModel() {
     private val notesRepo = NotesRepo()
 
     /***
-     * Note for edit
+     * Note for editing
      */
     private val _note = MutableLiveData<NoteDomain>()
 
@@ -52,7 +52,6 @@ class NoteDetailViewModel(noteId: Int): ViewModel() {
 
 
     //Methods for endEditEvent
-
     fun onEndEditEvent() {
         _endEditEvent.postValue(true)
     }
@@ -61,6 +60,10 @@ class NoteDetailViewModel(noteId: Int): ViewModel() {
         _endEditEvent.postValue(false)
     }
 
+    /**
+     * Save changes to database
+     * and call endEditEvent
+     */
     fun saveNote() {
 
         viewModelScope.launch(Dispatchers.IO) {

@@ -1,8 +1,7 @@
 package com.example.cardnotes.repos
 
-import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.MutableLiveData
 import com.example.cardnotes.database.NotesDB
 import com.example.cardnotes.domain.NoteDomain
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +11,11 @@ class NotesRepo {
 
     private val database = NotesDB.getInstance()
 
-    var notes: LiveData<List<NoteDomain>>
-        = Transformations.map(database.noteDao.getAllPositionSorted()) {
-        it.map { it.asDomain() }
-    }
+    private val _notes = MutableLiveData<List<NoteDomain>>()
+
+    val notes: LiveData<List<NoteDomain>>
+        get() = _notes
+
 
     suspend fun getById(noteId: Int): NoteDomain {
         return withContext(Dispatchers.IO) {
@@ -24,12 +24,20 @@ class NotesRepo {
         }
     }
 
+    suspend fun refreshItems() {
+        withContext(Dispatchers.IO) {
+            _notes.postValue(database.noteDao
+                .getAllBySearchQuery("").map {
+                    it.asDomain()
+                })
+        }
+    }
+
     suspend fun refreshItemsByQuery(searchQuery: String) {
         withContext(Dispatchers.IO) {
-            notes = Transformations.map(database.noteDao
-                .getAllBySearchQueryPositionedSorted(searchQuery)) {
-                it.map { it.asDomain() }
-            }
+            _notes.postValue(database.noteDao
+                .getAllBySearchQuery(searchQuery)
+                .map { it.asDomain() })
         }
     }
 

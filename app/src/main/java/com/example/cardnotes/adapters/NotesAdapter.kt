@@ -22,10 +22,6 @@ class NotesAdapter(
     resourceId: Int): RecyclerView.Adapter<NotesAdapter.ViewHolder>() {
 
     private var startEditCallback: Runnable? = null
-    private var endEditCallback: Runnable? = null
-
-    private var removeNotesComplete
-            : ((removedNotes: List<NoteDomain>) -> Unit)? = null
 
     private var noteUpdatedCallback
             : ((note: NoteDomain) -> Unit)? = null
@@ -34,12 +30,11 @@ class NotesAdapter(
             : ((note: NoteDomain) -> Unit)? = null
 
     private val inflater = LayoutInflater.from(context)
+
     private val notes = mutableListOf<NoteDomain>()
 
     var isSelection: Boolean = false
         private set
-
-    var searchQuery: String = ""
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = NoteItemBinding.inflate(
@@ -60,6 +55,12 @@ class NotesAdapter(
         return notes.size
     }
 
+
+    /**
+     * Update underlying notes list to
+     * contain only the notes within the
+     * list argument
+     */
     fun replaceAll(list: List<NoteDomain>) {
 
         for (note in notes.toList()) {
@@ -76,9 +77,36 @@ class NotesAdapter(
                 notifyItemInserted(notes.size)
             }
         }
-
     }
 
+    /**
+     * Sort elements by their position
+     */
+    fun sortByPosition() {
+
+        for (i in 0 until notes.size) {
+
+            var minPosition = Int.MAX_VALUE
+            var index = -1
+
+            for(j in i until notes.size) {
+                if(notes[j].position < minPosition) {
+                    minPosition = notes[j].position
+                    index = j
+                }
+            }
+
+            if(index != -1) {
+                Collections.swap(notes, i, index)
+                notifyItemMoved(i, index)
+            }
+        }
+    }
+
+    /**
+     * Move item in the recycler view and
+     * update moved notes with new position
+     */
     fun moveItem(fromIndex: Int, toIndex: Int) {
 
         Collections.swap(notes, fromIndex, toIndex)
@@ -90,21 +118,15 @@ class NotesAdapter(
         notifyItemMoved(fromIndex, toIndex)
 
 
+        //Call this to update the information
+        //about notes in the database
         noteUpdatedCallback?.invoke(notes[fromIndex])
         noteUpdatedCallback?.invoke(notes[toIndex])
     }
 
+
     fun setStartSelectionListener(callback: Runnable) {
         startEditCallback = callback
-    }
-
-    fun setEndSelectionListener(callback: Runnable) {
-        endEditCallback = callback
-    }
-
-    fun setRemoveNotesComplete(
-        callback: (removedNotes: List<NoteDomain>) -> Unit) {
-        removeNotesComplete = callback
     }
 
     fun setNoteUpdatedCallback(
@@ -117,6 +139,9 @@ class NotesAdapter(
         onNoteClickCallback = callback
     }
 
+    /**
+     * Start selection mode
+     */
     fun startEdit() {
 
         if(!isSelection) {
@@ -130,7 +155,10 @@ class NotesAdapter(
         }
     }
 
-    private fun disableSelection() {
+    /**
+     * End selection mode
+     */
+    fun disableSelection() {
 
         isSelection = false
 
@@ -140,28 +168,14 @@ class NotesAdapter(
         }
     }
 
-    fun acceptEdit() {
-
-        disableSelection()
-
-        val temp = notes.toList()
-        val removed = mutableListOf<NoteDomain>()
-
-        for(note in temp) {
-            if(note.isSelected.value == true) {
-                val i = notes.indexOf(note)
-                removed.add(notes.removeAt(i))
-                notifyItemRemoved(i)
-            }
+    /**
+     * Get selected notes in the selection mode
+     */
+    fun getSelectedNotes(): List<NoteDomain> {
+        return notes.filter {
+            it.isSelected.value == true
         }
-
-        removeNotesComplete?.invoke(removed)
     }
-
-    fun cancelEdit() {
-        disableSelection()
-    }
-
 
 
     inner class ViewHolder(private val binding: NoteItemBinding)
@@ -175,6 +189,7 @@ class NotesAdapter(
         }
 
         init {
+
 
             binding.noteItemHost.setOnLongClickListener {
                 startEdit()

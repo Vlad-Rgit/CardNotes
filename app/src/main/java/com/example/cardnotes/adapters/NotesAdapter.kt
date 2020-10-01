@@ -138,6 +138,12 @@ class NotesAdapter(
         callback: (note: NoteDomain) -> Unit) {
         onNoteClickCallback = callback
     }
+    
+    fun setIsSelectedForAllNotes(isSelected: Boolean) {
+        for(note in notes) {
+            note.isSelected.value = isSelected
+        }
+    }
 
     /**
      * Start selection mode

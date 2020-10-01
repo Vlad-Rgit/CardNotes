@@ -1,6 +1,5 @@
 package com.example.cardnotes.viewmodels
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -28,14 +27,7 @@ class MainMenuViewModel: ViewModel() {
             refreshNotes()
         }
 
-    private val _currentGroup = MutableLiveData<GroupDomain?>()
-
-    /**
-     * Current group of displaying note
-     * if the group is null we show all notes
-     */
-    val currentGroup: LiveData<GroupDomain?>
-        get() = _currentGroup
+    val currentGroup = MutableLiveData<GroupDomain?>(null)
 
     /**
      * Notes filtered with searchQuery
@@ -49,15 +41,28 @@ class MainMenuViewModel: ViewModel() {
 
     init {
         refreshNotes()
+        refreshGroups()
+
+        currentGroup.observeForever {
+            refreshNotes()
+        }
     }
 
     /**
-     * Refresh notes with searchQuery
+     * Refresh notes and groups
      */
     fun refreshNotes() {
         viewModelScope.launch {
             refreshNotesImpl()
-            groupsRepo.refreshItems()
+        }
+    }
+
+    /**
+     * Refresh notes and groups
+     */
+    fun refreshGroups() {
+        viewModelScope.launch {
+            refreshGroupsImpl()
         }
     }
 
@@ -82,13 +87,36 @@ class MainMenuViewModel: ViewModel() {
         }
     }
 
+    fun addGroup(group: GroupDomain) {
+        viewModelScope.launch {
+            groupsRepo.addGroup(group)
+            refreshGroupsImpl()
+        }
+    }
+
     /**
      * Implementation of refreshNotes to use
      * within a coroutine
      */
     private suspend fun refreshNotesImpl() {
         withContext(Dispatchers.IO) {
-            notesRepo.refreshItemsByQuery(searchQuery)
+            if(currentGroup.value == null) {
+                notesRepo.refreshItemsByQuery(searchQuery)
+            }
+            else {
+                notesRepo.refreshItemsByQueryByGroup(
+                    searchQuery, requireNotNull(currentGroup.value))
+            }
+        }
+    }
+
+    /**
+     * Implementation of refreshGroups to use
+     * within a coroutine
+     */
+    private suspend fun refreshGroupsImpl() {
+        withContext(Dispatchers.IO) {
+            groupsRepo.refreshItems()
         }
     }
 

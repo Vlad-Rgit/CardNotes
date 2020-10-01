@@ -2,18 +2,17 @@ package com.example.cardnotes.fragments
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.children
+import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -24,6 +23,7 @@ import com.example.cardnotes.R
 import com.example.cardnotes.adapters.NotesAdapter
 import com.example.cardnotes.databinding.FragmentMainMenuBinding
 import com.example.cardnotes.decorators.PaddingDecorator
+import com.example.cardnotes.dialog.AddGroupDialog
 import com.example.cardnotes.dialog.GroupsPopupWindow
 import com.example.cardnotes.utils.ItemTouchHelperCallback
 import com.example.cardnotes.viewmodels.MainMenuViewModel
@@ -39,7 +39,33 @@ class MainMenuFragment: Fragment() {
      * Popup for choosing group or creating
      * new group
      */
-    private lateinit var groupsPopupWindow: GroupsPopupWindow
+    private val groupsPopupWindow: GroupsPopupWindow by lazy {
+
+        //Init groups popup window
+        val groupsPopupWindow = GroupsPopupWindow(
+            requireContext(), binding.mainMenuHost)
+
+        groupsPopupWindow.setGroupChosenCallback {
+            dismissPopup()
+            viewModel.currentGroup.value = it
+        }
+
+        groupsPopupWindow.setNewGroupRequestCallback {
+            dismissPopup()
+
+            val dialog = AddGroupDialog(viewModel::addGroup)
+
+            dialog.show(childFragmentManager, null)
+        }
+
+        viewModel.groups.observe(viewLifecycleOwner,
+            Observer {
+            groupsPopupWindow.replaceGroups(it)
+        })
+
+
+        groupsPopupWindow
+    }
 
 
     /**
@@ -49,13 +75,45 @@ class MainMenuFragment: Fragment() {
 
 
     /**
-     * Opacity animation for selection host at the top of
+     * Alpha animation for selection host at the top of
      * the screen
      */
-    private val opacityAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+    private val alphaSelectionHostAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+
         addUpdateListener {
             val animatedValue = it.animatedValue as Float
             binding.selectionHost.alpha = animatedValue
+        }
+
+        doOnStart {
+            binding.selectionHost.visibility = View.VISIBLE
+        }
+
+        doOnEnd {
+            if(binding.selectionHost.alpha == 0f) {
+                binding.selectionHost.visibility = View.GONE
+            }
+        }
+    }
+
+    /**
+     * Alpha animation for group host at the top of
+     * the screen
+     */
+    private val alphaGroupHostAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+        addUpdateListener {
+            val animatedValue = it.animatedValue as Float
+            binding.groupHost.alpha = animatedValue
+        }
+
+        doOnStart {
+            binding.groupHost.visibility = View.VISIBLE
+        }
+
+        doOnEnd {
+            if(binding.groupHost.alpha == 0f) {
+                binding.groupHost.visibility = View.GONE
+            }
         }
     }
 
@@ -72,8 +130,7 @@ class MainMenuFragment: Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+        savedInstanceState: Bundle?): View? {
 
         binding = FragmentMainMenuBinding.inflate(
             inflater, container, false
@@ -83,15 +140,6 @@ class MainMenuFragment: Fragment() {
 
         binding.viewModel = viewModel
 
-        //Init group groups popup window
-        groupsPopupWindow = GroupsPopupWindow(
-            requireContext(), binding.mainMenuHost
-        )
-
-        viewModel.groups.observe(viewLifecycleOwner,
-            Observer { groups ->
-                groupsPopupWindow.replaceGroups(groups)
-            })
 
         //Init note adapter for recycler view
         val notesAdapter = NotesAdapter(
@@ -147,14 +195,22 @@ class MainMenuFragment: Fragment() {
             notesAdapter.sortByPosition()
         }
 
-        //End selection of the notes and
-        //remove all the selected notes
-        binding.btnAcceptEdit.setOnClickListener {
-            endSelection()
-            val removed = notesAdapter.getSelectedNotes()
-            notesAdapter.disableSelection()
-            viewModel.removeNotes(removed)
+
+        binding.btnSelectAll.apply {
+
+            toggledColor = ContextCompat.getColor(
+                requireContext(), R.color.colorAccent)
+
+            normalColor = ContextCompat.getColor(
+                requireContext(), R.color.primaryTextColor)
+
+
+            setOnClickListener {
+                notesAdapter.setIsSelectedForAllNotes(isChecked)
+            }
         }
+
+
 
         //End selection but not remove the selected notes
         binding.btnEndEdit.setOnClickListener {
@@ -166,6 +222,7 @@ class MainMenuFragment: Fragment() {
         //Attach listener to the search text field
         //Filter listener each time the user types a character
         binding.edSearch.addTextChangedListener(object : TextWatcher {
+
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
 
             }
@@ -226,7 +283,8 @@ class MainMenuFragment: Fragment() {
      */
     private fun startSelection() {
         if(binding.selectionHost.alpha == 0f) {
-            opacityAnimator.start()
+            alphaSelectionHostAnimator.start()
+            alphaGroupHostAnimator.reverse()
         }
     }
 
@@ -234,17 +292,11 @@ class MainMenuFragment: Fragment() {
      * Hide the selection host
      */
     private fun endSelection() {
-        opacityAnimator.reverse()
+        binding.btnSelectAll.isChecked = false
+        alphaSelectionHostAnimator.reverse()
+        alphaGroupHostAnimator.start()
     }
 
-    fun setEnableForAllViews(parent: View, enable: Boolean) {
-        parent.isEnabled = enable
-        if(parent is ViewGroup) {
-            for(child in parent.children) {
-                setEnableForAllViews(child, enable)
-            }
-        }
-    }
 
     private fun showDim() {
         binding.dim.visibility = View.VISIBLE
@@ -252,6 +304,16 @@ class MainMenuFragment: Fragment() {
 
     private fun hideDim() {
         binding.dim.visibility = View.GONE
+    }
+
+    private fun showPopup() {
+        showDim()
+        groupsPopupWindow.showAsDropDown(binding.mainMenuHost)
+    }
+
+    private fun dismissPopup() {
+        groupsPopupWindow.dismiss()
+        hideDim()
     }
 
     /**

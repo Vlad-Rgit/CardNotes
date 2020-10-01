@@ -1,15 +1,17 @@
 package com.example.cardnotes.adapters
 
 import android.content.Context
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.cardnotes.R
 import com.example.cardnotes.databinding.GroupItemBinding
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.utils.replaceAll
 
 class GroupsAdapter(
-    context: Context)
+    private val context: Context)
     : RecyclerView.Adapter<GroupsAdapter.ViewHolder>() {
 
 
@@ -21,7 +23,18 @@ class GroupsAdapter(
 
 
     fun replaceAll(items: List<GroupDomain>) {
+
         groups.replaceAll(items, this)
+
+        groups.add(0, GroupDomain(
+            groupName = context.getString(R.string.new_folder)))
+
+        notifyItemInserted(0)
+
+        groups.add(1, GroupDomain(
+            groupName = context.getString(R.string.all_folders)))
+
+        notifyItemInserted(1)
     }
 
     fun setGroupClickedCallback(callback:
@@ -39,7 +52,7 @@ class GroupsAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val group = groups[position]
-        holder.performBind(group)
+        holder.performBind(group, position)
     }
 
     override fun getItemCount(): Int {
@@ -57,7 +70,17 @@ class GroupsAdapter(
             }
         }
 
-        fun performBind(group: GroupDomain) {
+        fun performBind(group: GroupDomain, position: Int) {
+
+            if(position == 0 || position == 1) {
+                binding.tvGroupName.setTypeface(
+                    null, Typeface.BOLD)
+            }
+            else {
+                binding.tvGroupName.setTypeface(
+                    null, Typeface.NORMAL)
+            }
+
             binding.group = group
         }
 

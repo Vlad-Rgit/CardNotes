@@ -27,4 +27,11 @@ class GroupsRepo {
         }
     }
 
+    suspend fun addGroup(group: GroupDomain) {
+        withContext(Dispatchers.IO) {
+            database.groupDao.insert(
+                group.asDatabase())
+        }
+    }
+
 }

@@ -8,7 +8,7 @@ import android.widget.PopupWindow
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cardnotes.R
 import com.example.cardnotes.adapters.GroupsAdapter
-import com.example.cardnotes.databinding.GroupDialogLayoutBinding
+import com.example.cardnotes.databinding.GroupPopupLayoutBinding
 import com.example.cardnotes.domain.GroupDomain
 
 class GroupsPopupWindow
@@ -17,26 +17,33 @@ class GroupsPopupWindow
     : PopupWindow(context) {
 
     private val inflater = LayoutInflater.from(context)
-    private val binding: GroupDialogLayoutBinding
+    private val binding: GroupPopupLayoutBinding
     private val groupsAdapter: GroupsAdapter
 
     //Callbacks
     private var groupChosenCallback:
-            ((group: GroupDomain) -> Unit)? = null
+            ((group: GroupDomain?) -> Unit)? = null
 
     private var newGroupRequestCallback:
             (() -> Unit)? = null
 
     init {
 
-        binding = GroupDialogLayoutBinding.inflate(
+
+
+        binding = GroupPopupLayoutBinding.inflate(
             inflater, parent, false)
 
         groupsAdapter = GroupsAdapter(context)
 
         groupsAdapter.setGroupClickedCallback { group, position ->
+            //If new group clicked
             if(position == 0) {
                 newGroupRequestCallback?.invoke()
+            }
+            //If All groups clicked
+            else if (position == 1) {
+                groupChosenCallback?.invoke(null)
             }
             else {
                 groupChosenCallback?.invoke(group)
@@ -61,6 +68,7 @@ class GroupsPopupWindow
                 .getDrawable(R.drawable.popup_bg_with_shadow))
         }
 
+
         contentView = binding.root
     }
 
@@ -69,7 +77,7 @@ class GroupsPopupWindow
     }
 
     //Setter for callbacks
-    fun setGroupChosenCallback(callback: (group: GroupDomain) -> Unit) {
+    fun setGroupChosenCallback(callback: (group: GroupDomain?) -> Unit) {
         groupChosenCallback = callback
     }
 

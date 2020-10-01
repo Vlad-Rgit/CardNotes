@@ -3,6 +3,7 @@ package com.example.cardnotes.repos
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.cardnotes.database.NotesDB
+import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.domain.NoteDomain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -37,6 +38,15 @@ class NotesRepo {
         withContext(Dispatchers.IO) {
             _notes.postValue(database.noteDao
                 .getAllBySearchQuery(searchQuery)
+                .map { it.asDomain() })
+        }
+    }
+
+    suspend fun refreshItemsByQueryByGroup(searchQuery: String,
+                                            groupDomain: GroupDomain) {
+        withContext(Dispatchers.IO) {
+            _notes.postValue(database.noteDao
+                .getAllBySearchQueryByGroup(searchQuery, groupDomain.groupId)
                 .map { it.asDomain() })
         }
     }

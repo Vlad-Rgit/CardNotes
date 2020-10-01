@@ -5,5 +5,10 @@
     <string name="note">Note</string>
     <string name="here_will_appear_your_notes">Here will appear your notes!</string>
     <string name="write_here_your_note">Write here your note</string>
-    <string name="search_by_title_or_value">Search by title or value</string>
+    <string name="search_by_title_or_content">Search by title or content</string>
+
+    <string name="new_folder">New folder</string>
+    <string name="all_folders">All folders</string>
+    <string name="create_folder">Create folder</string>
+    <string name="cancel">Cancel</string>
 </resources>

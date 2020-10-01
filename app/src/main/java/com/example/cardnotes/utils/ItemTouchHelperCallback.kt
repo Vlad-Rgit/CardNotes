@@ -4,7 +4,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cardnotes.adapters.NotesAdapter
-import com.example.cardnotes.adapters.RecyclerViewAdapter
 
 class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
     UP or DOWN or START or END, 0) {

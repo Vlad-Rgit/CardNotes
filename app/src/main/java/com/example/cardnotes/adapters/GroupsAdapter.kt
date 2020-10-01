@@ -53,7 +53,7 @@ class GroupsAdapter(
 
         init {
             binding.root.setOnClickListener {
-                groupClickedCallback?.invoke(binding.group, layoutPosition)
+                groupClickedCallback?.invoke(binding.group!!, layoutPosition)
             }
         }
 

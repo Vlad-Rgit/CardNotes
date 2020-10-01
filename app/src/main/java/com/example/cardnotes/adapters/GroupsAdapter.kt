@@ -16,9 +16,17 @@ class GroupsAdapter(
     private val inflater = LayoutInflater.from(context)
     private val groups = mutableListOf<GroupDomain>()
 
+    private var groupClickedCallback:
+            ((group: GroupDomain, position: Int) -> Unit)? = null
+
 
     fun replaceAll(items: List<GroupDomain>) {
         groups.replaceAll(items, this)
+    }
+
+    fun setGroupClickedCallback(callback:
+                                    (group: GroupDomain, position: Int) -> Unit) {
+        groupClickedCallback = callback
     }
 
 
@@ -39,9 +47,15 @@ class GroupsAdapter(
     }
 
 
-    class ViewHolder(
+    inner class ViewHolder(
         private val binding: GroupItemBinding)
         : RecyclerView.ViewHolder(binding.root) {
+
+        init {
+            binding.root.setOnClickListener {
+                groupClickedCallback?.invoke(binding.group, layoutPosition)
+            }
+        }
 
         fun performBind(group: GroupDomain) {
             binding.group = group

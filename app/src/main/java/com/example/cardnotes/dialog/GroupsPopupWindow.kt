@@ -20,11 +20,28 @@ class GroupsPopupWindow
     private val binding: GroupDialogLayoutBinding
     private val groupsAdapter: GroupsAdapter
 
+    //Callbacks
+    private var groupChosenCallback:
+            ((group: GroupDomain) -> Unit)? = null
+
+    private var newGroupRequestCallback:
+            (() -> Unit)? = null
+
     init {
+
         binding = GroupDialogLayoutBinding.inflate(
             inflater, parent, false)
 
         groupsAdapter = GroupsAdapter(context)
+
+        groupsAdapter.setGroupClickedCallback { group, position ->
+            if(position == 0) {
+                newGroupRequestCallback?.invoke()
+            }
+            else {
+                groupChosenCallback?.invoke(group)
+            }
+        }
 
         binding.rvGroup.apply {
             setHasFixedSize(true)
@@ -51,5 +68,13 @@ class GroupsPopupWindow
         groupsAdapter.replaceAll(groups)
     }
 
+    //Setter for callbacks
+    fun setGroupChosenCallback(callback: (group: GroupDomain) -> Unit) {
+        groupChosenCallback = callback
+    }
+
+    fun setNewGroupRequestCallback(callback: () -> Unit) {
+        newGroupRequestCallback = callback
+    }
 
 }

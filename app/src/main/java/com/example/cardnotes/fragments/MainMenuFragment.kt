@@ -2,16 +2,18 @@ package com.example.cardnotes.fragments
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.*
-import android.widget.PopupMenu
-import android.widget.PopupWindow
-import androidx.appcompat.app.AlertDialog
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.animation.doOnEnd
-import androidx.core.widget.addTextChangedListener
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -22,10 +24,10 @@ import com.example.cardnotes.R
 import com.example.cardnotes.adapters.NotesAdapter
 import com.example.cardnotes.databinding.FragmentMainMenuBinding
 import com.example.cardnotes.decorators.PaddingDecorator
-import com.example.cardnotes.dialog.GroupDialog
 import com.example.cardnotes.dialog.GroupsPopupWindow
 import com.example.cardnotes.utils.ItemTouchHelperCallback
 import com.example.cardnotes.viewmodels.MainMenuViewModel
+
 
 class MainMenuFragment: Fragment() {
 
@@ -70,10 +72,12 @@ class MainMenuFragment: Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): View? {
+        savedInstanceState: Bundle?
+    ): View? {
 
         binding = FragmentMainMenuBinding.inflate(
-            inflater, container, false)
+            inflater, container, false
+        )
 
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -81,17 +85,19 @@ class MainMenuFragment: Fragment() {
 
         //Init group groups popup window
         groupsPopupWindow = GroupsPopupWindow(
-            requireContext(), binding.mainMenuHost)
+            requireContext(), binding.mainMenuHost
+        )
 
         viewModel.groups.observe(viewLifecycleOwner,
-            Observer {
-                groups ->
+            Observer { groups ->
                 groupsPopupWindow.replaceGroups(groups)
-        })
+            })
 
         //Init note adapter for recycler view
-        val notesAdapter = NotesAdapter(viewLifecycleOwner,
-            requireContext(), R.layout.note_item)
+        val notesAdapter = NotesAdapter(
+            viewLifecycleOwner,
+            requireContext(), R.layout.note_item
+        )
 
         //If the user long presses card note
         //the selection mode is enabled
@@ -117,11 +123,16 @@ class MainMenuFragment: Fragment() {
 
             setHasFixedSize(true)
 
-            layoutManager = StaggeredGridLayoutManager(2,
-                StaggeredGridLayoutManager.VERTICAL)
+            layoutManager = StaggeredGridLayoutManager(
+                2,
+                StaggeredGridLayoutManager.VERTICAL
+            )
 
-            addItemDecoration(PaddingDecorator(
-                16,16,16,16))
+            addItemDecoration(
+                PaddingDecorator(
+                    16, 16, 16, 16
+                )
+            )
 
             ItemTouchHelper(ItemTouchHelperCallback())
                 .attachToRecyclerView(this)
@@ -131,8 +142,7 @@ class MainMenuFragment: Fragment() {
 
         //Attach observer to notes collection
         //And reflect any changes within the adapter
-        viewModel.notes.observe(viewLifecycleOwner) {
-                notes ->
+        viewModel.notes.observe(viewLifecycleOwner) { notes ->
             notesAdapter.replaceAll(notes)
             notesAdapter.sortByPosition()
         }
@@ -161,14 +171,13 @@ class MainMenuFragment: Fragment() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if(s.isNullOrBlank() && isSearching) {
+                if (s.isNullOrBlank() && isSearching) {
                     clearSearch()
-                }
-                else {
+                } else {
                     //if it is first character
                     //show the close icon
                     //instead of search icon
-                    if(!isSearching)
+                    if (!isSearching)
                         startSearch()
 
                     viewModel.searchQuery = s.toString()
@@ -194,12 +203,18 @@ class MainMenuFragment: Fragment() {
 
             if(groupsPopupWindow.isShowing) {
                 groupsPopupWindow.dismiss()
+                hideDim()
             }
             else {
+                showDim()
                 groupsPopupWindow.showAsDropDown(binding.btnFolder)
             }
         }
 
+        binding.dim.setOnClickListener {
+            groupsPopupWindow.dismiss()
+            hideDim()
+        }
 
 
         return binding.root
@@ -222,7 +237,22 @@ class MainMenuFragment: Fragment() {
         opacityAnimator.reverse()
     }
 
+    fun setEnableForAllViews(parent: View, enable: Boolean) {
+        parent.isEnabled = enable
+        if(parent is ViewGroup) {
+            for(child in parent.children) {
+                setEnableForAllViews(child, enable)
+            }
+        }
+    }
 
+    private fun showDim() {
+        binding.dim.visibility = View.VISIBLE
+    }
+
+    private fun hideDim() {
+        binding.dim.visibility = View.GONE
+    }
 
     /**
      * Show close icon instead of search icon

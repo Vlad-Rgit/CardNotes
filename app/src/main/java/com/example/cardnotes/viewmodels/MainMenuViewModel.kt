@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.domain.NoteDomain
+import com.example.cardnotes.interfaces.ListAccessor
 import com.example.cardnotes.repos.GroupsRepo
 import com.example.cardnotes.repos.NotesRepo
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +29,11 @@ class MainMenuViewModel: ViewModel() {
         }
 
     val currentGroup = MutableLiveData<GroupDomain?>(null)
+
+    private val _selectedNotes = mutableListOf<NoteDomain>()
+
+    val selectedNotes: List<NoteDomain>
+        get() = _selectedNotes
 
     /**
      * Notes filtered with searchQuery
@@ -68,11 +74,12 @@ class MainMenuViewModel: ViewModel() {
 
 
     /**
-     * Remove notes and refresh
+     * Remove selectedNotes notes and refresh
      */
-    fun removeNotes(removed: List<NoteDomain>) {
+    fun removeSelectedNotes() {
         viewModelScope.launch(Dispatchers.IO) {
-            notesRepo.removeAll(removed)
+            notesRepo.removeAll(_selectedNotes)
+            _selectedNotes.clear()
             refreshNotesImpl()
         }
     }
@@ -117,6 +124,23 @@ class MainMenuViewModel: ViewModel() {
     private suspend fun refreshGroupsImpl() {
         withContext(Dispatchers.IO) {
             groupsRepo.refreshItems()
+        }
+    }
+
+
+    inner class SelectedNotesAccessor
+        : ListAccessor<NoteDomain> {
+
+        override fun add(item: NoteDomain) {
+            _selectedNotes.add(item)
+        }
+
+        override fun remove(item: NoteDomain) {
+            _selectedNotes.remove(item)
+        }
+
+        override fun size(): Int {
+            return _selectedNotes.size
         }
     }
 

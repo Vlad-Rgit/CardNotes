@@ -3,6 +3,7 @@ package com.example.cardnotes.adapters
 import android.animation.ValueAnimator
 import android.content.Context
 import android.provider.ContactsContract
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.cardnotes.R
 import com.example.cardnotes.databinding.NoteItemBinding
 import com.example.cardnotes.domain.NoteDomain
+import com.example.cardnotes.viewmodels.MainMenuViewModel
 import com.google.android.material.card.MaterialCardView
 import java.util.*
 
@@ -20,6 +22,7 @@ class NotesAdapter(
     private val lifecycleOwner: LifecycleOwner,
     context: Context,
     resourceId: Int): RecyclerView.Adapter<NotesAdapter.ViewHolder>() {
+
 
     private var startEditCallback: Runnable? = null
 
@@ -29,6 +32,9 @@ class NotesAdapter(
     private var onNoteClickCallback
             : ((note: NoteDomain) -> Unit)? = null
 
+    private var noteCheckedCallback
+            : ((newQuantity: Int) -> Unit)? = null
+
     private val inflater = LayoutInflater.from(context)
 
     private val notes = mutableListOf<NoteDomain>()
@@ -36,10 +42,15 @@ class NotesAdapter(
     var isSelection: Boolean = false
         private set
 
+    lateinit var selectedNotesAccessor
+            : MainMenuViewModel.SelectedNotesAccessor
+
+    var selectedNotesQuantity = 0
+        private set
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = NoteItemBinding.inflate(
-            inflater, parent, false
-        )
+            inflater, parent, false)
 
         binding.lifecycleOwner = lifecycleOwner
 
@@ -67,16 +78,40 @@ class NotesAdapter(
             if(!list.contains(note)) {
                 val index = notes.indexOf(note)
                 notes.removeAt(index)
+                Log.d("LiveDataNote",
+                    "Removed observer from " + note.noteId + " id")
+                note.isSelected.removeObservers(lifecycleOwner)
                 notifyItemRemoved(index)
             }
         }
 
         for(note in list) {
+
             if(!notes.contains(note)) {
                 notes.add(note)
+
+                if(isSelection)
+                    note.isSelectionEnabled.value = true
+
+                Log.d("LiveDataNote",
+                    "Added observer to " + note.noteId + " id")
+                note.isSelected.observe(lifecycleOwner, IsNoteSelectedObserver(note))
                 notifyItemInserted(notes.size)
             }
         }
+
+        selectedNotesQuantity =
+            selectedNotesAccessor.size()
+
+        noteCheckedCallback?.invoke(selectedNotesQuantity)
+    }
+
+
+
+    private fun getSelectedNotesCount(): Int {
+        return notes.filter {
+            it.isSelected.value!!
+        }.size
     }
 
     /**
@@ -124,6 +159,7 @@ class NotesAdapter(
         noteUpdatedCallback?.invoke(notes[toIndex])
     }
 
+    //Setters for callbacks
 
     fun setStartSelectionListener(callback: Runnable) {
         startEditCallback = callback
@@ -143,6 +179,11 @@ class NotesAdapter(
         for(note in notes) {
             note.isSelected.value = isSelected
         }
+    }
+
+    fun setNoteCheckedCallback(callback:
+                                   (newQuantity: Int) -> Unit) {
+        noteCheckedCallback = callback
     }
 
     /**
@@ -174,15 +215,6 @@ class NotesAdapter(
         }
     }
 
-    /**
-     * Get selected notes in the selection mode
-     */
-    fun getSelectedNotes(): List<NoteDomain> {
-        return notes.filter {
-            it.isSelected.value == true
-        }
-    }
-
 
     inner class ViewHolder(private val binding: NoteItemBinding)
         : RecyclerView.ViewHolder(binding.root) {
@@ -208,8 +240,14 @@ class NotesAdapter(
 
                 if(model != null) {
 
-                    if (!isSelection)
+                    //If in selection mode change checkbox then click on card
+                    if (isSelection) {
+                        binding.checkbox.isChecked = !(model.isSelected.value ?: true)
+                    }
+                    //Otherwise notify fragment that the note was clicked
+                    else {
                         onNoteClickCallback?.invoke(model)
+                    }
                 }
             }
         }
@@ -227,6 +265,35 @@ class NotesAdapter(
             elevationAnimation.cancel()
             elevationAnimation.reverse()
         }
+
+    }
+
+    inner class IsNoteSelectedObserver
+        (private val note: NoteDomain):
+        androidx.lifecycle.Observer<Boolean> {
+
+        private var oldIsSelected = false
+
+        override fun onChanged(isSelected: Boolean?) {
+
+            if(isSelected != null &&
+                oldIsSelected != isSelected) {
+
+                oldIsSelected = isSelected
+
+                if(isSelected) {
+                    selectedNotesQuantity++
+                    selectedNotesAccessor.add(note)
+                }
+                else {
+                    selectedNotesQuantity--
+                    selectedNotesAccessor.remove(note)
+                }
+
+                noteCheckedCallback?.invoke(selectedNotesQuantity)
+            }
+        }
+
 
     }
 

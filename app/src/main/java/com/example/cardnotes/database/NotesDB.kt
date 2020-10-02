@@ -69,6 +69,7 @@ abstract class NotesDB: RoomDatabase() {
                 """)
 
                 initGroups(this@Companion.getInstance().groupDao)
+                initNotes(this@Companion.getInstance().noteDao)
             }
         }
 
@@ -143,8 +144,7 @@ abstract class NotesDB: RoomDatabase() {
                         NoteDatabase(
                             title = "Shopping for today",
                             value = "1. Chicken\n2. Tasty soap\n3. More chicken"),
-                        NoteDatabase(title = "Day 1", value = "Start of day 1"),
-                    )
+                        NoteDatabase(title = "Day 1", value = "Start of day 1"),)
 
                     noteDao.insertAll(notes)
                 }

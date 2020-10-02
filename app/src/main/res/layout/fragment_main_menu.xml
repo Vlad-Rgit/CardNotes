@@ -9,6 +9,9 @@
         <variable
             name="viewModel"
             type="com.example.cardnotes.viewmodels.MainMenuViewModel" />
+        <variable
+            name="ui"
+            type="com.example.cardnotes.fragments.MainMenuFragment" />
     </data>
 
     <FrameLayout
@@ -19,7 +22,8 @@
             android:id="@+id/main_menu_host"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:paddingBottom="0dp">
 
             <FrameLayout
               android:id="@+id/top_host"
@@ -52,7 +56,7 @@
                         android:layout_height="wrap_content"
                         android:layout_centerHorizontal="true"
                         android:layout_centerVertical="true"
-                        android:text="@string/select_items"
+                        android:text="@{ui.selectedItemsString}"
                         android:textAppearance="?attr/textAppearanceHeadline6"/>
 
                     <com.example.cardnotes.customviews.ImageToggleButton
@@ -145,7 +149,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginTop="16dp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/bottom_selection_menu"
                 app:layout_constraintTop_toBottomOf="@id/txt_search_layout" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -155,12 +159,18 @@
                 app:backgroundTint="@color/colorPrimary"
                 android:src="@drawable/baseline_add_black_48"
                 app:borderWidth="0dp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/bottom_selection_menu"
                 app:layout_constraintHorizontal_bias="0.96"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.96" />
+
+           <androidx.fragment.app.FragmentContainerView
+               android:id="@+id/bottom_selection_menu"
+               android:layout_width="match_parent"
+               android:layout_height="wrap_content"
+               app:layout_constraintBottom_toBottomOf="parent"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

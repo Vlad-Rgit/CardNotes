@@ -14,6 +14,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -34,6 +35,9 @@ class MainMenuFragment: Fragment() {
     private lateinit var viewModel: MainMenuViewModel
     private lateinit var activity: AppCompatActivity
     private lateinit var binding: FragmentMainMenuBinding
+
+    private var bottomSelectionMenu:
+            BottomSelectionMenuFragment? = null
 
     /**
      * Popup for choosing group or creating
@@ -104,18 +108,23 @@ class MainMenuFragment: Fragment() {
         addUpdateListener {
             val animatedValue = it.animatedValue as Float
             binding.groupHost.alpha = animatedValue
+            binding.btnAddNote.alpha = animatedValue
         }
 
         doOnStart {
             binding.groupHost.visibility = View.VISIBLE
+            binding.btnAddNote.visibility = View.VISIBLE
         }
 
         doOnEnd {
             if(binding.groupHost.alpha == 0f) {
                 binding.groupHost.visibility = View.GONE
+                binding.btnAddNote.visibility = View.GONE
             }
         }
     }
+
+    var selectedItemsString = MutableLiveData<String>()
 
     override fun onAttach(context: Context) {
 
@@ -139,13 +148,20 @@ class MainMenuFragment: Fragment() {
         binding.lifecycleOwner = viewLifecycleOwner
 
         binding.viewModel = viewModel
+        binding.ui = this
 
+
+        //Init select items string
+        selectedItemsString.value = resources.getQuantityString(
+            R.plurals.selected_items, 0, 0)
 
         //Init note adapter for recycler view
         val notesAdapter = NotesAdapter(
             viewLifecycleOwner,
             requireContext(), R.layout.note_item
         )
+
+        notesAdapter.selectedNotesAccessor = viewModel.SelectedNotesAccessor()
 
         //If the user long presses card note
         //the selection mode is enabled
@@ -154,6 +170,16 @@ class MainMenuFragment: Fragment() {
         //If the user changes the position of the note
         //we must reflect this changes in the database
         notesAdapter.setNoteUpdatedCallback(viewModel::updateNote)
+
+        //Change select items string when user checks some note
+        notesAdapter.setNoteCheckedCallback { quantity ->
+            if(quantity > 0)
+                selectedItemsString.value = resources
+                    .getQuantityString(R.plurals.selected_items, quantity, quantity)
+            else
+                selectedItemsString.value = resources
+                    .getString(R.string.select_items)
+        }
 
         //Navigate to NoteDetailsFragment
         //for editing clicked note
@@ -283,8 +309,17 @@ class MainMenuFragment: Fragment() {
      */
     private fun startSelection() {
         if(binding.selectionHost.alpha == 0f) {
+
             alphaSelectionHostAnimator.start()
             alphaGroupHostAnimator.reverse()
+
+            bottomSelectionMenu = BottomSelectionMenuFragment()
+
+            childFragmentManager.beginTransaction()
+                .replace(R.id.bottom_selection_menu, bottomSelectionMenu!!)
+                .commitNow()
+
+            bottomSelectionMenu!!.show()
         }
     }
 
@@ -295,6 +330,10 @@ class MainMenuFragment: Fragment() {
         binding.btnSelectAll.isChecked = false
         alphaSelectionHostAnimator.reverse()
         alphaGroupHostAnimator.start()
+
+        bottomSelectionMenu!!.hide()
+
+
     }
 
 

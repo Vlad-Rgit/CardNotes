@@ -149,7 +149,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginTop="16dp"
-                app:layout_constraintBottom_toTopOf="@id/bottom_selection_menu"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/txt_search_layout" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -159,20 +159,21 @@
                 app:backgroundTint="@color/colorPrimary"
                 android:src="@drawable/baseline_add_black_48"
                 app:borderWidth="0dp"
-                app:layout_constraintBottom_toTopOf="@id/bottom_selection_menu"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintHorizontal_bias="0.96"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.96" />
 
-           <androidx.fragment.app.FragmentContainerView
-               android:id="@+id/bottom_selection_menu"
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               app:layout_constraintBottom_toBottomOf="parent"/>
-
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/bottom_selection_menu_host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:layout_gravity="bottom"/>
 
         <View
             android:id="@+id/dim"

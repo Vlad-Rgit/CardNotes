@@ -70,9 +70,15 @@ abstract class NotesDB: RoomDatabase() {
 
                 initGroups(this@Companion.getInstance().groupDao)
                 initNotes(this@Companion.getInstance().noteDao)
+                showNotes(this@Companion.getInstance().noteDao)
             }
         }
 
+        private fun showNotes(noteDao: NoteDao) {
+            CoroutineScope(Dispatchers.IO).launch {
+
+            }
+        }
 
         /**
          * Init table group with some data

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <data>
         <variable
@@ -7,10 +9,6 @@
             type="com.example.cardnotes.domain.GroupDomain" />
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent">
 
         <TextView
             android:id="@+id/tvGroupName"
@@ -18,23 +16,9 @@
             android:layout_width="wrap_content"
             android:textAppearance="?attr/textAppearanceSubtitle1"
             android:layout_margin="16dp"
-            android:text="@{group.groupName}"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toLeftOf="@id/imgGroup"
-            app:layout_constraintHorizontal_chainStyle="spread_inside">
+            android:text="@{group.groupName}">
         </TextView>
 
-        <ImageView
-            android:id="@+id/imgGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintLeft_toRightOf="@id/tvGroupName"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

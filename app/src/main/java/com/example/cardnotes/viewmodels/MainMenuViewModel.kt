@@ -85,6 +85,20 @@ class MainMenuViewModel: ViewModel() {
     }
 
     /**
+     * Move selected notes to group
+     */
+    fun moveSelectedNotes(group: GroupDomain) {
+        viewModelScope.launch {
+            _selectedNotes.forEach {
+                it.groupId = group.groupId
+            }
+            notesRepo.updateNotes(_selectedNotes)
+            _selectedNotes.clear()
+            refreshNotesImpl()
+        }
+    }
+
+    /**
      * Update note and refresh
      */
     fun updateNote(note: NoteDomain) {

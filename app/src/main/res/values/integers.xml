@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="default_anim_duration">400</integer>
+    <integer name="bottom_selection_menu_duration">300</integer>
 </resources>

@@ -316,7 +316,7 @@ class MainMenuFragment: Fragment() {
             bottomSelectionMenu = BottomSelectionMenuFragment()
 
             childFragmentManager.beginTransaction()
-                .replace(R.id.bottom_selection_menu, bottomSelectionMenu!!)
+                .replace(R.id.bottom_selection_menu_host, bottomSelectionMenu!!)
                 .commitNow()
 
             bottomSelectionMenu!!.show()
@@ -330,10 +330,7 @@ class MainMenuFragment: Fragment() {
         binding.btnSelectAll.isChecked = false
         alphaSelectionHostAnimator.reverse()
         alphaGroupHostAnimator.start()
-
         bottomSelectionMenu!!.hide()
-
-
     }
 
 

@@ -100,6 +100,10 @@ class NotesAdapter(
             }
         }
 
+        for(n in notes) {
+            Log.d("DbNote", (n.groupId ?: -1).toString())
+        }
+
         selectedNotesQuantity =
             selectedNotesAccessor.size()
 
@@ -131,7 +135,8 @@ class NotesAdapter(
                 }
             }
 
-            if(index != -1) {
+            if(index != -1
+                || index != i) {
                 Collections.swap(notes, i, index)
                 notifyItemMoved(i, index)
             }

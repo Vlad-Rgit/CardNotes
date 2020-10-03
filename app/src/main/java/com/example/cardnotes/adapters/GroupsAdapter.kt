@@ -21,7 +21,6 @@ class GroupsAdapter(
     private var groupClickedCallback:
             ((group: GroupDomain, position: Int) -> Unit)? = null
 
-
     fun replaceAll(items: List<GroupDomain>) {
 
         groups.replaceAll(items, this)

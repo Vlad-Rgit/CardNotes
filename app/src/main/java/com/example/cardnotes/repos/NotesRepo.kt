@@ -76,4 +76,10 @@ class NotesRepo {
         }
     }
 
+    suspend fun updateNotes(notes: Iterable<NoteDomain>) {
+        withContext(Dispatchers.IO) {
+            database.noteDao.updateAll(notes.map { it.asDatabase() })
+        }
+    }
+
 }

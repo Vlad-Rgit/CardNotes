@@ -22,6 +22,7 @@ data class NoteDomain(
     fun asDatabase(): NoteDatabase {
         return NoteDatabase(
             noteId = this.noteId,
+            groupId = this.groupId,
             title = this.name.value!!,
             position = position,
             value = this.value.value!!,

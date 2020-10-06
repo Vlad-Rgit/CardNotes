@@ -42,6 +42,12 @@ class NotesRepo {
         }
     }
 
+    suspend fun removeByGroupId(groupId: Int) {
+        withContext(Dispatchers.IO) {
+            database.noteDao.deleteByGroupId(groupId)
+        }
+    }
+
     suspend fun refreshItemsByQueryByGroup(searchQuery: String,
                                             groupDomain: GroupDomain) {
         withContext(Dispatchers.IO) {

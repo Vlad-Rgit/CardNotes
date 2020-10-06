@@ -8,7 +8,7 @@ import com.example.cardnotes.database.models.GroupWithNotesDatabase
 interface GroupDao {
 
     @Insert
-    suspend fun insert(group: GroupDatabase)
+    suspend fun insert(group: GroupDatabase): Long
 
     @Insert
     suspend fun insertAll(groups: Iterable<GroupDatabase>)
@@ -18,6 +18,9 @@ interface GroupDao {
 
     @Delete
     suspend fun delete(group: GroupDatabase)
+
+    @Query("Select * from `group` where groupId = :groupId")
+    suspend fun getById(groupId: Int): GroupDatabase
 
     @Query("Select * from `group`")
     suspend fun getAll(): List<GroupDatabase>
@@ -30,4 +33,7 @@ interface GroupDao {
 
     @Query("Select Count(groupId) from `group`")
     suspend fun count(): Int
+
+    @Query("Select * from `group` where groupName = :groupName")
+    suspend fun getByName(groupName: String): List<GroupDatabase>
 }

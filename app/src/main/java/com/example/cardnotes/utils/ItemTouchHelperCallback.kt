@@ -4,6 +4,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cardnotes.adapters.NotesAdapter
+import com.example.cardnotes.fragments.ItemTouchViewHolder
 
 class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
     UP or DOWN or START or END, 0) {
@@ -30,14 +31,14 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
     override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
         super.onSelectedChanged(viewHolder, actionState)
 
-        val notesViewHolder = viewHolder as? NotesAdapter.ViewHolder
-        notesViewHolder?.raiseCard()
+        val notesViewHolder = viewHolder as? ItemTouchViewHolder
+        notesViewHolder?.downTouch()
     }
 
     override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
         super.clearView(recyclerView, viewHolder)
 
-        val notesViewHolder = viewHolder as? NotesAdapter.ViewHolder
-        notesViewHolder?.lowCard()
+        val notesViewHolder = viewHolder as? ItemTouchViewHolder
+        notesViewHolder?.upTouch()
     }
 }

@@ -17,7 +17,7 @@ data class NoteDatabase(
         entity = GroupDatabase::class,
         parentColumns = ["groupId"],
         childColumns = ["groupId"],
-        onDelete = ForeignKey.RESTRICT,
+        onDelete = ForeignKey.CASCADE,
         onUpdate = ForeignKey.CASCADE)
     var groupId: Int? = null,
     var position: Int = noteId,

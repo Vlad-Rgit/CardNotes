@@ -18,12 +18,16 @@ import androidx.core.animation.doOnStart
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.example.cardnotes.R
 import com.example.cardnotes.databinding.BottomSelectionMenuFragmentBinding
+import com.example.cardnotes.dialog.AddGroupDialog
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.domain.NoteDomain
-import com.example.cardnotes.utils.getMaxHeight
+import com.example.cardnotes.utils.styleDialogButton
 import com.example.cardnotes.viewmodels.MainMenuViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.lang.reflect.Array
 
 
@@ -32,13 +36,13 @@ class BottomSelectionMenuFragment: Fragment() {
 
     private lateinit var binding: BottomSelectionMenuFragmentBinding
 
-    //Late initialization because we can retrieve the height of
-    //the fragment host only when it first appeared
-    private lateinit var revealAnimator: ObjectAnimator
 
     private lateinit var viewModel: MainMenuViewModel
 
     private lateinit var groupsAdapter: ArrayAdapter<GroupDomain>
+
+
+    private var onEndSelectionCallback: Runnable? = null
 
     override fun onAttach(context: Context) {
 
@@ -57,10 +61,32 @@ class BottomSelectionMenuFragment: Fragment() {
             .inflate(inflater, container, false)
 
 
-        binding.fragmentHost.visibility = View.INVISIBLE
-
         binding.btnDelete.setOnClickListener {
-            viewModel.removeSelectedNotes()
+
+            val res = requireContext().resources
+            val count = viewModel.selectedNotes.size
+
+            val title = res.getString(R.string.delete_notes)
+            val message = res.getQuantityString(
+                R.plurals.delete_notes, count, count)
+
+            val dialog = AlertDialog.Builder(requireContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setNegativeButton(res.getString(R.string.no)) { _, _ -> }
+                .setPositiveButton(res.getString(R.string.yes)) {
+                    _, _ ->
+
+                    viewModel.removeSelectedNotes()
+                    onEndSelectionCallback?.run()
+                }
+                .show()
+
+            val negativeButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            styleDialogButton(negativeButton)
+            styleDialogButton(positiveButton)
         }
 
         //Prevent the overlapped views to be clicked
@@ -73,8 +99,11 @@ class BottomSelectionMenuFragment: Fragment() {
 
         viewModel.groups.observe(viewLifecycleOwner, Observer {
             groupsAdapter.clear()
+
             groupsAdapter.add(
-                GroupDomain(groupName = "New folder"))
+                GroupDomain(groupName = requireContext()
+                    .getString(R.string.new_folder)))
+
             groupsAdapter.addAll(it)
             groupsAdapter.notifyDataSetChanged()
         })
@@ -82,8 +111,21 @@ class BottomSelectionMenuFragment: Fragment() {
         binding.btnMove.setOnClickListener {
             AlertDialog.Builder(requireContext())
                 .setAdapter(groupsAdapter) { di, i ->
-                    val group = groupsAdapter.getItem(i)!!
-                    viewModel.moveSelectedNotes(group)
+
+                    if(i == 0) {
+                        AddGroupDialog {
+                            lifecycleScope.launch(Dispatchers.Main) {
+                                it.groupId = viewModel.addGroupImpl(it)
+                                viewModel.moveSelectedNotes(it)
+                                onEndSelectionCallback?.run()
+                            }
+                        }.show(childFragmentManager, null)
+                    }
+                    else {
+                        val group = groupsAdapter.getItem(i)!!
+                        viewModel.moveSelectedNotes(group)
+                        onEndSelectionCallback?.run()
+                    }
                 }
                 .show()
         }
@@ -91,52 +133,8 @@ class BottomSelectionMenuFragment: Fragment() {
         return binding.root
     }
 
-    fun show() {
-
-        binding.fragmentHost.post {
-
-            if(!::revealAnimator.isInitialized) {
-                initAnimator()
-            }
-
-            revealAnimator.cancel()
-            revealAnimator.start()
-        }
-
-
-    }
-
-    fun hide() {
-
-        binding.fragmentHost.post {
-
-            if(!::revealAnimator.isInitialized) {
-                initAnimator()
-            }
-
-            revealAnimator.cancel()
-            revealAnimator.reverse()
-        }
-    }
-
-    private fun initAnimator() {
-        revealAnimator = ObjectAnimator.ofFloat(binding.fragmentHost, View.TRANSLATION_Y,
-
-            binding.fragmentHost.height.toFloat(), 0f).apply {
-
-            duration = requireContext().resources
-                .getInteger(R.integer.bottom_selection_menu_duration).toLong()
-
-            doOnStart {
-                binding.fragmentHost.visibility = View.VISIBLE
-            }
-
-            doOnEnd {
-                if(binding.fragmentHost.translationY > 0f) {
-                    binding.fragmentHost.visibility = View.INVISIBLE
-                }
-            }
-        }
+    fun setOnEndSelectionCallback(callback: Runnable) {
+        onEndSelectionCallback = callback
     }
 
 }

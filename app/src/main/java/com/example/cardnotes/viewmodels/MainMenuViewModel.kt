@@ -3,6 +3,8 @@ package com.example.cardnotes.viewmodels
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cardnotes.NoteApp
+import com.example.cardnotes.R
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.interfaces.ListAccessor
@@ -13,6 +15,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainMenuViewModel: ViewModel() {
+
+    private val context = NoteApp.getAppInstance()
+        .applicationContext
 
     private val notesRepo = NotesRepo()
     private val groupsRepo = GroupsRepo()
@@ -28,7 +33,11 @@ class MainMenuViewModel: ViewModel() {
             refreshNotes()
         }
 
-    val currentGroup = MutableLiveData<GroupDomain?>(null)
+    private val allGroup = GroupDomain(
+        groupId = -1,
+        groupName = context.getString(R.string.all_folders))
+
+    val currentGroup = MutableLiveData<GroupDomain>(allGroup)
 
     private val _selectedNotes = mutableListOf<NoteDomain>()
 
@@ -72,13 +81,18 @@ class MainMenuViewModel: ViewModel() {
         }
     }
 
+    fun setAllGroups() {
+        currentGroup.value = allGroup
+        refreshNotes()
+    }
+
 
     /**
      * Remove selectedNotes notes and refresh
      */
     fun removeSelectedNotes() {
         viewModelScope.launch(Dispatchers.IO) {
-            notesRepo.removeAll(_selectedNotes)
+            notesRepo.removeAll(_selectedNotes.toList())
             _selectedNotes.clear()
             refreshNotesImpl()
         }
@@ -92,7 +106,7 @@ class MainMenuViewModel: ViewModel() {
             _selectedNotes.forEach {
                 it.groupId = group.groupId
             }
-            notesRepo.updateNotes(_selectedNotes)
+            notesRepo.updateNotes(_selectedNotes.toList())
             _selectedNotes.clear()
             refreshNotesImpl()
         }
@@ -110,8 +124,27 @@ class MainMenuViewModel: ViewModel() {
 
     fun addGroup(group: GroupDomain) {
         viewModelScope.launch {
-            groupsRepo.addGroup(group)
+            addGroupImpl(group)
+        }
+    }
+
+    fun removeGroup(group: GroupDomain) {
+        viewModelScope.launch {
+            notesRepo.removeByGroupId(group.groupId)
+            groupsRepo.removeGroup(group)
             refreshGroupsImpl()
+        }
+    }
+
+    fun removeCurrentGroup() {
+        removeGroup(currentGroup.value!!)
+    }
+
+    suspend fun addGroupImpl(group: GroupDomain): Int {
+        return withContext(Dispatchers.IO) {
+            val id = groupsRepo.addGroup(group)
+            refreshGroupsImpl()
+            id
         }
     }
 
@@ -121,7 +154,7 @@ class MainMenuViewModel: ViewModel() {
      */
     private suspend fun refreshNotesImpl() {
         withContext(Dispatchers.IO) {
-            if(currentGroup.value == null) {
+            if(currentGroup.value!!.groupId == -1) {
                 notesRepo.refreshItemsByQuery(searchQuery)
             }
             else {

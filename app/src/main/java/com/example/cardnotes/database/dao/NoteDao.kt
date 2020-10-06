@@ -24,6 +24,9 @@ interface NoteDao {
     @Delete
     suspend fun delete(noteDatabase: NoteDatabase)
 
+    @Query("Delete from notes where groupId = :groupId")
+    suspend fun deleteByGroupId(groupId: Int)
+
     @Delete
     suspend fun deleteAll(notes: Iterable<NoteDatabase>)
 

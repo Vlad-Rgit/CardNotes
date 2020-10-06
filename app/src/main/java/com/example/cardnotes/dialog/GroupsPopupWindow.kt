@@ -43,7 +43,10 @@ class GroupsPopupWindow
             }
             //If All groups clicked
             else if (position == 1) {
-                groupChosenCallback?.invoke(null)
+                groupChosenCallback?.invoke(
+                    GroupDomain(
+                        groupId = -1,
+                        groupName = context.getString(R.string.all_folders)))
             }
             else {
                 groupChosenCallback?.invoke(group)

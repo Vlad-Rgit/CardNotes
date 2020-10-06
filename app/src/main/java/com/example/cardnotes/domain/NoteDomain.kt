@@ -29,6 +29,13 @@ data class NoteDomain(
             createdAt = this.createdAt.time)
     }
 
+    fun hasContent(): Boolean {
+        return if(value.value == null)
+            false
+        else
+            value.value!!.isNullOrBlank()
+    }
+
     override fun areContentsTheSame(other: NoteDomain): Boolean {
         return this == other
     }

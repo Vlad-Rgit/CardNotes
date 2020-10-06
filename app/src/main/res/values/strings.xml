@@ -1,4 +1,5 @@
 <resources>
+
     <string name="app_name">Card Notes</string>
     <string name="select_items">Select items</string>
     <string name="title">Title</string>
@@ -6,11 +7,36 @@
     <string name="here_will_appear_your_notes">Here will appear your notes!</string>
     <string name="write_here_your_note">Write here your note</string>
     <string name="search_by_title_or_content">Search by title or content</string>
-
     <string name="new_folder">New folder</string>
     <string name="all_folders">All folders</string>
     <string name="create_folder">Create folder</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="move_to">Move to</string>
+    <string name="no_folder">No folder</string>
+
+    <string name="folder_with_the_same_name_already_exists">
+        Folder with the same name already exists</string>
+
+    <string name="folder_name_must_not_be_empty">
+        Folder name must not be empty
+    </string>
+    
+    <string name="delete_notes">Delete notes</string>
+
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="delete_folder">Delete folder</string>
+
+    <string name="do_you_want_to_delete_folder_and_all_the_notes_in_it">
+        Do you want to delete folder and all the notes in it?
+    </string>
+
+    <string name="no_notes_here">
+        No notes here
+    </string>
+
+    <string name="list_view">List view</string>
+    <string name="grid_view">Grid view</string>
+
 </resources>

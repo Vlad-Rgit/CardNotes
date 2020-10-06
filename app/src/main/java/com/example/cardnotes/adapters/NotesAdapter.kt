@@ -2,27 +2,31 @@ package com.example.cardnotes.adapters
 
 import android.animation.ValueAnimator
 import android.content.Context
-import android.provider.ContactsContract
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
 import android.view.ViewGroup
-import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
-import com.example.cardnotes.R
+import com.example.cardnotes.adapters.viewholders.NotesViewHolder
 import com.example.cardnotes.databinding.NoteItemBinding
+import com.example.cardnotes.databinding.NoteListItemBinding
 import com.example.cardnotes.domain.NoteDomain
+import com.example.cardnotes.fragments.ItemTouchViewHolder
 import com.example.cardnotes.viewmodels.MainMenuViewModel
-import com.google.android.material.card.MaterialCardView
+import java.lang.IllegalStateException
 import java.util.*
 
 class NotesAdapter(
     private val lifecycleOwner: LifecycleOwner,
     context: Context,
-    resourceId: Int): RecyclerView.Adapter<NotesAdapter.ViewHolder>() {
+    resourceId: Int): RecyclerView.Adapter<NotesViewHolder>() {
 
+    enum class LayoutType {
+        List,
+        Grid
+    }
+
+    var layoutType: LayoutType = LayoutType.Grid
 
     private var startEditCallback: Runnable? = null
 
@@ -48,18 +52,24 @@ class NotesAdapter(
     var selectedNotesQuantity = 0
         private set
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = NoteItemBinding.inflate(
-            inflater, parent, false)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
 
-        binding.lifecycleOwner = lifecycleOwner
-
-        return ViewHolder(binding)
+        return when(layoutType) {
+            LayoutType.Grid -> {
+                GridViewHolder.from(parent)
+            }
+            LayoutType.List -> {
+                ListViewHolder.from(parent)
+            }
+            else -> {
+                throw IllegalStateException("Illegal layout type: $layoutType")
+            }
+        }
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val note = notes[position]
-        holder.performBinding(note)
+        holder.performBind(note)
     }
 
     override fun getItemCount(): Int {
@@ -136,9 +146,10 @@ class NotesAdapter(
             }
 
             if(index != -1
-                || index != i) {
+                && index != i) {
                 Collections.swap(notes, i, index)
                 notifyItemMoved(i, index)
+                notifyItemChanged(i)
             }
         }
     }
@@ -221,56 +232,37 @@ class NotesAdapter(
     }
 
 
-    inner class ViewHolder(private val binding: NoteItemBinding)
-        : RecyclerView.ViewHolder(binding.root) {
+    class GridViewHolder
+        private constructor(binding: NoteItemBinding): NotesViewHolder(binding){
 
-        private val elevationAnimation = ValueAnimator.ofFloat(3f, 16f).apply {
-            addUpdateListener {
-                val animatedValue = animatedValue as Float
-                binding.noteItemHost.cardElevation = animatedValue
+        companion object {
+
+            fun from(parent: ViewGroup): GridViewHolder {
+
+                val inflater = LayoutInflater.from(parent.context)
+
+                val binding = NoteItemBinding.inflate(
+                    inflater, parent, false)
+
+                return GridViewHolder(binding)
             }
         }
+    }
 
-        init {
+    class ListViewHolder
+        private constructor(binding: NoteListItemBinding): NotesViewHolder(binding) {
 
+        companion object {
+            fun from(parent: ViewGroup): ListViewHolder {
 
-            binding.noteItemHost.setOnLongClickListener {
-                startEdit()
-                return@setOnLongClickListener false
-            }
+                val inflater = LayoutInflater.from(parent.context)
 
-            binding.noteItemHost.setOnClickListener {
+                val binding = NoteListItemBinding.inflate(
+                    inflater, parent, false)
 
-                val model = binding.model
-
-                if(model != null) {
-
-                    //If in selection mode change checkbox then click on card
-                    if (isSelection) {
-                        binding.checkbox.isChecked = !(model.isSelected.value ?: true)
-                    }
-                    //Otherwise notify fragment that the note was clicked
-                    else {
-                        onNoteClickCallback?.invoke(model)
-                    }
-                }
+                return ListViewHolder(binding)
             }
         }
-
-        fun performBinding(model: NoteDomain) {
-            binding.model = model
-        }
-
-        fun raiseCard() {
-            elevationAnimation.cancel()
-            elevationAnimation.start()
-        }
-
-        fun lowCard() {
-            elevationAnimation.cancel()
-            elevationAnimation.reverse()
-        }
-
     }
 
     inner class IsNoteSelectedObserver

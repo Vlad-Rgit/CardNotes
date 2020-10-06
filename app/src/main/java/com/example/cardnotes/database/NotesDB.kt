@@ -17,7 +17,7 @@ import java.security.acl.Group
     entities =
     [NoteDatabase::class,
      GroupDatabase::class],
-    version = 15,
+    version = 16,
     exportSchema = false)
 abstract class NotesDB: RoomDatabase() {
 

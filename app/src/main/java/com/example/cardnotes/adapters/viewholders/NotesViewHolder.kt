@@ -1,14 +1,10 @@
 package com.example.cardnotes.adapters.viewholders
 
 import android.animation.ValueAnimator
-import android.view.View
 import androidx.databinding.ViewDataBinding
-import androidx.recyclerview.widget.AdapterListUpdateCallback
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cardnotes.BR
 import com.example.cardnotes.domain.NoteDomain
-import com.example.cardnotes.fragments.ItemTouchViewHolder
 import com.example.cardnotes.interfaces.OnNoteClick
 import com.google.android.material.card.MaterialCardView
 
@@ -26,6 +22,7 @@ abstract class NotesViewHolder
             cardHost.cardElevation = animatedValue
         }
     }
+
 
     fun performBind(model: NoteDomain) {
 

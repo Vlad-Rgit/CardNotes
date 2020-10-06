@@ -21,6 +21,7 @@
             android:padding="16dp">
             <TextView
                 android:id="@+id/tvName"
+                style="@style/CardNotes.TextView.NoteTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@{model.name}"
@@ -28,10 +29,6 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                android:textAppearance="?attr/textAppearanceSubtitle1"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/titleTextColor"
                 android:visibility="@{model.name.length() == 0 ? View.GONE : View.VISIBLE}"/>
             <View
                 android:id="@+id/title_separator"
@@ -43,29 +40,39 @@
                 android:visibility="@{model.name.length() == 0 ? View.INVISIBLE : View.VISIBLE}"/>
             <TextView
                 android:id="@+id/tvValue"
+                style="@style/CardNotes.TextView.NoteContent"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="@{model.value}"
                 tools:text="Value"
-                android:textAppearance="?attr/textAppearanceBody1"
                 android:layout_marginTop="8dp"
-                app:layout_constraintRight_toLeftOf="@id/checkbox"
+                android:maxLines="3"
+                app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/title_separator"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/tv_created_at"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintHorizontal_chainStyle="spread_inside"/>
 
+            <TextView
+                android:id="@+id/tv_created_at"
+                style="@style/CardNotes.TextView.CreatedAt"
+                tools:text="Created at"
+                android:text="@{model.dateCreatedString}"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/tvValue"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toLeftOf="@id/checkbox"
+                android:layout_marginTop="8dp"/>
             <com.example.cardnotes.customviews.RevealedCheckBox
                 android:id="@+id/checkbox"
                 android:layout_width="26dp"
                 android:layout_height="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintTop_toTopOf="@id/tv_created_at"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/title_separator"
-                app:layout_constraintVertical_bias="1.0"
                 android:padding="0dp"
-                android:buttonTint="@color/colorPrimary"
+                app:buttonTint="@color/colorPrimary"
                 android:checked="@={model.isSelected}"
                 android:visibility="@{model.isSelectionEnabled == true ? View.VISIBLE : View.INVISIBLE}"/>
 

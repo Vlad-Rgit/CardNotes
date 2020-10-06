@@ -1,6 +1,5 @@
 package com.example.cardnotes.adapters
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
@@ -11,7 +10,7 @@ import com.example.cardnotes.adapters.viewholders.NotesViewHolder
 import com.example.cardnotes.databinding.NoteItemBinding
 import com.example.cardnotes.databinding.NoteListItemBinding
 import com.example.cardnotes.domain.NoteDomain
-import com.example.cardnotes.fragments.ItemTouchViewHolder
+import com.example.cardnotes.interfaces.OnNoteClick
 import com.example.cardnotes.viewmodels.MainMenuViewModel
 import java.lang.IllegalStateException
 import java.util.*
@@ -56,10 +55,10 @@ class NotesAdapter(
 
         return when(layoutType) {
             LayoutType.Grid -> {
-                GridViewHolder.from(parent)
+                GridViewHolder.from(parent, lifecycleOwner)
             }
             LayoutType.List -> {
-                ListViewHolder.from(parent)
+                ListViewHolder.from(parent, lifecycleOwner)
             }
             else -> {
                 throw IllegalStateException("Illegal layout type: $layoutType")
@@ -70,6 +69,23 @@ class NotesAdapter(
     override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val note = notes[position]
         holder.performBind(note)
+
+        holder.setOnNoteClickCallback(object : OnNoteClick {
+            override fun onNoteClick(noteDomain: NoteDomain) {
+                if(isSelection) {
+                    note.isSelected.value = !(note.isSelected.value ?: true)
+                }
+                else {
+                    onNoteClickCallback?.invoke(note)
+                }
+            }
+        })
+
+        holder.setOnNoteLongClickCallback(object : OnNoteClick {
+            override fun onNoteClick(noteDomain: NoteDomain) {
+                startEdit()
+            }
+        })
     }
 
     override fun getItemCount(): Int {
@@ -132,15 +148,27 @@ class NotesAdapter(
      * Sort elements by their position
      */
     fun sortByPosition() {
+        sort { note -> note.position  }
+    }
+
+    /**
+     * Sort by creation date
+     */
+    fun sortByDate(isDescending: Boolean = false) {
+        sort(isDescending) { note -> note.createdAt }
+    }
+
+    fun <E : Comparable<E>> sort(isDescending: Boolean = false, by: (note: NoteDomain) -> E) {
 
         for (i in 0 until notes.size) {
 
-            var minPosition = Int.MAX_VALUE
+            var min = by(notes[i])
             var index = -1
 
             for(j in i until notes.size) {
-                if(notes[j].position < minPosition) {
-                    minPosition = notes[j].position
+                val v = by(notes[j])
+                if(v < min && !isDescending || v > min && isDescending) {
+                    min = v
                     index = j
                 }
             }
@@ -233,34 +261,40 @@ class NotesAdapter(
 
 
     class GridViewHolder
-        private constructor(binding: NoteItemBinding): NotesViewHolder(binding){
+        private constructor(binding: NoteItemBinding, lifecycleOwner: LifecycleOwner)
+        : NotesViewHolder(binding){
 
         companion object {
 
-            fun from(parent: ViewGroup): GridViewHolder {
+            fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): GridViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
                 val binding = NoteItemBinding.inflate(
                     inflater, parent, false)
 
-                return GridViewHolder(binding)
+                binding.lifecycleOwner = lifecycleOwner
+
+                return GridViewHolder(binding, lifecycleOwner)
             }
         }
     }
 
     class ListViewHolder
-        private constructor(binding: NoteListItemBinding): NotesViewHolder(binding) {
+        private constructor(binding: NoteListItemBinding, lifecycleOwner: LifecycleOwner)
+        : NotesViewHolder(binding) {
 
         companion object {
-            fun from(parent: ViewGroup): ListViewHolder {
+            fun from(parent: ViewGroup,lifecycleOwner: LifecycleOwner): ListViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
                 val binding = NoteListItemBinding.inflate(
                     inflater, parent, false)
 
-                return ListViewHolder(binding)
+                binding.lifecycleOwner = lifecycleOwner
+
+                return ListViewHolder(binding, lifecycleOwner)
             }
         }
     }

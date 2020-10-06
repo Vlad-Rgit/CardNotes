@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Card Notes</string>
+    <string name="select_items">Выберите заметки</string>
+    <string name="title">Название</string>
+    <string name="note">Заметка</string>
+    <string name="here_will_appear_your_notes">Здесь будут ваши заметки</string>
+    <string name="write_here_your_note">Здесь можете писать заметку</string>
+    <string name="search_by_title_or_content">Искать по названию или содержанию</string>
+    <string name="new_folder">Новая папка</string>
+    <string name="all_folders">Все папки</string>
+    <string name="create_folder">Создать папку</string>
+    <string name="cancel">Отмена</string>
+    <string name="delete">Удалить</string>
+    <string name="move_to">Переместить в</string>
+    <string name="no_folder">Без папки</string>
+    <string name="folder_with_the_same_name_already_exists">Папка с таким именем уже существует</string>
+    <string name="folder_name_must_not_be_empty">Название папки не может быть пустым</string>
+    <string name="delete_notes">Удалить заметки</string>
+    <string name="no">Нет</string>
+    <string name="yes">Да</string>
+    <string name="delete_folder">Удалить папку</string>
+    <string name="do_you_want_to_delete_folder_and_all_the_notes_in_it">Вы хотите удалить папку и все заметки в ней?</string>
+    <string name="no_notes_here">Здесь заметок нет</string>
+    <string name="list_view">Список</string>
+    <string name="grid_view">Карточки</string>
+    <string name="sort_by_creation_date">Сортировать по дате создания</string>
+    <string name="sort_by_date">Сортировать по дате</string>
+    <string name="new_first">Сначала новые</string>
+    <string name="old_first">Сначала сарые</string>
+    <string name="settings">Настройки</string>
+    <string name="language">Язык</string>
+</resources>

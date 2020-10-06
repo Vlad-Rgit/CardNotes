@@ -22,7 +22,7 @@ class GroupsPopupWindow
 
     //Callbacks
     private var groupChosenCallback:
-            ((group: GroupDomain?) -> Unit)? = null
+            ((group: GroupDomain) -> Unit)? = null
 
     private var newGroupRequestCallback:
             (() -> Unit)? = null
@@ -80,7 +80,7 @@ class GroupsPopupWindow
     }
 
     //Setter for callbacks
-    fun setGroupChosenCallback(callback: (group: GroupDomain?) -> Unit) {
+    fun setGroupChosenCallback(callback: (group: GroupDomain) -> Unit) {
         groupChosenCallback = callback
     }
 

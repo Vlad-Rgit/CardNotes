@@ -8,6 +8,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
@@ -35,6 +36,7 @@ import com.example.cardnotes.utils.hideKeyborad
 import com.example.cardnotes.viewmodels.MainMenuViewModel
 import kotlinx.android.synthetic.main.fragment_main_menu.*
 
+const val deleteFolderId = 1
 
 class MainMenuFragment: Fragment() {
 
@@ -44,7 +46,6 @@ class MainMenuFragment: Fragment() {
     private lateinit var notesAdapter: NotesAdapter
     private lateinit var bottomMenuAnimator: ObjectAnimator
 
-
     /**
      *Popup with options
      */
@@ -53,15 +54,16 @@ class MainMenuFragment: Fragment() {
         val popupMenu = PopupMenu(requireContext(), binding.btnMenu)
 
         popupMenu.inflate(R.menu.main_menu)
+
         popupMenu.setOnMenuItemClickListener {
             when(it.itemId) {
-                R.id.menu_delete_folder -> {
-                    val dialog = AlertDialog.Builder(requireContext())
+                deleteFolderId -> {
+                    AlertDialog.Builder(requireContext())
                         .setTitle(R.string.delete_folder)
-                        .setMessage(R.string
-                            .do_you_want_to_delete_folder_and_all_the_notes_in_it)
+                        .setMessage(
+                            R.string.do_you_want_to_delete_folder_and_all_the_notes_in_it)
                         .setPositiveButton(R.string.yes) {
-                                _, _ ->
+                            _, _ ->
                             viewModel.removeCurrentGroup()
                             viewModel.setAllGroups()
                         }
@@ -85,7 +87,19 @@ class MainMenuFragment: Fragment() {
                             item.setTitle(R.string.list_view)
                         }
                     }
-
+                }
+                R.id.menu_new_first -> {
+                    notesAdapter.sortByDate(isDescending = true)
+                    rvNotes.scrollToPosition(0)
+                }
+                R.id.menu_old_first -> {
+                    notesAdapter.sortByDate()
+                    rvNotes.scrollToPosition(0)
+                }
+                R.id.menu_settings -> {
+                    val action = MainMenuFragmentDirections
+                        .actionMainMenuFragmentToPreferencesFragment()
+                    findNavController().navigate(action)
                 }
             }
 
@@ -106,6 +120,19 @@ class MainMenuFragment: Fragment() {
 
         groupsPopupWindow.setGroupChosenCallback {
             dismissPopup()
+
+            if(it.groupId == -1) {
+                popupMenu.menu.removeItem(deleteFolderId)
+            }
+            else {
+                var menuItem = popupMenu.menu.findItem(deleteFolderId)
+
+                if(menuItem == null) {
+                    popupMenu.menu.add(0, deleteFolderId, 0, R.string.delete_folder)
+                }
+            }
+
+
             viewModel.currentGroup.value = it
         }
 

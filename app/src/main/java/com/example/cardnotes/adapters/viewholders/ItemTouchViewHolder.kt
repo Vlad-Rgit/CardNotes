@@ -1,4 +1,4 @@
-package com.example.cardnotes.fragments
+package com.example.cardnotes.adapters.viewholders
 
 interface ItemTouchViewHolder {
     fun downTouch()

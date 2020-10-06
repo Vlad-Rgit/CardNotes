@@ -68,15 +68,8 @@ abstract class NotesDB: RoomDatabase() {
                      end;
                 """)
 
-                initGroups(this@Companion.getInstance().groupDao)
-                initNotes(this@Companion.getInstance().noteDao)
-                showNotes(this@Companion.getInstance().noteDao)
-            }
-        }
-
-        private fun showNotes(noteDao: NoteDao) {
-            CoroutineScope(Dispatchers.IO).launch {
-
+                /**initGroups(this@Companion.getInstance().groupDao)
+                initNotes(this@Companion.getInstance().noteDao)*/
             }
         }
 

@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
 <data>
+    <import type="android.view.View"/>
     <variable
         name="model"
         type="com.example.cardnotes.domain.NoteDomain" />
@@ -10,7 +13,6 @@
 
 
 <com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -20,24 +22,60 @@
         android:padding="16dp">
 
         <TextView
+            android:id="@+id/tv_title"
+            style="@style/CardNotes.TextView.NoteTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            tools:text="Title"
+            android:text="@{model.name}"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tv_content"
+            app:layout_constraintRight_toLeftOf="@id/checkbox"
+            android:layout_marginRight="8dp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tv_content"
+            style="@style/CardNotes.TextView.NoteContent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintRight_toLeftOf="@id/checkbox"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
-            android:text="@{model.name}"/>
+            app:layout_constraintBottom_toTopOf="@id/tv_created_at"
+            android:text="@{model.value}"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="8dp"
+            tools:text="Content"
+            android:maxLines="2"
+            android:layout_marginEnd="8dp" />
 
 
         <com.example.cardnotes.customviews.RevealedCheckBox
             android:id="@+id/checkbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="26dp"
+            android:layout_height="20dp"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toTopOf="@id/tv_created_at"
+            app:buttonTint="?attr/colorPrimary"
+            android:checked="@{model.isSelected}"
+            android:visibility="@{model.isSelectionEnabled == true ? View.VISIBLE : View.INVISIBLE}"/>
+
+        <TextView
+            android:id="@+id/tv_created_at"
+            style="@style/CardNotes.TextView.CreatedAt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="8dp"
+            android:text="@{model.dateCreatedString}"
+            tools:text="Created at"
+            app:layout_constraintTop_toBottomOf="@id/tv_content"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/checkbox"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:checked="@{model.isSelected}"/>
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="8dp"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -82,7 +82,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:maxLines="1"
-                        android:text="@{viewModel.currentGroup.groupName}"
+                        android:text="@{viewModel.currentGroup.groupId == -1 ? @string/all_folders : viewModel.currentGroup.groupName}"
                         android:textAppearance="?attr/textAppearanceHeadline6"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toStartOf="@+id/btn_folder"

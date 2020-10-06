@@ -65,9 +65,16 @@ dependencies {
     implementation "androidx.room:room-ktx:$room_version"
 
     //Material design
-    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.0'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.0'
+
+    //Joda time
+    implementation 'joda-time:joda-time:2.9.9'
+
+    //Androidx preference
+    implementation "androidx.preference:preference:1.1.1"
+
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

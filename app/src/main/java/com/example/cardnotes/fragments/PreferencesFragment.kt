@@ -2,8 +2,10 @@ package com.example.cardnotes.fragments
 
 
 
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
 import com.example.cardnotes.PreferencesName
@@ -38,6 +40,11 @@ class PreferencesFragment: PreferenceFragmentCompat() {
             true
         }
 
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        Toast.makeText(requireContext(), "Config changes", Toast.LENGTH_LONG).show()
+        super.onConfigurationChanged(newConfig)
     }
 
 

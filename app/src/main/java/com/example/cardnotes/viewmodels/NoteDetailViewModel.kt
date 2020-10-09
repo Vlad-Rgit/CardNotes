@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class NoteDetailViewModel(noteId: Int): ViewModel() {
+class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
 
     private val _isEdit: Boolean
 
@@ -55,8 +55,17 @@ class NoteDetailViewModel(noteId: Int): ViewModel() {
             folderNote.value = GroupDomain(
                 groupName = context.getString(
                     R.string.no_folder
-                )
-            )
+                ))
+
+            //If new group is set
+            if(groupId != -1) {
+                viewModelScope.launch {
+                    val group = groupRepo.getById(groupId)
+                    folderNote.postValue(group)
+                    note.value!!.groupId = groupId
+                }
+            }
+
         }
         //If we edit existing note
         else {

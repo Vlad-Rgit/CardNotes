@@ -31,7 +31,7 @@ class NoteDetailFragment: Fragment() {
             .fromBundle(requireArguments())
 
         viewModel = ViewModelProvider(this,
-                NoteDetailViewModelFactory(args.noteId))
+                NoteDetailViewModelFactory(args.noteId, args.newGroupId))
             .get(NoteDetailViewModel::class.java)
     }
 

@@ -20,11 +20,13 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.example.cardnotes.NoteApp
 import com.example.cardnotes.R
 import com.example.cardnotes.adapters.NotesAdapter
 import com.example.cardnotes.databinding.FragmentMainMenuBinding
@@ -208,20 +210,18 @@ class MainMenuFragment: Fragment() {
 
     var selectedItemsString = MutableLiveData<String>()
 
-    override fun onAttach(context: Context) {
 
-        super.onAttach(context)
-
-        activity = requireActivity() as AppCompatActivity
-
-        viewModel = ViewModelProvider(this)
-            .get(MainMenuViewModel::class.java)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?): View? {
+
+
+        activity = requireActivity() as AppCompatActivity
+
+        viewModel = ViewModelProvider(this, SavedStateViewModelFactory(NoteApp.getAppInstance(), this))
+            .get(MainMenuViewModel::class.java)
 
         binding = FragmentMainMenuBinding.inflate(
             inflater, container, false
@@ -369,7 +369,8 @@ class MainMenuFragment: Fragment() {
             hideSearchKeyboard()
 
             val action = MainMenuFragmentDirections
-                .actionMainMenuFragmentToNoteDetailFragment()
+                .actionMainMenuFragmentToNoteDetailFragment(
+                    newGroupId = viewModel.currentGroup.value!!.groupId)
 
             findNavController().navigate(action)
         }

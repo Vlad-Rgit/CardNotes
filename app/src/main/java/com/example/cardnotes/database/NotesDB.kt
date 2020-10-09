@@ -68,8 +68,8 @@ abstract class NotesDB: RoomDatabase() {
                      end;
                 """)
 
-                /**initGroups(this@Companion.getInstance().groupDao)
-                initNotes(this@Companion.getInstance().noteDao)*/
+                initGroups(this@Companion.getInstance().groupDao)
+                initNotes(this@Companion.getInstance().noteDao)
             }
         }
 

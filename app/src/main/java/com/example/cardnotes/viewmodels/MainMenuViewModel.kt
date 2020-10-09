@@ -1,6 +1,7 @@
 package com.example.cardnotes.viewmodels
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cardnotes.NoteApp
@@ -14,7 +15,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainMenuViewModel: ViewModel() {
+private const val CURRENT_GROUP_KEY = "CurrentGroupKey"
+
+
+class MainMenuViewModel
+    (private val savedState: SavedStateHandle)
+    : ViewModel() {
 
     private val context = NoteApp.getAppInstance()
         .applicationContext
@@ -37,7 +43,7 @@ class MainMenuViewModel: ViewModel() {
         groupId = -1,
         groupName = context.getString(R.string.all_folders))
 
-    val currentGroup = MutableLiveData<GroupDomain>(allGroup)
+    val currentGroup = MutableLiveData<GroupDomain>()
 
     private val _selectedNotes = mutableListOf<NoteDomain>()
 
@@ -55,11 +61,18 @@ class MainMenuViewModel: ViewModel() {
     val groups = groupsRepo.groups
 
     init {
-        refreshNotes()
         refreshGroups()
+
+        val savedCurrentGroup = getSavedCurrentGroup()
+
+        if(savedCurrentGroup == null)
+            currentGroup.value = allGroup
+        else
+            currentGroup.value = savedCurrentGroup
 
         currentGroup.observeForever {
             refreshNotes()
+            saveCurrentGroup()
         }
     }
 
@@ -172,6 +185,25 @@ class MainMenuViewModel: ViewModel() {
         withContext(Dispatchers.IO) {
             groupsRepo.refreshItems()
         }
+    }
+
+
+    /**
+     * Save current group to Saved state handle
+     */
+    private fun saveCurrentGroup() {
+        savedState.set(CURRENT_GROUP_KEY, currentGroup.value!!)
+    }
+
+    /**
+     * Get saved state of current group.
+     * If saved state is not exists returns null
+     */
+    private fun getSavedCurrentGroup(): GroupDomain? {
+        return if(savedState.contains(CURRENT_GROUP_KEY))
+            savedState.get(CURRENT_GROUP_KEY)
+        else
+            null
     }
 
 

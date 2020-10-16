@@ -2,50 +2,109 @@ package com.example.cardnotes.fragments
 
 
 
-import android.content.res.Configuration
-import android.os.Build
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
-import androidx.preference.ListPreference
-import androidx.preference.PreferenceFragmentCompat
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.ImageButton
+import android.widget.Spinner
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import com.example.cardnotes.PreferencesLanguageKey
 import com.example.cardnotes.PreferencesName
 import com.example.cardnotes.R
+import com.example.cardnotes.utils.LocaleHelper
 import java.util.*
 
 
-class PreferencesFragment: PreferenceFragmentCompat() {
+class PreferencesFragment: Fragment() {
+
+    private lateinit var languageCodes: Array<String>
+    private lateinit var languageValues: Array<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        preferenceManager.sharedPreferencesName = PreferencesName
+
+        languageCodes = resources.getStringArray(
+            R.array.languages_codes)
+
+        languageValues = resources.getStringArray(
+            R.array.languages_values)
     }
 
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?): View? {
 
-        setPreferencesFromResource(R.xml.preferences, rootKey)
+        val view = inflater.inflate(
+            R.layout.preferences_fragment, container, false)
 
-        val languagesPref = findPreference<ListPreference>("languages")
 
-        languagesPref?.setOnPreferenceChangeListener { preference, newValue ->
-
-            val newLanguage = newValue as String
-
-            val config = resources.configuration
-            val displayMetrics = resources.displayMetrics
-
-            config.locale = Locale(newLanguage)
-            resources.updateConfiguration(config, displayMetrics)
-
-            true
+        val btnBack = view.findViewById<ImageButton>(R.id.btn_back)
+        btnBack.setOnClickListener {
+            findNavController().popBackStack()
         }
 
+        val adapter = ArrayAdapter(requireContext(),
+            android.R.layout.simple_spinner_item, languageValues)
+
+        adapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item)
+
+        val spinnerLanguages = view.findViewById<Spinner>(
+            R.id.spinner_language)
+
+        spinnerLanguages.adapter = adapter
+        spinnerLanguages.setSelection(getCurrentPos())
+
+        spinnerLanguages.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    if(position != getCurrentPos())
+                        changeAndSaveLocale(languageCodes[position])
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    TODO("Not yet implemented")
+                }
+
+            }
+
+        return view
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        Toast.makeText(requireContext(), "Config changes", Toast.LENGTH_LONG).show()
-        super.onConfigurationChanged(newConfig)
+
+    @SuppressLint("ApplySharedPref")
+    private fun changeAndSaveLocale(langCode: String) {
+        val preferences = requireContext()
+            .getSharedPreferences(PreferencesName, Context.MODE_PRIVATE)
+
+        preferences.edit()
+            .putString(PreferencesLanguageKey, langCode)
+            .commit()
+
+        LocaleHelper.updateAppLocale(Locale(langCode))
+        requireActivity().recreate()
     }
 
+    private fun getCurrentPos(): Int{
+        val preferences = requireContext()
+            .getSharedPreferences(PreferencesName, Context.MODE_PRIVATE)
+
+        val currentCode = preferences.getString(PreferencesLanguageKey, "")
+
+        return languageCodes.indexOf(currentCode)
+    }
 
 }

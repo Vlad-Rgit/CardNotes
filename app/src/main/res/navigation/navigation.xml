@@ -16,7 +16,11 @@
             app:popExitAnim="@anim/slide_out_right" />
         <action
             android:id="@+id/action_mainMenuFragment_to_preferencesFragment"
-            app:destination="@id/preferencesFragment" />
+            app:destination="@id/preferencesFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/fade_out"
+            app:popEnterAnim="@anim/fade_in"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -27,13 +31,6 @@
             android:name="noteId"
             app:argType="integer"
             android:defaultValue="-1" />
-        <action
-            android:id="@+id/action_noteDetailFragment_to_mainMenuFragment"
-            app:destination="@id/mainMenuFragment"
-            app:enterAnim="@anim/fade_in"
-            app:exitAnim="@anim/slide_out_right"
-            app:popUpTo="@id/noteDetailFragment"
-            app:popUpToInclusive="true" />
         <argument
             android:name="newGroupId"
             app:argType="integer"

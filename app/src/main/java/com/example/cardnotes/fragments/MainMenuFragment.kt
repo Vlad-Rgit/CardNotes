@@ -6,13 +6,10 @@ import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -20,14 +17,14 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.observe
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.example.cardnotes.NoteApp
 import com.example.cardnotes.R
+import com.example.cardnotes.activities.MainActivity
 import com.example.cardnotes.adapters.NotesAdapter
 import com.example.cardnotes.databinding.FragmentMainMenuBinding
 import com.example.cardnotes.decorators.PaddingDecorator
@@ -43,117 +40,21 @@ const val deleteFolderId = 1
 class MainMenuFragment: Fragment() {
 
     private lateinit var viewModel: MainMenuViewModel
-    private lateinit var activity: AppCompatActivity
+    private lateinit var activity: MainActivity
     private lateinit var binding: FragmentMainMenuBinding
     private lateinit var notesAdapter: NotesAdapter
     private lateinit var bottomMenuAnimator: ObjectAnimator
 
     /**
-     *Popup with options
-     */
-    private val popupMenu: PopupMenu by lazy {
-
-        val popupMenu = PopupMenu(requireContext(), binding.btnMenu)
-
-        popupMenu.inflate(R.menu.main_menu)
-
-        popupMenu.setOnMenuItemClickListener {
-            when(it.itemId) {
-                deleteFolderId -> {
-                    AlertDialog.Builder(requireContext())
-                        .setTitle(R.string.delete_folder)
-                        .setMessage(
-                            R.string.do_you_want_to_delete_folder_and_all_the_notes_in_it)
-                        .setPositiveButton(R.string.yes) {
-                            _, _ ->
-                            viewModel.removeCurrentGroup()
-                            viewModel.setAllGroups()
-                        }
-                        .setNegativeButton(R.string.no) {_, _ ->}
-                        .show()
-                }
-                R.id.menu_change_layout -> {
-                    val item = popupMenu.menu.findItem(R.id.menu_change_layout)
-                    when(notesAdapter.layoutType) {
-                        NotesAdapter.LayoutType.Grid -> {
-                            notesAdapter.layoutType = NotesAdapter.LayoutType.List
-                            rvNotes.layoutManager = LinearLayoutManager(requireContext())
-                            rvNotes.adapter = notesAdapter
-                            item.setTitle(R.string.grid_view)
-                        }
-                        NotesAdapter.LayoutType.List -> {
-                            notesAdapter.layoutType = NotesAdapter.LayoutType.Grid
-                            rvNotes.layoutManager = StaggeredGridLayoutManager(
-                                2, StaggeredGridLayoutManager.VERTICAL)
-                            rvNotes.adapter = notesAdapter
-                            item.setTitle(R.string.list_view)
-                        }
-                    }
-                }
-                R.id.menu_new_first -> {
-                    notesAdapter.sortByDate(isDescending = true)
-                    rvNotes.scrollToPosition(0)
-                }
-                R.id.menu_old_first -> {
-                    notesAdapter.sortByDate()
-                    rvNotes.scrollToPosition(0)
-                }
-                R.id.menu_settings -> {
-                    val action = MainMenuFragmentDirections
-                        .actionMainMenuFragmentToPreferencesFragment()
-                    findNavController().navigate(action)
-                }
-            }
-
-            false
-        }
-        popupMenu
-    }
-
-    /**
      * Popup for choosing group or creating
      * new group
      */
-    private val groupsPopupWindow: GroupsPopupWindow by lazy {
+    private lateinit var groupsPopupWindow: GroupsPopupWindow
 
-        //Init groups popup window
-        val groupsPopupWindow = GroupsPopupWindow(
-            requireContext(), binding.mainMenuHost)
-
-        groupsPopupWindow.setGroupChosenCallback {
-            dismissPopup()
-
-            if(it.groupId == -1) {
-                popupMenu.menu.removeItem(deleteFolderId)
-            }
-            else {
-                var menuItem = popupMenu.menu.findItem(deleteFolderId)
-
-                if(menuItem == null) {
-                    popupMenu.menu.add(0, deleteFolderId, 0, R.string.delete_folder)
-                }
-            }
-
-
-            viewModel.currentGroup.value = it
-        }
-
-        groupsPopupWindow.setNewGroupRequestCallback {
-            dismissPopup()
-
-            val dialog = AddGroupDialog(viewModel::addGroup)
-
-            dialog.show(childFragmentManager, null)
-        }
-
-        viewModel.groups.observe(viewLifecycleOwner,
-            Observer {
-            groupsPopupWindow.replaceGroups(it)
-        })
-
-
-        groupsPopupWindow
-    }
+    /**
+     * Options menu
+     */
+    private lateinit var popupMenu: PopupMenu
 
 
     /**
@@ -210,6 +111,12 @@ class MainMenuFragment: Fragment() {
 
     var selectedItemsString = MutableLiveData<String>()
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity = context as MainActivity
+        viewModel = ViewModelProvider(this)
+            .get(MainMenuViewModel::class.java)
+    }
 
 
     override fun onCreateView(
@@ -217,15 +124,8 @@ class MainMenuFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?): View? {
 
-
-        activity = requireActivity() as AppCompatActivity
-
-        viewModel = ViewModelProvider(this, SavedStateViewModelFactory(NoteApp.getAppInstance(), this))
-            .get(MainMenuViewModel::class.java)
-
         binding = FragmentMainMenuBinding.inflate(
-            inflater, container, false
-        )
+            inflater, container, false)
 
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -233,16 +133,34 @@ class MainMenuFragment: Fragment() {
         binding.ui = this
 
 
+        //Init options menu
+        popupMenu = createPopupMenu()
+
+
+        //Init bottom menu fragment
+        val bottomMenuFragment = BottomSelectionMenuFragment()
+
+        bottomMenuFragment.setOnEndSelectionCallback {
+            endSelection()
+        }
+
+        childFragmentManager.beginTransaction()
+            .replace(R.id.bottom_selection_menu_host, bottomMenuFragment)
+            .commit()
+
+
+
+        //Init group popup window
+        groupsPopupWindow = createGroupPopup()
+
         //Init select items string
         selectedItemsString.value = resources.getQuantityString(
             R.plurals.selected_items, 0, 0)
 
         //Init note adapter for recycler view
         notesAdapter = NotesAdapter(
-            viewLifecycleOwner,
-            requireContext(), R.layout.note_item)
+            requireContext(), viewModel.SelectedNotesAccessor())
 
-        notesAdapter.selectedNotesAccessor = viewModel.SelectedNotesAccessor()
 
         //If the user long presses card note
         //the selection mode is enabled
@@ -253,7 +171,7 @@ class MainMenuFragment: Fragment() {
         notesAdapter.setNoteUpdatedCallback(viewModel::updateNote)
 
         //Change select items string when user checks some note
-        notesAdapter.setNoteCheckedCallback { quantity ->
+        viewModel.selectedNotesAmount.observe(viewLifecycleOwner) { quantity ->
             if(quantity > 0)
                 selectedItemsString.value = resources
                     .getQuantityString(R.plurals.selected_items, quantity, quantity)
@@ -281,14 +199,14 @@ class MainMenuFragment: Fragment() {
             setHasFixedSize(true)
 
             layoutManager = StaggeredGridLayoutManager(
-                2, StaggeredGridLayoutManager.VERTICAL
-            )
+                2, StaggeredGridLayoutManager.VERTICAL)
 
             addItemDecoration(
                 PaddingDecorator(
                     16, 16, 16, 16
-                )
-            )
+                ))
+
+
 
             ItemTouchHelper(ItemTouchHelperCallback())
                 .attachToRecyclerView(this)
@@ -322,8 +240,10 @@ class MainMenuFragment: Fragment() {
 
         //End selection but not remove the selected notes
         binding.btnEndEdit.setOnClickListener {
-            endSelection()
-            notesAdapter.disableSelection()
+            if(notesAdapter.isSelectionMode) {
+                endSelection()
+                notesAdapter.disableSelection()
+            }
         }
 
         binding.bottomSelectionMenuHost.post {
@@ -344,21 +264,22 @@ class MainMenuFragment: Fragment() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (s.isNullOrBlank() && isSearching) {
-                    clearSearch()
-                } else {
-                    //if it is first character
-                    //show the close icon
-                    //instead of search icon
-                    if (!isSearching)
-                        startSearch()
 
-                    viewModel.searchQuery = s.toString()
-                }
             }
 
             override fun afterTextChanged(s: Editable?) {
+                if (s.isNullOrBlank() && isSearching) {
+                    clearSearch()
 
+                }
+                //if it is first character
+                //show the close icon
+                //instead of search icon
+                else if(!s.isNullOrBlank() && !isSearching) {
+                    startSearch()
+                }
+
+                viewModel.searchQuery = s.toString()
             }
 
         })
@@ -378,15 +299,15 @@ class MainMenuFragment: Fragment() {
         binding.btnFolder.setOnClickListener {
 
             if(groupsPopupWindow.isShowing) {
-                dismissPopup()
+                dismissGroupPopupWindow()
             }
             else {
                 showPopup()
             }
         }
 
-        binding.dim.setOnClickListener {
-            dismissPopup()
+        binding.overlay.setOnClickListener {
+            dismissGroupPopupWindow()
         }
 
 
@@ -394,9 +315,99 @@ class MainMenuFragment: Fragment() {
     }
 
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshGroups()
+    /**
+     * Init options menu
+     */
+    private fun createPopupMenu(): PopupMenu {
+
+        val popupMenu = PopupMenu(requireContext(), binding.btnMenu)
+
+        popupMenu.inflate(R.menu.main_menu)
+
+        popupMenu.setOnMenuItemClickListener {
+            when(it.itemId) {
+                deleteFolderId -> {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle(R.string.delete_folder)
+                        .setMessage(
+                            R.string.do_you_want_to_delete_folder_and_all_the_notes_in_it)
+                        .setPositiveButton(R.string.yes) {
+                                _, _ ->
+                            viewModel.removeCurrentGroup()
+                            viewModel.setAllGroups()
+                        }
+                        .setNegativeButton(R.string.no) {_, _ ->}
+                        .show()
+                }
+                R.id.menu_change_layout -> {
+                    val item = popupMenu.menu.findItem(R.id.menu_change_layout)
+                    when(notesAdapter.layoutType) {
+                        NotesAdapter.LayoutType.Grid -> {
+                            notesAdapter.layoutType = NotesAdapter.LayoutType.List
+                            rvNotes.layoutManager = LinearLayoutManager(requireContext())
+                            rvNotes.adapter = notesAdapter
+                            item.setTitle(R.string.grid_view)
+                        }
+                        NotesAdapter.LayoutType.List -> {
+                            notesAdapter.layoutType = NotesAdapter.LayoutType.Grid
+                            rvNotes.layoutManager = StaggeredGridLayoutManager(
+                                2, StaggeredGridLayoutManager.VERTICAL)
+                            rvNotes.adapter = notesAdapter
+                            item.setTitle(R.string.list_view)
+                        }
+                    }
+                }
+                R.id.menu_new_first -> {
+                    notesAdapter.sortByDate(isDescending = true)
+                    rvNotes.scrollToPosition(0)
+                }
+                R.id.menu_old_first -> {
+                    notesAdapter.sortByDate()
+                    rvNotes.scrollToPosition(0)
+                }
+                R.id.menu_settings -> {
+                    val action = MainMenuFragmentDirections
+                        .actionMainMenuFragmentToPreferencesFragment()
+                    findNavController().navigate(action)
+                }
+            }
+
+            false
+        }
+
+        return popupMenu
+    }
+
+    private fun createGroupPopup(): GroupsPopupWindow {
+
+        val groupsPopupWindow = GroupsPopupWindow(
+            requireContext(), binding.mainMenuHost)
+
+        groupsPopupWindow.setGroupChosenCallback {
+            dismissGroupPopupWindow()
+            viewModel.currentGroup.value = it
+            if(it.groupId == -1) {
+                popupMenu.menu.removeItem(deleteFolderId)
+            }
+            else if(popupMenu.menu.findItem(deleteFolderId) == null){
+                popupMenu.menu.add(0, deleteFolderId, 0, R.string.delete_folder)
+            }
+        }
+
+        groupsPopupWindow.setNewGroupRequestCallback {
+            dismissGroupPopupWindow()
+
+            val dialog = AddGroupDialog(viewModel::addGroup)
+
+            dialog.show(childFragmentManager, null)
+        }
+
+        viewModel.groups.observe(viewLifecycleOwner,
+            Observer {
+                groupsPopupWindow.replaceGroups(it)
+            })
+
+        return groupsPopupWindow
     }
 
     /**
@@ -424,21 +435,22 @@ class MainMenuFragment: Fragment() {
         binding.btnSelectAll.isChecked = false
         alphaSelectionHostAnimator.reverse()
         alphaGroupHostAnimator.start()
+        rvNotes.setPadding(0,0,0,0)
         bottomMenuAnimator.reverse()
     }
 
 
-    private fun showDim() {
-        binding.dim.visibility = View.VISIBLE
+    private fun showOverlay() {
+        binding.overlay.visibility = View.VISIBLE
     }
 
-    private fun hideDim() {
-        binding.dim.visibility = View.GONE
+    private fun hideOverlay() {
+        binding.overlay.visibility = View.GONE
     }
 
     private fun showPopup() {
         hideSearchKeyboard()
-        showDim()
+        showOverlay()
         groupsPopupWindow.showAsDropDown(binding.btnFolder)
     }
 
@@ -446,9 +458,9 @@ class MainMenuFragment: Fragment() {
         hideKeyborad(requireContext(), requireView().rootView)
     }
 
-    private fun dismissPopup() {
+    private fun dismissGroupPopupWindow() {
         groupsPopupWindow.dismiss()
-        hideDim()
+        hideOverlay()
     }
 
     /**
@@ -472,10 +484,18 @@ class MainMenuFragment: Fragment() {
      * in the text field and clear this text field
      */
     private fun clearSearch() {
+
+        if(!binding.edSearch.text.isNullOrBlank()) {
+            binding.edSearch.setText("")
+        }
+
         isSearching = false
-        binding.edSearch.setText("")
         binding.txtSearchLayout.endIconDrawable =
             requireContext().resources.getDrawable(R.drawable.baseline_search_black_24)
+
+        binding.txtSearchLayout.setEndIconOnClickListener {
+
+        }
     }
 
 
@@ -497,9 +517,10 @@ class MainMenuFragment: Fragment() {
                 if(binding.bottomSelectionMenuHost.translationY > 0f) {
                     binding.bottomSelectionMenuHost.visibility = View.GONE
                 }
+                else {
+                    rvNotes.setPadding(0,0,0, binding.bottomSelectionMenuHost.height)
+                }
             }
         }
     }
-
-
 }

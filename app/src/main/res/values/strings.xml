@@ -44,4 +44,15 @@
     <string name="old_first">Old first</string>
     <string name="settings">Settings</string>
     <string name="language">Language</string>
+
+
+    <plurals name="selected_items">
+        <item quantity="one">%d selected item</item>
+        <item quantity="other">%d selected items</item>
+    </plurals>
+
+    <plurals name="delete_notes">
+        <item quantity="one">Do you want to delete %d note?</item>
+        <item quantity="other">Do you want to delete %d notes?</item>
+    </plurals>
 </resources>

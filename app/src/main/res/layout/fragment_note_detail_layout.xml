@@ -37,7 +37,8 @@
             android:onClick="@{() -> viewModel.onEndEditEvent()}"
             android:src="@drawable/baseline_close_black_24"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="@id/btn_choose_folder"
+            app:layout_constraintBottom_toBottomOf="@id/btn_choose_folder"/>
 
         <TextView
             android:id="@+id/tvGroupName"
@@ -46,14 +47,15 @@
             app:layout_constrainedWidth="true"
             android:layout_gravity="center_vertical"
             android:maxLines="1"
-            android:text="@{viewModel.folderNote.groupName}"
+            android:ellipsize="end"
+            android:text="@{viewModel.folderNote == null ? @string/no_folder : viewModel.folderNote.groupName}"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             app:layout_constraintEnd_toStartOf="@+id/btn_choose_folder"
             app:layout_constraintStart_toEndOf="@+id/imageButton2"
-            app:layout_constraintTop_toTopOf="parent"
             tools:text="Folder name"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintBottom_toTopOf="@id/barrier"/>
+            app:layout_constraintTop_toTopOf="@id/btn_choose_folder"
+            app:layout_constraintBottom_toBottomOf="@id/btn_choose_folder"
+            app:layout_constraintHorizontal_chainStyle="packed"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/txt_input_title_layout"

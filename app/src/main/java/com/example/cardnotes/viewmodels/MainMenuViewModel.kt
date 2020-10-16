@@ -1,7 +1,6 @@
 package com.example.cardnotes.viewmodels
 
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cardnotes.NoteApp
@@ -19,7 +18,6 @@ private const val CURRENT_GROUP_KEY = "CurrentGroupKey"
 
 
 class MainMenuViewModel
-    (private val savedState: SavedStateHandle)
     : ViewModel() {
 
     private val context = NoteApp.getAppInstance()
@@ -27,6 +25,11 @@ class MainMenuViewModel
 
     private val notesRepo = NotesRepo()
     private val groupsRepo = GroupsRepo()
+
+    private val _selectedNotesAmount = MutableLiveData<Int>(0)
+
+    val selectedNotesAmount
+        get() = _selectedNotesAmount
 
     /**
      * String by which filtering will be performed
@@ -61,18 +64,12 @@ class MainMenuViewModel
     val groups = groupsRepo.groups
 
     init {
-        refreshGroups()
 
-        val savedCurrentGroup = getSavedCurrentGroup()
 
-        if(savedCurrentGroup == null)
-            currentGroup.value = allGroup
-        else
-            currentGroup.value = savedCurrentGroup
+        currentGroup.value = allGroup
 
         currentGroup.observeForever {
             refreshNotes()
-            saveCurrentGroup()
         }
     }
 
@@ -82,15 +79,6 @@ class MainMenuViewModel
     fun refreshNotes() {
         viewModelScope.launch {
             refreshNotesImpl()
-        }
-    }
-
-    /**
-     * Refresh notes and groups
-     */
-    fun refreshGroups() {
-        viewModelScope.launch {
-            refreshGroupsImpl()
         }
     }
 
@@ -110,6 +98,7 @@ class MainMenuViewModel
             refreshNotesImpl()
         }
     }
+
 
     /**
      * Move selected notes to group
@@ -145,7 +134,6 @@ class MainMenuViewModel
         viewModelScope.launch {
             notesRepo.removeByGroupId(group.groupId)
             groupsRepo.removeGroup(group)
-            refreshGroupsImpl()
         }
     }
 
@@ -156,7 +144,6 @@ class MainMenuViewModel
     suspend fun addGroupImpl(group: GroupDomain): Int {
         return withContext(Dispatchers.IO) {
             val id = groupsRepo.addGroup(group)
-            refreshGroupsImpl()
             id
         }
     }
@@ -177,50 +164,34 @@ class MainMenuViewModel
         }
     }
 
-    /**
-     * Implementation of refreshGroups to use
-     * within a coroutine
-     */
-    private suspend fun refreshGroupsImpl() {
-        withContext(Dispatchers.IO) {
-            groupsRepo.refreshItems()
-        }
-    }
-
-
-    /**
-     * Save current group to Saved state handle
-     */
-    private fun saveCurrentGroup() {
-        savedState.set(CURRENT_GROUP_KEY, currentGroup.value!!)
-    }
-
-    /**
-     * Get saved state of current group.
-     * If saved state is not exists returns null
-     */
-    private fun getSavedCurrentGroup(): GroupDomain? {
-        return if(savedState.contains(CURRENT_GROUP_KEY))
-            savedState.get(CURRENT_GROUP_KEY)
-        else
-            null
-    }
-
-
-    inner class SelectedNotesAccessor
-        : ListAccessor<NoteDomain> {
+    inner class SelectedNotesAccessor: ListAccessor<NoteDomain> {
 
         override fun add(item: NoteDomain) {
             _selectedNotes.add(item)
+            _selectedNotesAmount.value = _selectedNotes.size
         }
 
         override fun remove(item: NoteDomain) {
             _selectedNotes.remove(item)
+            _selectedNotesAmount.value = _selectedNotes.size
         }
 
-        override fun size(): Int {
+        override fun clear() {
+            _selectedNotes.clear()
+            _selectedNotesAmount.value = _selectedNotes.size
+        }
+
+        override fun addAll(collection: Collection<NoteDomain>) {
+            _selectedNotes.addAll(collection)
+            _selectedNotesAmount.value = _selectedNotes.size
+        }
+
+        override fun contains(item: NoteDomain): Boolean {
+            return _selectedNotes.contains(item)
+        }
+
+        override fun getSize(): Int {
             return _selectedNotes.size
         }
     }
-
 }

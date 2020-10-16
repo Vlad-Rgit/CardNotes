@@ -1,13 +1,10 @@
 package com.example.cardnotes.viewmodels
 
-import android.net.wifi.hotspot2.pps.HomeSp
-import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cardnotes.NoteApp
-import com.example.cardnotes.R
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.repos.GroupsRepo
@@ -52,10 +49,6 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
         if(noteId == -1) {
             _isEdit = false
             _note.value = NoteDomain()
-            folderNote.value = GroupDomain(
-                groupName = context.getString(
-                    R.string.no_folder
-                ))
 
             //If new group is set
             if(groupId != -1) {
@@ -64,6 +57,9 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
                     folderNote.postValue(group)
                     note.value!!.groupId = groupId
                 }
+            }
+            else {
+                folderNote.value = null
             }
 
         }
@@ -81,20 +77,13 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
                 val groupId = note.groupId
 
                 if(groupId == null) {
-                    folderNote.postValue(
-                        GroupDomain(
-                        groupName = context.getString(R.string.no_folder)
-                    ))
+                    folderNote.postValue(null)
                 }
                 else {
                     folderNote.postValue(
                         groupRepo.getById(groupId))
                 }
             }
-        }
-
-        viewModelScope.launch {
-            groupRepo.refreshItems()
         }
 
     }
@@ -134,7 +123,7 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
             note.value!!.groupId =
                 groupRepo.addGroup(groupDomain)
 
-            groupRepo.refreshItems()
+
             folderNote.postValue(groupDomain)
         }
     }

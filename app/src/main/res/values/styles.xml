@@ -10,6 +10,7 @@
         <item name="android:textColor">@color/primaryTextColor</item>
         <item name="android:textColorPrimary">@color/primaryTextColor</item>
         <item name="android:alertDialogTheme">@style/CardNotes.AlertDialog</item>
+        <item name="popupMenuStyle">@style/CardNotes.PopupMenu</item>
     </style>
 
     <style name="CardNotes.TextInputLayout"
@@ -56,6 +57,10 @@
             @style/TextAppearance.MaterialComponents.Body2
         </item>
         <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="CardNotes.PopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@drawable/popup_bg_with_shadow</item>
     </style>
 
 </resources>

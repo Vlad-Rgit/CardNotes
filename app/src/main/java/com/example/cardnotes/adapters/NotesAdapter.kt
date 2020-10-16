@@ -1,24 +1,20 @@
 package com.example.cardnotes.adapters
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
+import com.example.cardnotes.R
 import com.example.cardnotes.adapters.viewholders.NotesViewHolder
-import com.example.cardnotes.databinding.NoteItemBinding
-import com.example.cardnotes.databinding.NoteListItemBinding
 import com.example.cardnotes.domain.NoteDomain
-import com.example.cardnotes.interfaces.OnNoteClick
-import com.example.cardnotes.viewmodels.MainMenuViewModel
-import java.lang.IllegalStateException
+import com.example.cardnotes.interfaces.ListAccessor
 import java.util.*
 
 class NotesAdapter(
-    private val lifecycleOwner: LifecycleOwner,
     context: Context,
-    resourceId: Int): RecyclerView.Adapter<NotesViewHolder>() {
+    private val selectedNotes: ListAccessor<NoteDomain>)
+    : RecyclerView.Adapter<NotesViewHolder>() {
 
     enum class LayoutType {
         List,
@@ -26,6 +22,17 @@ class NotesAdapter(
     }
 
     var layoutType: LayoutType = LayoutType.Grid
+
+    private val boundViewHolders = mutableListOf<NotesViewHolder>()
+
+    private val selectedChangedListener = NoteDomain.IsSelectedChangedListener {
+        if(it.isSelected && !selectedNotes.contains(it)) {
+            selectedNotes.add(it)
+        }
+        else {
+            selectedNotes.remove(it)
+        }
+    }
 
     private var startEditCallback: Runnable? = null
 
@@ -35,63 +42,69 @@ class NotesAdapter(
     private var onNoteClickCallback
             : ((note: NoteDomain) -> Unit)? = null
 
-    private var noteCheckedCallback
-            : ((newQuantity: Int) -> Unit)? = null
-
     private val inflater = LayoutInflater.from(context)
 
     private val notes = mutableListOf<NoteDomain>()
 
-    var isSelection: Boolean = false
+    var isSelectionMode: Boolean = false
         private set
 
-    lateinit var selectedNotesAccessor
-            : MainMenuViewModel.SelectedNotesAccessor
-
-    var selectedNotesQuantity = 0
-        private set
+    init {
+        setHasStableIds(true)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
 
-        return when(layoutType) {
+        val holder = when(layoutType) {
             LayoutType.Grid -> {
-                GridViewHolder.from(parent, lifecycleOwner)
+                GridViewHolder.from(parent)
             }
             LayoutType.List -> {
-                ListViewHolder.from(parent, lifecycleOwner)
+                ListViewHolder.from(parent)
             }
             else -> {
                 throw IllegalStateException("Illegal layout type: $layoutType")
             }
         }
+
+        holder.setOnNoteClickCallback { note ->
+            if (!isSelectionMode) {
+                onNoteClickCallback?.invoke(note)
+            }
+        }
+
+        holder.setOnNoteLongClickCallback { startEdit() }
+
+        holder.setOnNoteSelectedChangedCallback {
+            if(it.isSelected)
+                selectedNotes.add(it)
+            else
+                selectedNotes.remove(it)
+        }
+
+
+
+        return holder
     }
 
     override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val note = notes[position]
-        holder.performBind(note)
+        holder.performBind(note, isSelectionMode)
+        boundViewHolders.add(holder)
+    }
 
-        holder.setOnNoteClickCallback(object : OnNoteClick {
-            override fun onNoteClick(noteDomain: NoteDomain) {
-                if(isSelection) {
-                    note.isSelected.value = !(note.isSelected.value ?: true)
-                }
-                else {
-                    onNoteClickCallback?.invoke(note)
-                }
-            }
-        })
-
-        holder.setOnNoteLongClickCallback(object : OnNoteClick {
-            override fun onNoteClick(noteDomain: NoteDomain) {
-                startEdit()
-            }
-        })
+    override fun onViewRecycled(holder: NotesViewHolder) {
+        super.onViewRecycled(holder)
+        boundViewHolders.remove(holder)
     }
 
     override fun getItemCount(): Int {
         return notes.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return notes[position].noteId.toLong()
+    }
 
     /**
      * Update underlying notes list to
@@ -104,9 +117,6 @@ class NotesAdapter(
             if(!list.contains(note)) {
                 val index = notes.indexOf(note)
                 notes.removeAt(index)
-                Log.d("LiveDataNote",
-                    "Removed observer from " + note.noteId + " id")
-                note.isSelected.removeObservers(lifecycleOwner)
                 notifyItemRemoved(index)
             }
         }
@@ -115,33 +125,17 @@ class NotesAdapter(
 
             if(!notes.contains(note)) {
                 notes.add(note)
-
-                if(isSelection)
-                    note.isSelectionEnabled.value = true
-
-                Log.d("LiveDataNote",
-                    "Added observer to " + note.noteId + " id")
-                note.isSelected.observe(lifecycleOwner, IsNoteSelectedObserver(note))
+                note.addIfNotExistsSelectedChangedListener(
+                    owner = this, listener = selectedChangedListener)
                 notifyItemInserted(notes.size)
             }
         }
-
-        for(n in notes) {
-            Log.d("DbNote", (n.groupId ?: -1).toString())
-        }
-
-        selectedNotesQuantity =
-            selectedNotesAccessor.size()
-
-        noteCheckedCallback?.invoke(selectedNotesQuantity)
     }
 
 
 
     private fun getSelectedNotesCount(): Int {
-        return notes.filter {
-            it.isSelected.value!!
-        }.size
+        return selectedNotes.getSize()
     }
 
     /**
@@ -221,28 +215,26 @@ class NotesAdapter(
     
     fun setIsSelectedForAllNotes(isSelected: Boolean) {
         for(note in notes) {
-            note.isSelected.value = isSelected
+            note.setIsSelectedAndNotify(isSelected)
         }
     }
 
-    fun setNoteCheckedCallback(callback:
-                                   (newQuantity: Int) -> Unit) {
-        noteCheckedCallback = callback
-    }
 
     /**
      * Start selection mode
      */
     fun startEdit() {
 
-        if(!isSelection) {
+        if(!isSelectionMode) {
 
-            isSelection = true
+            isSelectionMode = true
 
             startEditCallback?.run()
 
-            for (note in notes)
-                note.isSelectionEnabled.value = true
+
+            for(holder in boundViewHolders) {
+                holder.isSelectionMode = true
+            }
         }
     }
 
@@ -250,82 +242,43 @@ class NotesAdapter(
      * End selection mode
      */
     fun disableSelection() {
+        isSelectionMode = false
 
-        isSelection = false
-
-        for(note in notes) {
-            note.isSelectionEnabled.value = false
-            note.isSelected.value = false
+        for(holder in boundViewHolders) {
+            holder.isSelectionMode = false
         }
     }
 
 
     class GridViewHolder
-        private constructor(binding: NoteItemBinding, lifecycleOwner: LifecycleOwner)
-        : NotesViewHolder(binding){
+        private constructor(view: View)
+        : NotesViewHolder(view){
 
         companion object {
 
-            fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): GridViewHolder {
+            fun from(parent: ViewGroup): GridViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                val binding = NoteItemBinding.inflate(
-                    inflater, parent, false)
-
-                binding.lifecycleOwner = lifecycleOwner
-
-                return GridViewHolder(binding, lifecycleOwner)
+                return GridViewHolder(inflater.inflate(
+                    R.layout.note_item, parent, false))
             }
         }
     }
 
     class ListViewHolder
-        private constructor(binding: NoteListItemBinding, lifecycleOwner: LifecycleOwner)
-        : NotesViewHolder(binding) {
+        private constructor(view: View)
+        : NotesViewHolder(view) {
 
         companion object {
-            fun from(parent: ViewGroup,lifecycleOwner: LifecycleOwner): ListViewHolder {
+            fun from(parent: ViewGroup): ListViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                val binding = NoteListItemBinding.inflate(
-                    inflater, parent, false)
-
-                binding.lifecycleOwner = lifecycleOwner
-
-                return ListViewHolder(binding, lifecycleOwner)
+                return ListViewHolder(inflater.inflate(
+                    R.layout.note_list_item, parent, false))
             }
         }
-    }
-
-    inner class IsNoteSelectedObserver
-        (private val note: NoteDomain):
-        androidx.lifecycle.Observer<Boolean> {
-
-        private var oldIsSelected = false
-
-        override fun onChanged(isSelected: Boolean?) {
-
-            if(isSelected != null &&
-                oldIsSelected != isSelected) {
-
-                oldIsSelected = isSelected
-
-                if(isSelected) {
-                    selectedNotesQuantity++
-                    selectedNotesAccessor.add(note)
-                }
-                else {
-                    selectedNotesQuantity--
-                    selectedNotesAccessor.remove(note)
-                }
-
-                noteCheckedCallback?.invoke(selectedNotesQuantity)
-            }
-        }
-
-
     }
 
 }

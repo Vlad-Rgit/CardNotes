@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <Transition
+        motion:constraintSetStart="@id/startScrolling"
+        motion:constraintSetEnd="@id/endScrolling"
+        motion:duration="50">
+        <OnSwipe
+            motion:onTouchUp="autoCompleteToEnd"
+            motion:touchAnchorId="@+id/rvNotes"
+            motion:dragDirection="dragUp"/>
+    </Transition>
+
+    <ConstraintSet android:id="@+id/startScrolling">
+        <Constraint
+            android:id="@+id/txt_search_layout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            motion:layout_constraintLeft_toLeftOf="parent"
+            motion:layout_constraintRight_toRightOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/top_host" />
+        <Constraint
+            android:id="@+id/top_host">
+            <CustomAttribute motion:attributeName="elevation"
+                motion:customFloatValue="0"/>
+        </Constraint>
+        <Constraint
+            android:id="@+id/rvNotes"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            motion:layout_constraintTop_toBottomOf="@id/txt_search_layout"
+            motion:layout_constraintBottom_toBottomOf="parent"/>
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/endScrolling">
+        <Constraint
+            android:id="@+id/txt_search_layout"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="0dp"
+            motion:layout_constraintLeft_toLeftOf="parent"
+            motion:layout_constraintRight_toRightOf="parent"
+            motion:layout_constraintTop_toBottomOf="@id/top_host" />
+        <Constraint
+            android:id="@+id/top_host">
+            <CustomAttribute motion:attributeName="elevation"
+                motion:customFloatValue="6"/>
+        </Constraint>
+        <Constraint
+            android:id="@+id/rvNotes"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="0dp"
+            motion:layout_constraintTop_toBottomOf="@id/txt_search_layout"
+            motion:layout_constraintBottom_toBottomOf="parent">
+
+        </Constraint>
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/bottomMenuExpanded">
+        <Constraint
+            android:layout_width="match_parent"
+            android:layout_height="500dp"
+            motion:layout_constraintBottom_toBottomOf="parent"/>
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/bottomMenuCollapsed">
+        <Constraint
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            motion:layout_constraintBottom_toBottomOf="parent"/>
+    </ConstraintSet>
+
+</MotionScene>

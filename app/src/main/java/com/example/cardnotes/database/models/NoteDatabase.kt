@@ -1,6 +1,5 @@
 package com.example.cardnotes.database.models
 
-import androidx.lifecycle.MutableLiveData
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
@@ -30,8 +29,8 @@ data class NoteDatabase(
             noteId = this.noteId,
             groupId = this.groupId,
             position = this.position,
-            name = MutableLiveData(this.title),
-            value = MutableLiveData(this.value),
+            name = this.title,
+            value = this.value,
             createdAt = Timestamp(createdAt))
     }
 }

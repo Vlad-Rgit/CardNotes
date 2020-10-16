@@ -1,10 +1,10 @@
 package com.example.cardnotes.dialog
 
 import android.content.Context
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.PopupWindow
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.cardnotes.R
 import com.example.cardnotes.adapters.GroupsAdapter
@@ -28,6 +28,7 @@ class GroupsPopupWindow
             (() -> Unit)? = null
 
     init {
+
 
 
 
@@ -59,18 +60,12 @@ class GroupsPopupWindow
             adapter = groupsAdapter
         }
 
-        //Elevation property requires
-        //21 min skd version
-        if(Build.VERSION.SDK_INT >= 21) {
-            elevation = 8f
-            setBackgroundDrawable(
-                context.getDrawable(R.drawable.popup_bg))
-        }
-        else {
-            setBackgroundDrawable(context.resources
-                .getDrawable(R.drawable.popup_bg_with_shadow))
-        }
+        val background = ContextCompat.getDrawable(context,
+            R.drawable.popup_bg_with_shadow)
 
+        isOutsideTouchable = true
+
+        setBackgroundDrawable(background)
 
         contentView = binding.root
     }

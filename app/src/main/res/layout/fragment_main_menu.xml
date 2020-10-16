@@ -18,21 +18,24 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.constraintlayout.motion.widget.MotionLayout
             android:id="@+id/main_menu_host"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:padding="16dp"
-            android:paddingBottom="0dp">
+            app:layoutDescription="@xml/main_fragment_scene">
 
             <FrameLayout
                 android:id="@+id/top_host"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:paddingTop="8dp"
+                android:paddingEnd="@dimen/side_padding"
+                android:paddingStart="@dimen/side_padding"
+                android:background="@android:color/white"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <RelativeLayout
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/selection_host"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -43,8 +46,7 @@
                         android:id="@+id/btn_end_edit"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentLeft="true"
-                        android:layout_marginRight="16dp"
+                        app:layout_constraintLeft_toLeftOf="parent"
                         app:backgroundTint="@android:color/white"
                         android:src="@drawable/baseline_close_24"
                         android:layout_alignParentStart="true"
@@ -55,8 +57,10 @@
                         android:id="@+id/tvSelectItems"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_centerHorizontal="true"
-                        android:layout_centerVertical="true"
+                        app:layout_constraintTop_toTopOf="@id/btn_end_edit"
+                        app:layout_constraintBottom_toBottomOf="@id/btn_end_edit"
+                        app:layout_constraintLeft_toLeftOf="@id/btn_end_edit"
+                        app:layout_constraintRight_toRightOf="@id/btn_select_all"
                         android:text="@{ui.selectedItemsString}"
                         android:textAppearance="?attr/textAppearanceHeadline6"/>
 
@@ -64,13 +68,14 @@
                         android:id="@+id/btn_select_all"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignParentRight="true"
-                        android:layout_centerVertical="true"
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/btn_end_edit"
+                        app:layout_constraintBottom_toBottomOf="@id/btn_end_edit"
                         android:src="@drawable/select_all"
                         app:backgroundTint="@android:color/white"/>
 
 
-                </RelativeLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/group_host"
@@ -124,12 +129,13 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:hint="@string/search_by_title_or_content"
-                app:endIconDrawable="@drawable/baseline_search_black_24"
-                app:endIconMode="custom"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/top_host">
+                android:paddingStart="@dimen/side_padding"
+                android:paddingEnd="@dimen/side_padding"
+                android:hint="@string/search_by_title_or_content"
+                app:endIconDrawable="@drawable/baseline_search_black_24"
+                app:endIconMode="custom">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/ed_search"
@@ -149,39 +155,24 @@
                 android:layout_height="wrap_content"
                 android:text="@string/no_notes_here"
                 android:textAppearance="?attr/textAppearanceHeadline6"
-                android:visibility="@{viewModel.notes.size() == 0 ? View.VISIBLE : View.GONE}"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/txt_search_layout"
-                app:layout_constraintBottom_toBottomOf="parent">
+
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvNotes"
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
+                    app:layout_constrainedHeight="true"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:layout_weight="5"/>
-
-                <FrameLayout
-                    android:id="@+id/bottom_selection_menu_host"
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1">
-                    <fragment
-                        android:name="com.example.cardnotes.fragments.BottomSelectionMenuFragment"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="invisible"/>
-                </FrameLayout>
-
-            </LinearLayout>
+                    android:background="@android:color/white"
+                    app:layout_constraintTop_toBottomOf="@id/txt_search_layout"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:paddingStart="@dimen/side_padding"
+                    android:paddingEnd="@dimen/side_padding" />
 
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -198,17 +189,24 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.96" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.motion.widget.MotionLayout>
 
+
+
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/bottom_selection_menu_host"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"/>
 
 
         <View
-            android:id="@+id/dim"
+            android:id="@+id/overlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/frame_bg"
-            android:visibility="gone"
-            android:alpha="0.3"/>
+            android:background="@android:color/transparent"
+            android:visibility="gone" />
 
     </FrameLayout>
 

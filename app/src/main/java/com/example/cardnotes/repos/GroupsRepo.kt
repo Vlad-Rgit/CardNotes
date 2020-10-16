@@ -1,8 +1,7 @@
 package com.example.cardnotes.repos
 
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import com.example.cardnotes.NoteApp
+import androidx.lifecycle.Transformations
 import com.example.cardnotes.database.NotesDB
 import com.example.cardnotes.domain.GroupDomain
 import kotlinx.coroutines.Dispatchers
@@ -12,10 +11,10 @@ class GroupsRepo {
 
     private val database = NotesDB.getInstance()
 
-    private val _groups = MutableLiveData<List<GroupDomain>>()
-
-    val groups: LiveData<List<GroupDomain>>
-        get() = _groups
+    val groups: LiveData<List<GroupDomain>> = 
+        Transformations.map(database.groupDao.getAll()) {
+        it.map { it.asDomain() }
+    }
 
 
     suspend fun getById(groupId: Int): GroupDomain {
@@ -25,15 +24,6 @@ class GroupsRepo {
         }
     }
 
-    suspend fun refreshItems() {
-        withContext(Dispatchers.IO) {
-           _groups.postValue(
-               database.groupDao.getAll()
-                   .map {
-                       it.asDomain()
-                   })
-        }
-    }
 
     suspend fun removeGroup(group: GroupDomain) {
         withContext(Dispatchers.IO) {

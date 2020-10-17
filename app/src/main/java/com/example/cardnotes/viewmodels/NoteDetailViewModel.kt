@@ -4,14 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.cardnotes.NoteApp
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.repos.GroupsRepo
 import com.example.cardnotes.repos.NotesRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
 
@@ -20,8 +18,6 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
     private val notesRepo = NotesRepo()
     private val groupRepo = GroupsRepo()
 
-    private val context = NoteApp.getAppInstance()
-        .applicationContext
 
     /***
      * Note for editing
@@ -131,13 +127,6 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
     fun setGroup(groupDomain: GroupDomain) {
         note.value!!.groupId = groupDomain.groupId
         folderNote.value = groupDomain
-    }
-
-
-    suspend fun isGroupExist(groupName: String): Boolean {
-        return withContext(Dispatchers.IO) {
-            groupRepo.isExist(groupName)
-        }
     }
 
 

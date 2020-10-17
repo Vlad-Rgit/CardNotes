@@ -39,11 +39,17 @@ abstract class NotesViewHolder
 
     protected var note: NoteDomain? = null
 
+    protected val onNoteIsSelectedChangedCallback = NoteDomain.OnIsSelectedChangedListener {
+        if (it.isSelected != cbIsSelected.isChecked) {
+            cbIsSelected.isChecked = it.isSelected
+        }
+    }
+
+
     init {
 
         cardHost.setOnClickListener {
             note?.let {
-                cbIsSelected.isChecked = !it.isSelected
                 onNoteClick?.onNoteClick(it)
             }
         }
@@ -57,15 +63,16 @@ abstract class NotesViewHolder
 
         cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
             note?.let {
-                if(it.isSelected != isChecked)
-                    it.setIsSelectedAndNotify(isChecked, cbIsSelected)
+                if(it.isSelected != isChecked) {
+                    it.isSelected = isChecked
+                }
             }
         }
     }
 
     fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
-        note?.removeSelectedChangedListener(cbIsSelected)
+        note?.removeIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
 
         note = model
 
@@ -80,10 +87,9 @@ abstract class NotesViewHolder
         tvNoteValue.text = model.value
         tvCreatedAt.text = model.dateCreatedString
         cbIsSelected.isChecked = model.isSelected
+        cardHost.transitionName = model.noteId.toString()
 
-        model.addIfNotExistsSelectedChangedListener(cbIsSelected) {
-            cbIsSelected.isChecked = it.isSelected
-        }
+        model.addOnIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
 
         this.isSelectionMode = isSelectionMode
     }
@@ -107,11 +113,6 @@ abstract class NotesViewHolder
     private fun disableSelectionMode() {
         cbIsSelected.visibility = View.GONE
         cbIsSelected.isChecked = false
-    }
-
-
-    fun setIsSelected(isSelected: Boolean) {
-        cbIsSelected.isChecked = isSelected
     }
 
     override fun downTouch() {

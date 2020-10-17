@@ -1,7 +1,9 @@
 package com.example.cardnotes.database
 
 import android.util.Log
-import androidx.room.*
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.cardnotes.NoteApp
 import com.example.cardnotes.database.dao.GroupDao
@@ -11,7 +13,6 @@ import com.example.cardnotes.database.models.NoteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.security.acl.Group
 
 @Database(
     entities =
@@ -57,7 +58,6 @@ abstract class NotesDB: RoomDatabase() {
          */
         private val roomCallback = object : RoomDatabase.Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {
-                Log.d("RoomCallback", "Creating trigger")
                 db.execSQL("""
                     Create trigger if not exists TR_notes_AfterInsert
                     after insert on notes 
@@ -67,9 +67,6 @@ abstract class NotesDB: RoomDatabase() {
                         Where noteId = new.noteId;
                      end;
                 """)
-
-                initGroups(this@Companion.getInstance().groupDao)
-                initNotes(this@Companion.getInstance().noteDao)
             }
         }
 

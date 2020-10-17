@@ -18,6 +18,7 @@ import com.example.cardnotes.PreferencesLanguageKey
 import com.example.cardnotes.PreferencesName
 import com.example.cardnotes.R
 import com.example.cardnotes.utils.LocaleHelper
+import com.google.android.material.transition.MaterialFadeThrough
 import java.util.*
 
 
@@ -34,6 +35,8 @@ class PreferencesFragment: Fragment() {
 
         languageValues = resources.getStringArray(
             R.array.languages_values)
+
+        enterTransition = MaterialFadeThrough()
     }
 
 

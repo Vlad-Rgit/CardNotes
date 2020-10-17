@@ -1,10 +1,14 @@
 <resources>
 
-    <string name="app_name">Card Notes</string>
+    <string name="app_name" translatable="false">Card Notes</string>
+
+    <string name="note_detail_transition_name" translatable="false">
+        note_detail_transition_name
+    </string>
+
+
     <string name="select_items">Select items</string>
     <string name="title">Title</string>
-    <string name="note">Note</string>
-    <string name="here_will_appear_your_notes">Here will appear your notes!</string>
     <string name="write_here_your_note">Write here your note</string>
     <string name="search_by_title_or_content">Search by title or content</string>
     <string name="new_folder">New folder</string>
@@ -38,7 +42,6 @@
 
     <string name="list_view">List view</string>
     <string name="grid_view">Grid view</string>
-    <string name="sort_by_creation_date">Sort by creation date</string>
     <string name="sort_by_date">Sort by date</string>
     <string name="new_first">New first</string>
     <string name="old_first">Old first</string>

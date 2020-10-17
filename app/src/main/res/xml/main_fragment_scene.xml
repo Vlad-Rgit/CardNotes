@@ -28,11 +28,22 @@
         </Constraint>
         <Constraint
             android:id="@+id/rvNotes"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
             android:layout_marginTop="16dp"
+            android:layout_marginRight="@dimen/side_padding"
+            android:layout_marginLeft="@dimen/side_padding"
+            motion:layout_constraintLeft_toLeftOf="parent"
+            motion:layout_constraintRight_toRightOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/txt_search_layout"
             motion:layout_constraintBottom_toBottomOf="parent"/>
+
+        <Constraint
+            android:id="@+id/tvNoNotes">
+            <PropertySet
+                motion:visibilityMode="ignore"
+                motion:applyMotionScene="false">
+            </PropertySet>
+        </Constraint>
+
     </ConstraintSet>
 
     <ConstraintSet android:id="@+id/endScrolling">
@@ -51,27 +62,23 @@
         </Constraint>
         <Constraint
             android:id="@+id/rvNotes"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
             android:layout_marginTop="0dp"
+            android:layout_marginRight="@dimen/side_padding"
+            android:layout_marginLeft="@dimen/side_padding"
+            motion:layout_constraintLeft_toLeftOf="parent"
+            motion:layout_constraintRight_toRightOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/txt_search_layout"
             motion:layout_constraintBottom_toBottomOf="parent">
+        </Constraint>
+
+        <Constraint
+            android:id="@+id/tvNoNotes"
+            motion:deriveConstraintsFrom="@id/startScrolling">
 
         </Constraint>
+
+
     </ConstraintSet>
 
-    <ConstraintSet android:id="@+id/bottomMenuExpanded">
-        <Constraint
-            android:layout_width="match_parent"
-            android:layout_height="500dp"
-            motion:layout_constraintBottom_toBottomOf="parent"/>
-    </ConstraintSet>
-
-    <ConstraintSet android:id="@+id/bottomMenuCollapsed">
-        <Constraint
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            motion:layout_constraintBottom_toBottomOf="parent"/>
-    </ConstraintSet>
 
 </MotionScene>

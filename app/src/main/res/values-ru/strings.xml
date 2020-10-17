@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">Card Notes</string>
     <string name="select_items">Выберите заметки</string>
     <string name="title">Название</string>
-    <string name="note">Заметка</string>
-    <string name="here_will_appear_your_notes">Здесь будут ваши заметки</string>
     <string name="write_here_your_note">Здесь можете писать заметку</string>
     <string name="search_by_title_or_content">Искать по названию или содержанию</string>
     <string name="new_folder">Новая папка</string>
@@ -24,24 +22,26 @@
     <string name="no_notes_here">Здесь заметок нет</string>
     <string name="list_view">Список</string>
     <string name="grid_view">Карточки</string>
-    <string name="sort_by_creation_date">Сортировать по дате создания</string>
     <string name="sort_by_date">Сортировать по дате</string>
     <string name="new_first">Сначала новые</string>
-    <string name="old_first">Сначала сарые</string>
+    <string name="old_first">Сначала старые</string>
     <string name="settings">Настройки</string>
     <string name="language">Язык</string>
+
 
 
     <plurals name="selected_items">
         <item quantity="one">%d выбранная заметка</item>
         <item quantity="few">%d выбранные заметки</item>
         <item quantity="many">%d выбранных заметок</item>
-        <item quantity="other">%d selected items</item>
+        <item quantity="other">%d выбранных заметок</item>
     </plurals>
 
-    <plurals name="delete_notes" tools:ignore="MissingQuantity">
-        <item quantity="one">Do you want to delete %d note?</item>
-        <item quantity="other">Do you want to delete %d notes?</item>
+    <plurals name="delete_notes">
+        <item quantity="one">Вы хотите удалить %d заметку?</item>
+        <item quantity="few">Вы хотите удалить %d заметки?</item>
+        <item quantity="many">Вы хотите удалить %d заметок?</item>
+        <item quantity="other">Вы хотите удалить %d заметок?</item>
     </plurals>
 
 </resources>

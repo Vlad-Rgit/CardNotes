@@ -17,7 +17,6 @@ class NotesRepo {
     val notes: LiveData<List<NoteDomain>>
         get() = _notes
 
-
     suspend fun getById(noteId: Int): NoteDomain {
         return withContext(Dispatchers.IO) {
             return@withContext database.noteDao

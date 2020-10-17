@@ -14,7 +14,7 @@ import java.util.*
 class NotesAdapter(
     context: Context,
     private val selectedNotes: ListAccessor<NoteDomain>)
-    : RecyclerView.Adapter<NotesViewHolder>() {
+    : RecyclerView.Adapter<NotesViewHolder>(){
 
     enum class LayoutType {
         List,
@@ -25,8 +25,8 @@ class NotesAdapter(
 
     private val boundViewHolders = mutableListOf<NotesViewHolder>()
 
-    private val selectedChangedListener = NoteDomain.IsSelectedChangedListener {
-        if(it.isSelected && !selectedNotes.contains(it)) {
+    private val selectedChangedListener = NoteDomain.OnIsSelectedChangedListener {
+        if(it.isSelected) {
             selectedNotes.add(it)
         }
         else {
@@ -34,15 +34,14 @@ class NotesAdapter(
         }
     }
 
+
     private var startEditCallback: Runnable? = null
 
     private var noteUpdatedCallback
             : ((note: NoteDomain) -> Unit)? = null
 
     private var onNoteClickCallback
-            : ((note: NoteDomain) -> Unit)? = null
-
-    private val inflater = LayoutInflater.from(context)
+            : ((note: NoteDomain, root: View) -> Unit)? = null
 
     private val notes = mutableListOf<NoteDomain>()
 
@@ -62,14 +61,14 @@ class NotesAdapter(
             LayoutType.List -> {
                 ListViewHolder.from(parent)
             }
-            else -> {
-                throw IllegalStateException("Illegal layout type: $layoutType")
-            }
         }
 
         holder.setOnNoteClickCallback { note ->
-            if (!isSelectionMode) {
-                onNoteClickCallback?.invoke(note)
+            if (isSelectionMode) {
+                note.isSelected = !note.isSelected
+            }
+            else {
+                onNoteClickCallback?.invoke(note, holder.itemView)
             }
         }
 
@@ -106,6 +105,12 @@ class NotesAdapter(
         return notes[position].noteId.toLong()
     }
 
+
+    fun detachListeners() {
+        for(note in notes)
+            note.removeIsSelectedChangedListener(selectedChangedListener)
+    }
+
     /**
      * Update underlying notes list to
      * contain only the notes within the
@@ -125,8 +130,7 @@ class NotesAdapter(
 
             if(!notes.contains(note)) {
                 notes.add(note)
-                note.addIfNotExistsSelectedChangedListener(
-                    owner = this, listener = selectedChangedListener)
+                note.addOnIsSelectedChangedListener(selectedChangedListener)
                 notifyItemInserted(notes.size)
             }
         }
@@ -209,13 +213,14 @@ class NotesAdapter(
     }
 
     fun setOnNoteClickCallback(
-        callback: (note: NoteDomain) -> Unit) {
+        callback: (note: NoteDomain, root: View) -> Unit) {
         onNoteClickCallback = callback
     }
     
     fun setIsSelectedForAllNotes(isSelected: Boolean) {
         for(note in notes) {
-            note.setIsSelectedAndNotify(isSelected)
+            if(note.isSelected != isSelected)
+                note.isSelected = isSelected
         }
     }
 

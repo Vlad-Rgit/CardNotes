@@ -21,14 +21,19 @@ data class NoteDomain(
     : SortedItem<NoteDomain> {
 
 
-    fun interface IsSelectedChangedListener {
-        fun onSelectedChanged(note: NoteDomain)
+    fun interface OnIsSelectedChangedListener {
+        fun onIsSelectedChanged(note: NoteDomain)
     }
 
-    var isSelected: Boolean = false
-        private set
+    var isSelected = false
+        set(value) {
+            field = value
+            for(listener in onIsSelectedChangedListeners)
+                listener.onIsSelectedChanged(this)
+        }
 
-    private var isSelectedChangedListeners = mutableMapOf<Any, IsSelectedChangedListener>()
+    private val onIsSelectedChangedListeners = mutableSetOf<OnIsSelectedChangedListener>()
+
 
     val dateCreatedString: String
      get() {
@@ -61,25 +66,6 @@ data class NoteDomain(
          return formatter.format(createdAt)
      }
 
-    fun addIfNotExistsSelectedChangedListener(owner: Any, listener: IsSelectedChangedListener) {
-        if(!isSelectedChangedListeners.containsKey(owner))
-            isSelectedChangedListeners[owner] = listener
-    }
-
-    fun removeSelectedChangedListener(owner: Any) {
-        isSelectedChangedListeners.remove(owner)
-    }
-
-
-    fun setIsSelectedAndNotify(isSelected: Boolean, vararg excepts: Any) {
-        this.isSelected = isSelected
-        for(owner in isSelectedChangedListeners.keys) {
-            if(!excepts.contains(owner)) {
-                isSelectedChangedListeners[owner]?.onSelectedChanged(this)
-            }
-        }
-    }
-
     fun asDatabase(): NoteDatabase {
         return NoteDatabase(
             noteId = this.noteId,
@@ -88,6 +74,14 @@ data class NoteDomain(
             position = position,
             value = this.value,
             createdAt = this.createdAt.time)
+    }
+
+    fun addOnIsSelectedChangedListener(listener: OnIsSelectedChangedListener) {
+        onIsSelectedChangedListeners.add(listener)
+    }
+
+    fun removeIsSelectedChangedListener(listener: OnIsSelectedChangedListener) {
+        onIsSelectedChangedListeners.remove(listener)
     }
 
 
@@ -109,6 +103,8 @@ data class NoteDomain(
             ?: throw IllegalArgumentException()
 
         return this.noteId == otherNote.noteId
+                && this.name == otherNote.name
+                && this.value == otherNote.value
     }
 
 

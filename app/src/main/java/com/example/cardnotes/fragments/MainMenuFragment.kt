@@ -1,28 +1,33 @@
 package com.example.cardnotes.fragments
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.transition.ChangeBounds
+import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import com.example.cardnotes.R
 import com.example.cardnotes.activities.MainActivity
 import com.example.cardnotes.adapters.NotesAdapter
@@ -33,9 +38,15 @@ import com.example.cardnotes.dialog.GroupsPopupWindow
 import com.example.cardnotes.utils.ItemTouchHelperCallback
 import com.example.cardnotes.utils.hideKeyborad
 import com.example.cardnotes.viewmodels.MainMenuViewModel
+import com.google.android.material.transition.MaterialElevationScale
+import com.google.android.material.transition.MaterialFade
+import com.google.android.material.transition.MaterialFadeThrough
+import com.google.android.material.transition.MaterialSharedAxis
 import kotlinx.android.synthetic.main.fragment_main_menu.*
 
-const val deleteFolderId = 1
+private const val deleteFolderId = 1
+private const val KEY_LAYOUT_TYPE = "KeyLayoutType"
+private const val KEY_SCROLL_POSITION = "KeyScrollPosition"
 
 class MainMenuFragment: Fragment() {
 
@@ -43,7 +54,8 @@ class MainMenuFragment: Fragment() {
     private lateinit var activity: MainActivity
     private lateinit var binding: FragmentMainMenuBinding
     private lateinit var notesAdapter: NotesAdapter
-    private lateinit var bottomMenuAnimator: ObjectAnimator
+
+    private var rvNotesLastPosition = 0
 
     /**
      * Popup for choosing group or creating
@@ -56,58 +68,11 @@ class MainMenuFragment: Fragment() {
      */
     private lateinit var popupMenu: PopupMenu
 
-
     /**
      * If user is typing in search field
      */
     private var isSearching = false
 
-
-    /**
-     * Alpha animation for selection host at the top of
-     * the screen
-     */
-    private val alphaSelectionHostAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-
-        addUpdateListener {
-            val animatedValue = it.animatedValue as Float
-            binding.selectionHost.alpha = animatedValue
-        }
-
-        doOnStart {
-            binding.selectionHost.visibility = View.VISIBLE
-        }
-
-        doOnEnd {
-            if(binding.selectionHost.alpha == 0f) {
-                binding.selectionHost.visibility = View.GONE
-            }
-        }
-    }
-
-    /**
-     * Alpha animation for group host at the top of
-     * the screen
-     */
-    private val alphaGroupHostAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-        addUpdateListener {
-            val animatedValue = it.animatedValue as Float
-            binding.groupHost.alpha = animatedValue
-            binding.btnAddNote.alpha = animatedValue
-        }
-
-        doOnStart {
-            binding.groupHost.visibility = View.VISIBLE
-            binding.btnAddNote.visibility = View.VISIBLE
-        }
-
-        doOnEnd {
-            if(binding.groupHost.alpha == 0f) {
-                binding.groupHost.visibility = View.GONE
-                binding.btnAddNote.visibility = View.GONE
-            }
-        }
-    }
 
     var selectedItemsString = MutableLiveData<String>()
 
@@ -119,23 +84,78 @@ class MainMenuFragment: Fragment() {
     }
 
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+            //Init note adapter for recycler view
+            notesAdapter = NotesAdapter(
+                requireContext(), viewModel.selectedNotesAccessor)
+
+            savedInstanceState?.let {
+                notesAdapter.layoutType = NotesAdapter.LayoutType
+                    .valueOf(it.getString(KEY_LAYOUT_TYPE)!!)
+            }
+
+            //If the user long presses card note
+            //the selection mode is enabled
+            notesAdapter.setStartSelectionListener(::startSelection)
+
+            //If the user changes the position of the note
+            //we must reflect this changes in the database
+            notesAdapter.setNoteUpdatedCallback(viewModel::updateNote)
+
+            //Navigate to NoteDetailsFragment
+            //for editing clicked note
+            notesAdapter.setOnNoteClickCallback { note, root ->
+
+                hideSearchKeyboard()
+
+                exitTransition = MaterialElevationScale(false).apply {
+                    duration = resources.getInteger(
+                        R.integer.transition_animation
+                    ).toLong()
+                }
+
+                reenterTransition = MaterialElevationScale(true).apply {
+                    duration = resources.getInteger(
+                        R.integer.transition_animation
+                    ).toLong()
+                }
+
+                val extras = FragmentNavigatorExtras(
+                    root to resources.getString(R.string.note_detail_transition_name)
+                )
+
+                val action = MainMenuFragmentDirections
+                    .actionMainMenuFragmentToNoteDetailFragment(note.noteId)
+
+                findNavController().navigate(action, extras)
+            }
+
+        //Init select items string
+        selectedItemsString.value = resources.getQuantityString(
+            R.plurals.selected_items, 0, 0)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?): View? {
 
+        postponeEnterTransition()
+
+
         binding = FragmentMainMenuBinding.inflate(
-            inflater, container, false)
+            inflater, container, false
+        )
 
         binding.lifecycleOwner = viewLifecycleOwner
 
         binding.viewModel = viewModel
         binding.ui = this
 
-
         //Init options menu
         popupMenu = createPopupMenu()
-
 
         //Init bottom menu fragment
         val bottomMenuFragment = BottomSelectionMenuFragment()
@@ -149,69 +169,38 @@ class MainMenuFragment: Fragment() {
             .commit()
 
 
-
         //Init group popup window
         groupsPopupWindow = createGroupPopup()
-
-        //Init select items string
-        selectedItemsString.value = resources.getQuantityString(
-            R.plurals.selected_items, 0, 0)
-
-        //Init note adapter for recycler view
-        notesAdapter = NotesAdapter(
-            requireContext(), viewModel.SelectedNotesAccessor())
-
-
-        //If the user long presses card note
-        //the selection mode is enabled
-        notesAdapter.setStartSelectionListener(::startSelection)
-
-        //If the user changes the position of the note
-        //we must reflect this changes in the database
-        notesAdapter.setNoteUpdatedCallback(viewModel::updateNote)
-
-        //Change select items string when user checks some note
-        viewModel.selectedNotesAmount.observe(viewLifecycleOwner) { quantity ->
-            if(quantity > 0)
-                selectedItemsString.value = resources
-                    .getQuantityString(R.plurals.selected_items, quantity, quantity)
-            else
-                selectedItemsString.value = resources
-                    .getString(R.string.select_items)
-        }
-
-        //Navigate to NoteDetailsFragment
-        //for editing clicked note
-        notesAdapter.setOnNoteClickCallback {
-
-            hideSearchKeyboard()
-
-            val action = MainMenuFragmentDirections
-                .actionMainMenuFragmentToNoteDetailFragment(it.noteId)
-
-            findNavController().navigate(action)
-        }
-
 
         //Init notes recycler view
         binding.rvNotes.apply {
 
-            setHasFixedSize(true)
-
-            layoutManager = StaggeredGridLayoutManager(
-                2, StaggeredGridLayoutManager.VERTICAL)
+            setHasFixedSize(false)
 
             addItemDecoration(
                 PaddingDecorator(
                     16, 16, 16, 16
-                ))
-
-
+                )
+            )
 
             ItemTouchHelper(ItemTouchHelperCallback())
                 .attachToRecyclerView(this)
 
-            adapter = notesAdapter
+            applyLayoutType(notesAdapter.layoutType)
+
+            doOnPreDraw {
+                startPostponedEnterTransition()
+            }
+
+            savedInstanceState?.let {
+                rvNotesLastPosition = it.getInt(KEY_SCROLL_POSITION)
+                this.scrollToPosition(rvNotesLastPosition)
+            }
+
+            if(rvNotesLastPosition > 0) {
+                binding.mainMenuHost.transitionToEnd()
+            }
+
         }
 
 
@@ -222,14 +211,26 @@ class MainMenuFragment: Fragment() {
             notesAdapter.sortByPosition()
         }
 
+        //Change select items string when user checks some note
+        viewModel.selectedNotesAmount.observe(viewLifecycleOwner) { quantity ->
+            if (quantity > 0)
+                selectedItemsString.value = resources
+                    .getQuantityString(R.plurals.selected_items, quantity, quantity)
+            else
+                selectedItemsString.value = resources
+                    .getString(R.string.select_items)
+        }
+
 
         binding.btnSelectAll.apply {
 
             toggledColor = ContextCompat.getColor(
-                requireContext(), R.color.colorAccent)
+                requireContext(), R.color.colorAccent
+            )
 
             normalColor = ContextCompat.getColor(
-                requireContext(), R.color.primaryTextColor)
+                requireContext(), R.color.primaryTextColor
+            )
 
             setOnClickListener {
                 notesAdapter.setIsSelectedForAllNotes(isChecked)
@@ -237,18 +238,13 @@ class MainMenuFragment: Fragment() {
         }
 
 
-
         //End selection but not remove the selected notes
         binding.btnEndEdit.setOnClickListener {
-            if(notesAdapter.isSelectionMode) {
+            if (notesAdapter.isSelectionMode) {
                 endSelection()
-                notesAdapter.disableSelection()
             }
         }
 
-        binding.bottomSelectionMenuHost.post {
-            binding.bottomSelectionMenuHost.visibility = View.GONE
-        }
 
         binding.btnMenu.setOnClickListener {
             popupMenu.show()
@@ -275,7 +271,7 @@ class MainMenuFragment: Fragment() {
                 //if it is first character
                 //show the close icon
                 //instead of search icon
-                else if(!s.isNullOrBlank() && !isSearching) {
+                else if (!s.isNullOrBlank() && !isSearching) {
                     startSearch()
                 }
 
@@ -289,19 +285,32 @@ class MainMenuFragment: Fragment() {
 
             hideSearchKeyboard()
 
+            reenterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, false).apply {
+                duration = resources.getInteger(
+                    R.integer.transition_animation
+                ).toLong()
+            }
+
+            exitTransition = MaterialSharedAxis(MaterialSharedAxis.Z, true).apply {
+                duration = resources.getInteger(
+                    R.integer.transition_animation
+                ).toLong()
+            }
+
+
             val action = MainMenuFragmentDirections
                 .actionMainMenuFragmentToNoteDetailFragment(
-                    newGroupId = viewModel.currentGroup.value!!.groupId)
+                    newGroupId = viewModel.currentGroup.value!!.groupId
+                )
 
             findNavController().navigate(action)
         }
 
         binding.btnFolder.setOnClickListener {
 
-            if(groupsPopupWindow.isShowing) {
+            if (groupsPopupWindow.isShowing) {
                 dismissGroupPopupWindow()
-            }
-            else {
+            } else {
                 showPopup()
             }
         }
@@ -309,7 +318,6 @@ class MainMenuFragment: Fragment() {
         binding.overlay.setOnClickListener {
             dismissGroupPopupWindow()
         }
-
 
         return binding.root
     }
@@ -340,22 +348,7 @@ class MainMenuFragment: Fragment() {
                         .show()
                 }
                 R.id.menu_change_layout -> {
-                    val item = popupMenu.menu.findItem(R.id.menu_change_layout)
-                    when(notesAdapter.layoutType) {
-                        NotesAdapter.LayoutType.Grid -> {
-                            notesAdapter.layoutType = NotesAdapter.LayoutType.List
-                            rvNotes.layoutManager = LinearLayoutManager(requireContext())
-                            rvNotes.adapter = notesAdapter
-                            item.setTitle(R.string.grid_view)
-                        }
-                        NotesAdapter.LayoutType.List -> {
-                            notesAdapter.layoutType = NotesAdapter.LayoutType.Grid
-                            rvNotes.layoutManager = StaggeredGridLayoutManager(
-                                2, StaggeredGridLayoutManager.VERTICAL)
-                            rvNotes.adapter = notesAdapter
-                            item.setTitle(R.string.list_view)
-                        }
-                    }
+                    changeLayoutType()
                 }
                 R.id.menu_new_first -> {
                     notesAdapter.sortByDate(isDescending = true)
@@ -368,6 +361,12 @@ class MainMenuFragment: Fragment() {
                 R.id.menu_settings -> {
                     val action = MainMenuFragmentDirections
                         .actionMainMenuFragmentToPreferencesFragment()
+
+                    exitTransition = MaterialFadeThrough().apply {
+                        duration = resources.getInteger(
+                            R.integer.transition_animation).toLong()
+                    }
+
                     findNavController().navigate(action)
                 }
             }
@@ -376,6 +375,34 @@ class MainMenuFragment: Fragment() {
         }
 
         return popupMenu
+    }
+
+    private fun applyLayoutType(layoutType: NotesAdapter.LayoutType) {
+        val item = popupMenu.menu.findItem(R.id.menu_change_layout)
+        when (layoutType) {
+            NotesAdapter.LayoutType.Grid -> {
+                notesAdapter.layoutType = NotesAdapter.LayoutType.Grid
+                binding.rvNotes.layoutManager = StaggeredGridLayoutManager(
+                    2, StaggeredGridLayoutManager.VERTICAL)
+                binding.rvNotes.adapter = notesAdapter
+                item.setTitle(R.string.list_view)
+            }
+            NotesAdapter.LayoutType.List -> {
+                notesAdapter.layoutType = NotesAdapter.LayoutType.List
+                binding.rvNotes.layoutManager = LinearLayoutManager(requireContext())
+                binding.rvNotes.adapter = notesAdapter
+                item.setTitle(R.string.grid_view)
+            }
+        }
+    }
+
+    private fun changeLayoutType() {
+        if(notesAdapter.layoutType == NotesAdapter.LayoutType.Grid) {
+            applyLayoutType(NotesAdapter.LayoutType.List)
+        }
+        else {
+            applyLayoutType(NotesAdapter.LayoutType.Grid)
+        }
     }
 
     private fun createGroupPopup(): GroupsPopupWindow {
@@ -414,17 +441,26 @@ class MainMenuFragment: Fragment() {
      * Show the selection host
      */
     private fun startSelection() {
-        if(binding.selectionHost.alpha == 0f) {
-            alphaSelectionHostAnimator.start()
-            alphaGroupHostAnimator.reverse()
 
-            binding.bottomSelectionMenuHost.visibility = View.VISIBLE
+        if(binding.selectionHost.visibility == View.GONE) {
 
-            if(!::bottomMenuAnimator.isInitialized) {
-                initBottomAnimator()
+            TransitionManager.beginDelayedTransition(binding.masterFrame, buildSelectionModeTransition())
+
+            binding.selectionHost.visibility = View.VISIBLE
+            binding.groupHost.visibility = View.GONE
+
+            binding.bottomSelectionMenuHost.let {
+                val params = it.layoutParams
+                params.height = FrameLayout.LayoutParams.WRAP_CONTENT
+                it.layoutParams = params
             }
 
-            bottomMenuAnimator.start()
+            binding.btnAddNote.visibility = View.GONE
+
+            binding.bottomSelectionMenuHost.measure(ConstraintLayout.LayoutParams.WRAP_CONTENT,
+                ConstraintLayout.LayoutParams.WRAP_CONTENT)
+
+            rvNotes.setPadding(0, 0, 0, binding.bottomSelectionMenuHost.measuredHeight)
         }
     }
 
@@ -432,13 +468,39 @@ class MainMenuFragment: Fragment() {
      * Hide the selection host
      */
     private fun endSelection() {
+
+        notesAdapter.disableSelection()
+        notesAdapter.setIsSelectedForAllNotes(false)
         binding.btnSelectAll.isChecked = false
-        alphaSelectionHostAnimator.reverse()
-        alphaGroupHostAnimator.start()
-        rvNotes.setPadding(0,0,0,0)
-        bottomMenuAnimator.reverse()
+
+        TransitionManager.beginDelayedTransition(binding.masterFrame,
+            buildSelectionModeTransition())
+
+        binding.selectionHost.visibility = View.GONE
+        binding.groupHost.visibility = View.VISIBLE
+
+        binding.bottomSelectionMenuHost.let {
+            val params = it.layoutParams
+            params.height = 0
+            it.layoutParams = params
+        }
+
+        binding.btnAddNote.visibility = View.VISIBLE
+
+        rvNotes.setPadding(0, 0, 0, 0)
     }
 
+    private fun buildSelectionModeTransition(): TransitionSet {
+         return TransitionSet().apply {
+             addTransition(MaterialFade().apply {
+                 secondaryAnimatorProvider = null
+                 addTarget(binding.groupHost)
+                 addTarget(binding.selectionHost)
+                 addTarget(binding.btnAddNote)
+             })
+             addTransition(ChangeBounds())
+         }
+    }
 
     private fun showOverlay() {
         binding.overlay.visibility = View.VISIBLE
@@ -498,29 +560,44 @@ class MainMenuFragment: Fragment() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
 
-    private fun initBottomAnimator() {
+        Log.d("MainMenuFragment", "Save state")
+        outState.putString(KEY_LAYOUT_TYPE, notesAdapter.layoutType.name)
+    }
 
-        val bottomMenu = binding.bottomSelectionMenuHost
+    private fun getRvNotesPosition(): Int {
 
-        bottomMenuAnimator = ObjectAnimator.ofFloat(bottomMenu, View.TRANSLATION_Y,
-            bottomMenu.height.toFloat(), 0f).apply {
+        val manager = binding.rvNotes.layoutManager
 
-            addUpdateListener {
-                binding.mainMenuHost.postInvalidate()
+        return if(manager is LinearLayoutManager) {
+            var position = manager.findFirstVisibleItemPosition()
+            if(position == RecyclerView.NO_POSITION) {
+                position = 0
             }
-
-            duration = requireContext().resources.getInteger(
-                R.integer.bottom_selection_menu_duration).toLong()
-
-            doOnEnd {
-                if(binding.bottomSelectionMenuHost.translationY > 0f) {
-                    binding.bottomSelectionMenuHost.visibility = View.GONE
-                }
-                else {
-                    rvNotes.setPadding(0,0,0, binding.bottomSelectionMenuHost.height)
-                }
+            position
+        }
+        else if(manager is StaggeredGridLayoutManager) {
+            var positions = manager.findFirstVisibleItemPositions(null)
+            if(positions[0] == RecyclerView.NO_POSITION) {
+                positions[0] = 0
             }
+            positions[0]
+        }
+        else {
+            throw IllegalStateException()
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        rvNotesLastPosition = getRvNotesPosition()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        notesAdapter.detachListeners()
+    }
+
 }

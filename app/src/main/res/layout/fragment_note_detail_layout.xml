@@ -11,6 +11,7 @@
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:transitionName="@string/note_detail_transition_name"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp">
@@ -92,6 +93,7 @@
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/txt_input_note"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="top"

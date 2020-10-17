@@ -28,6 +28,8 @@ class MainMenuViewModel
 
     private val _selectedNotesAmount = MutableLiveData<Int>(0)
 
+    val selectedNotesAccessor = SelectedNotesAccessor()
+
     val selectedNotesAmount
         get() = _selectedNotesAmount
 
@@ -48,9 +50,9 @@ class MainMenuViewModel
 
     val currentGroup = MutableLiveData<GroupDomain>()
 
-    private val _selectedNotes = mutableListOf<NoteDomain>()
+    private val _selectedNotes = mutableSetOf<NoteDomain>()
 
-    val selectedNotes: List<NoteDomain>
+    val selectedNotes: Set<NoteDomain>
         get() = _selectedNotes
 
     /**

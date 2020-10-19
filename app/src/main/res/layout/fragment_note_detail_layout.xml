@@ -7,7 +7,7 @@
         <import type="android.view.View"/>
         <variable
             name="viewModel"
-            type="com.example.cardnotes.viewmodels.NoteDetailViewModel" />
+            type="cf.feuerkrieg.cardnotes.viewmodels.NoteDetailViewModel" />
     </data>
 <FrameLayout
     android:layout_width="match_parent"
@@ -39,7 +39,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@android:color/white"
-            android:onClick="@{() -> viewModel.onEndEditEvent()}"
             android:src="@drawable/baseline_close_black_24"
             android:contentDescription="@string/close"
             app:layout_constraintStart_toStartOf="parent"
@@ -48,12 +47,12 @@
 
         <TextView
             android:id="@+id/tvGroupName"
+            style="@style/CardNotes.TextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constrainedWidth="true"
             android:layout_gravity="center_vertical"
             android:maxLines="1"
-            android:ellipsize="end"
             android:text="@{viewModel.folderNote == null ? @string/no_folder : viewModel.folderNote.groupName}"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             app:layout_constraintEnd_toStartOf="@+id/btn_choose_folder"
@@ -111,7 +110,7 @@
             </com.google.android.material.textfield.TextInputLayout>
         </ScrollView>
 
-        <com.example.cardnotes.customviews.RevealedImageButton
+        <cf.feuerkrieg.cardnotes.customviews.RevealedImageButton
             android:id="@+id/revealedImageButton2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

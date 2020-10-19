@@ -44,22 +44,17 @@
     </style>
 
 
-    <style name="CardNotes.DialogButton" parent="Widget.MaterialComponents.Button">
-        <item name="android:textSize">18sp</item>
-    </style>
-
-    <style name="CardNotes.TextView" parent="">
+    <style name="CardNotes.TextView" parent="Widget.MaterialComponents.TextView">
         <item name="android:ellipsize">end</item>
     </style>
 
-    <style name="CardNotes.TextView.NoteContent" parent="Widget.MaterialComponents.TextView">
+    <style name="CardNotes.TextView.NoteContent" parent="CardNotes.TextView">
         <item name="android:textAppearance">
             @style/TextAppearance.MaterialComponents.Body1
         </item>
-
     </style>
 
-    <style name="CardNotes.TextView.NoteTitle" parent="Widget.MaterialComponents.TextView">
+    <style name="CardNotes.TextView.NoteTitle" parent="CardNotes.TextView">
         <item name="android:textAppearance">
             @style/TextAppearance.MaterialComponents.Subtitle1
         </item>
@@ -68,7 +63,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <style name="CardNotes.TextView.CreatedAt">
+    <style name="CardNotes.TextView.CreatedAt" parent="CardNotes.TextView">
         <item name="android:textColor">@android:color/darker_gray</item>
         <item name="android:textAppearance">
             @style/TextAppearance.MaterialComponents.Body2

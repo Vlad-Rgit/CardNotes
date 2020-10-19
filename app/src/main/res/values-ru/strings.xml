@@ -26,7 +26,14 @@
     <string name="old_first">Сначала старые</string>
     <string name="settings">Настройки</string>
     <string name="language">Язык</string>
+    <string name="close_edit">Закрыть редактирование</string>
+    <string name="do_you_want_to_close_and_decline_all_changes">
+        Закрыть и отменить все изменения?
+    </string>
 
+    <string name="rename_folder">
+        Переименовать папку
+    </string>
 
 
     <plurals name="selected_items">
@@ -45,5 +52,6 @@
     <string name="choose_folder">Выбрать папку</string>
     <string name="close">Закрыть</string>
     <string name="close_edit_mode">Закончить режим редактирования</string>
+    <string name="accept">Подтвердить</string>
 
 </resources>

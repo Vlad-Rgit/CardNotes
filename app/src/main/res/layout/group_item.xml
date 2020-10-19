@@ -6,7 +6,7 @@
     <data>
         <variable
             name="group"
-            type="com.example.cardnotes.domain.GroupDomain" />
+            type="cf.feuerkrieg.cardnotes.domain.GroupDomain" />
     </data>
 
 

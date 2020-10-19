@@ -51,6 +51,15 @@
     <string name="close">Close</string>
     <string name="close_edit_mode">Close edit mode</string>
 
+    <string name="close_edit">Close edit</string>
+
+    <string name="do_you_want_to_close_and_decline_all_changes">
+        Close and decline all changes?
+    </string>
+
+    <string name="rename_folder">
+        Rename folder
+    </string>
 
     <plurals name="selected_items">
         <item quantity="one">%d selected item</item>
@@ -61,4 +70,5 @@
         <item quantity="one">Do you want to delete %d note?</item>
         <item quantity="other">Do you want to delete %d notes?</item>
     </plurals>
+    <string name="accept">Аccept</string>
 </resources>

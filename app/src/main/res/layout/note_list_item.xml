@@ -50,7 +50,7 @@
             app:layout_constraintLeft_toLeftOf="parent"/>
 
 
-        <com.example.cardnotes.customviews.RevealedCheckBox
+        <cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
             android:id="@+id/chIsSelected"
             android:layout_width="26dp"
             android:layout_height="20dp"

@@ -47,6 +47,9 @@
     <string name="old_first">Old first</string>
     <string name="settings">Settings</string>
     <string name="language">Language</string>
+    <string name="choose_folder">Choose folder</string>
+    <string name="close">Close</string>
+    <string name="close_edit_mode">Close edit mode</string>
 
 
     <plurals name="selected_items">

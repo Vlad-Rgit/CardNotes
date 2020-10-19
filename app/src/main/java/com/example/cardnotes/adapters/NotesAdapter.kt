@@ -52,7 +52,7 @@ class NotesAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
 
-        val holder = when(layoutType) {
+        val holder = when (layoutType) {
             LayoutType.Grid -> {
                 GridViewHolder.from(parent)
             }
@@ -61,25 +61,6 @@ class NotesAdapter(
             }
         }
 
-        holder.setOnNoteClickCallback { note ->
-            if (isSelectionMode) {
-                note.isSelected = !note.isSelected
-            }
-            else {
-                onNoteClickCallback?.invoke(note, holder.itemView)
-            }
-        }
-
-        holder.setOnNoteLongClickCallback { startEdit() }
-
-        holder.setOnNoteSelectedChangedCallback {
-            if(it.isSelected)
-                selectedNotes.add(it)
-            else
-                selectedNotes.remove(it)
-        }
-
-
 
         return holder
     }
@@ -87,13 +68,29 @@ class NotesAdapter(
     override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
         val note = notes[position]
         holder.performBind(note, isSelectionMode)
+
+        holder.setOnNoteClickCallback {
+            if (isSelectionMode) {
+                it.isSelected = !it.isSelected
+            } else {
+                onNoteClickCallback?.invoke(it, holder.itemView)
+            }
+        }
+
+        holder.setOnNoteLongClickCallback { startEdit() }
+
         boundViewHolders.add(holder)
     }
 
     override fun onViewRecycled(holder: NotesViewHolder) {
         super.onViewRecycled(holder)
-        holder.detachListeners()
         boundViewHolders.remove(holder)
+        holder.detachListeners()
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        dispose()
     }
 
     override fun getItemCount(): Int {
@@ -107,11 +104,8 @@ class NotesAdapter(
 
     fun dispose() {
 
-        for(note in notes)
-            note.removeIsSelectedChangedListener(selectedChangedListener)
-
-        for(note in notes)
-            note.clearIsSelectedChangedListeners()
+        for (holder in boundViewHolders)
+            holder.detachListeners()
 
         boundViewHolders.clear()
     }
@@ -126,6 +120,7 @@ class NotesAdapter(
         for (note in notes.toList()) {
             if(!list.contains(note)) {
                 val index = notes.indexOf(note)
+                note.removeIsSelectedChangedListener(selectedChangedListener)
                 notes.removeAt(index)
                 notifyItemRemoved(index)
             }
@@ -221,19 +216,13 @@ class NotesAdapter(
         callback: (note: NoteDomain, root: View) -> Unit) {
         onNoteClickCallback = callback
     }
-    
+
     fun setIsSelectedForAllNotes(isSelected: Boolean) {
         for(note in notes) {
             if(note.isSelected != isSelected)
                 note.isSelected = isSelected
         }
     }
-
-    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView)
-        boundViewHolders.clear()
-    }
-
 
 
     /**
@@ -248,7 +237,7 @@ class NotesAdapter(
             startEditCallback?.run()
 
 
-           for(holder in boundViewHolders) {
+            for (holder in boundViewHolders) {
                 holder.isSelectionMode = true
             }
         }
@@ -267,8 +256,7 @@ class NotesAdapter(
 
 
     class GridViewHolder
-        private constructor(view: View)
-        : NotesViewHolder(view) {
+    private constructor(view: View) : NotesViewHolder(view) {
 
         companion object {
 
@@ -283,24 +271,10 @@ class NotesAdapter(
                 )
             }
         }
-
-        private val titleSeparator: View = view.findViewById(R.id.titleSeparator)
-
-
-        override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
-            super.performBind(model, isSelectionMode)
-
-            if(model.name.isBlank()) {
-                titleSeparator.visibility = View.GONE
-            }
-            else {
-                titleSeparator.visibility = View.VISIBLE
-            }
-        }
     }
 
     class ListViewHolder
-        private constructor(view: View)
+    private constructor(view: View)
         : NotesViewHolder(view) {
 
         companion object {

@@ -12,7 +12,7 @@ import com.example.cardnotes.R
 import com.example.cardnotes.databinding.GroupAddDialogLayoutBinding
 import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.repos.GroupsRepo
-import com.example.cardnotes.utils.styleDialogButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -32,30 +32,25 @@ class AddGroupDialog
         binding = GroupAddDialogLayoutBinding
             .inflate(layoutInflater)
 
-        val groupDialog = AlertDialog
-            .Builder(requireContext(), R.style.CardNotes_AlertDialog)
-            .setTitle(requireContext().getString(R.string.create_folder))
-            .setView(binding.root)
-            .setPositiveButton(R.string.create_folder) { _, _ ->
+        val groupDialog =
+            MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
+                .setTitle(requireContext().getString(R.string.create_folder))
+                .setView(binding.root)
+                .setPositiveButton(R.string.create_folder) { _, _ ->
 
-                lifecycleScope.launch(Dispatchers.Main) {
-                    onCreateGroupCallback(
-                        GroupDomain(
-                            groupName = binding.edGroupName.text.toString())
-                    )
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        onCreateGroupCallback(
+                            GroupDomain(
+                                groupName = binding.edGroupName.text.toString()
+                            )
+                        )
+                    }
                 }
-            }
-            .setNegativeButton(R.string.cancel) { _, _ -> }
+                .setNegativeButton(R.string.cancel) { _, _ -> }
             .show()
-
-        groupDialog.window!!.setBackgroundDrawableResource(R.drawable.dialog_bg)
 
         positiveButton = groupDialog.getButton(AlertDialog.BUTTON_POSITIVE)
         disableButton(positiveButton)
-
-        negativeButton = groupDialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-
-        styleDialogButton(negativeButton)
 
         binding.edGroupName.addTextChangedListener {
 

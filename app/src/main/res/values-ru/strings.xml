@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Card Notes</string>
     <string name="select_items">Выберите заметки</string>
     <string name="title">Название</string>
     <string name="write_here_your_note">Здесь можете писать заметку</string>
@@ -43,5 +42,8 @@
         <item quantity="many">Вы хотите удалить %d заметок?</item>
         <item quantity="other">Вы хотите удалить %d заметок?</item>
     </plurals>
+    <string name="choose_folder">Выбрать папку</string>
+    <string name="close">Закрыть</string>
+    <string name="close_edit_mode">Закончить режим редактирования</string>
 
 </resources>

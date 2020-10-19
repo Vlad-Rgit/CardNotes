@@ -2,10 +2,10 @@ package com.example.cardnotes.adapters.viewholders
 
 import android.animation.ValueAnimator
 import android.view.View
-import android.widget.CheckBox
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.cardnotes.R
+import com.example.cardnotes.customviews.RevealedCheckBox
 import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.interfaces.OnNoteClick
 import com.google.android.material.card.MaterialCardView
@@ -35,7 +35,7 @@ abstract class NotesViewHolder
     protected val tvNoteName: TextView = itemView.findViewById(R.id.tvNoteName)
     protected val tvNoteValue: TextView = itemView.findViewById(R.id.tvNoteValue)
     protected val tvCreatedAt: TextView = itemView.findViewById(R.id.tvCreatedAt)
-    protected val cbIsSelected: CheckBox = itemView.findViewById(R.id.chIsSelected)
+    protected val cbIsSelected: RevealedCheckBox = itemView.findViewById(R.id.chIsSelected)
 
     protected var note: NoteDomain? = null
 
@@ -111,12 +111,16 @@ abstract class NotesViewHolder
     }
 
     private fun enableSelectionMode() {
-        cbIsSelected.visibility = View.VISIBLE
+        if (cbIsSelected.visibility != View.VISIBLE) {
+            cbIsSelected.reveal()
+        }
     }
 
     private fun disableSelectionMode() {
-        cbIsSelected.visibility = View.GONE
-        cbIsSelected.isChecked = false
+        if (cbIsSelected.visibility != View.GONE) {
+            cbIsSelected.isChecked = false
+            cbIsSelected.unreveal()
+        }
     }
 
     override fun downTouch() {

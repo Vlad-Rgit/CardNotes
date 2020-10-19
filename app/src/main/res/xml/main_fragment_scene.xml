@@ -9,6 +9,7 @@
         <OnSwipe
             motion:onTouchUp="stop"
             motion:touchAnchorId="@+id/rvNotes"
+            motion:touchAnchorSide="top"
             motion:dragDirection="dragUp"/>
     </Transition>
 
@@ -20,11 +21,11 @@
             android:layout_marginTop="16dp"
             motion:layout_constraintLeft_toLeftOf="parent"
             motion:layout_constraintRight_toRightOf="parent"
-            motion:layout_constraintTop_toBottomOf="@id/top_host" />
-        <Constraint
-            android:id="@+id/top_host">
-            <CustomAttribute motion:attributeName="elevation"
-                motion:customFloatValue="0"/>
+            motion:layout_constraintTop_toBottomOf="@id/topHost" />
+        <Constraint android:id="@+id/topHost">
+            <CustomAttribute
+                motion:attributeName="elevation"
+                motion:customFloatValue="0" />
         </Constraint>
         <Constraint
             android:id="@+id/rvNotes"
@@ -34,7 +35,7 @@
             motion:layout_constraintLeft_toLeftOf="parent"
             motion:layout_constraintRight_toRightOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/txt_search_layout"
-            motion:layout_constraintBottom_toBottomOf="parent"/>
+            motion:layout_constraintBottom_toBottomOf="parent" />
 
         <Constraint
             android:id="@+id/tvNoNotes">
@@ -55,11 +56,11 @@
             android:alpha="0"
             motion:layout_constraintLeft_toLeftOf="parent"
             motion:layout_constraintRight_toRightOf="parent"
-            motion:layout_constraintTop_toBottomOf="@id/top_host" />
-        <Constraint
-            android:id="@+id/top_host">
-            <CustomAttribute motion:attributeName="elevation"
-                motion:customFloatValue="6"/>
+            motion:layout_constraintTop_toBottomOf="@id/topHost" />
+        <Constraint android:id="@+id/topHost">
+            <CustomAttribute
+                motion:attributeName="elevation"
+                motion:customFloatValue="6" />
         </Constraint>
         <Constraint
             android:id="@+id/rvNotes"

@@ -13,7 +13,8 @@ import com.example.cardnotes.domain.GroupDomain
 
 class GroupsPopupWindow
     (context: Context,
-     parent: ViewGroup)
+     parent: ViewGroup,
+     defaultGroupStringResId: Int)
     : PopupWindow(context) {
 
     private val inflater = LayoutInflater.from(context)
@@ -30,12 +31,10 @@ class GroupsPopupWindow
     init {
 
 
-
-
         binding = GroupPopupLayoutBinding.inflate(
             inflater, parent, false)
 
-        groupsAdapter = GroupsAdapter(context)
+        groupsAdapter = GroupsAdapter(context, defaultGroupStringResId)
 
         groupsAdapter.setGroupClickedCallback { group, position ->
             //If new group clicked
@@ -47,7 +46,7 @@ class GroupsPopupWindow
                 groupChosenCallback?.invoke(
                     GroupDomain(
                         groupId = -1,
-                        groupName = context.getString(R.string.all_folders)))
+                        groupName = ""))
             }
             else {
                 groupChosenCallback?.invoke(group)

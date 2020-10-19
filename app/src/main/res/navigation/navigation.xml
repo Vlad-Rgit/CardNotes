@@ -9,7 +9,9 @@
         android:label="MainMenuFragment" >
         <action
             android:id="@+id/action_mainMenuFragment_to_noteDetailFragment"
-            app:destination="@id/noteDetailFragment" />
+            app:destination="@id/noteDetailFragment"
+            app:popUpTo="@id/mainMenuFragment"
+            app:popUpToInclusive="false" />
         <action
             android:id="@+id/action_mainMenuFragment_to_preferencesFragment"
             app:destination="@id/preferencesFragment" />

@@ -11,7 +11,8 @@ import com.example.cardnotes.domain.GroupDomain
 import com.example.cardnotes.utils.replaceAll
 
 class GroupsAdapter(
-    private val context: Context)
+    private val context: Context,
+    private val defaulGroupStringResId: Int)
     : RecyclerView.Adapter<GroupsAdapter.ViewHolder>() {
 
 
@@ -31,7 +32,7 @@ class GroupsAdapter(
         notifyItemInserted(0)
 
         groups.add(1, GroupDomain(
-            groupName = context.getString(R.string.all_folders)))
+            groupName = context.getString(defaulGroupStringResId)))
 
         notifyItemInserted(1)
     }

@@ -41,7 +41,7 @@ class NoteApp: Application() {
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(LocaleHelper
-            .setLocaleFromSharedPrefsIfExists(base!!))
+            .setLocaleFromSharedPrefsOrSaveDefault(base!!))
     }
 
 

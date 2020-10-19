@@ -9,6 +9,9 @@
             name="viewModel"
             type="com.example.cardnotes.viewmodels.NoteDetailViewModel" />
     </data>
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:transitionName="@string/note_detail_transition_name"
@@ -126,4 +129,14 @@
             tools:layout_editor_absoluteY="715dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@android:color/transparent"/>
+
+</FrameLayout>
+
 </layout>

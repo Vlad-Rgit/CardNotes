@@ -1,6 +1,5 @@
 package com.example.cardnotes.adapters
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,6 @@ import com.example.cardnotes.interfaces.ListAccessor
 import java.util.*
 
 class NotesAdapter(
-    context: Context,
     private val selectedNotes: ListAccessor<NoteDomain>)
     : RecyclerView.Adapter<NotesViewHolder>(){
 
@@ -94,6 +92,7 @@ class NotesAdapter(
 
     override fun onViewRecycled(holder: NotesViewHolder) {
         super.onViewRecycled(holder)
+        holder.detachListeners()
         boundViewHolders.remove(holder)
     }
 
@@ -106,9 +105,15 @@ class NotesAdapter(
     }
 
 
-    fun detachListeners() {
+    fun dispose() {
+
         for(note in notes)
             note.removeIsSelectedChangedListener(selectedChangedListener)
+
+        for(note in notes)
+            note.clearIsSelectedChangedListeners()
+
+        boundViewHolders.clear()
     }
 
     /**
@@ -224,6 +229,12 @@ class NotesAdapter(
         }
     }
 
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        boundViewHolders.clear()
+    }
+
+
 
     /**
      * Start selection mode
@@ -237,7 +248,7 @@ class NotesAdapter(
             startEditCallback?.run()
 
 
-            for(holder in boundViewHolders) {
+           for(holder in boundViewHolders) {
                 holder.isSelectionMode = true
             }
         }
@@ -257,7 +268,7 @@ class NotesAdapter(
 
     class GridViewHolder
         private constructor(view: View)
-        : NotesViewHolder(view){
+        : NotesViewHolder(view) {
 
         companion object {
 
@@ -265,8 +276,25 @@ class NotesAdapter(
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                return GridViewHolder(inflater.inflate(
-                    R.layout.note_item, parent, false))
+                return GridViewHolder(
+                    inflater.inflate(
+                        R.layout.note_grid_item, parent, false
+                    )
+                )
+            }
+        }
+
+        private val titleSeparator: View = view.findViewById(R.id.titleSeparator)
+
+
+        override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
+            super.performBind(model, isSelectionMode)
+
+            if(model.name.isBlank()) {
+                titleSeparator.visibility = View.GONE
+            }
+            else {
+                titleSeparator.visibility = View.VISIBLE
             }
         }
     }

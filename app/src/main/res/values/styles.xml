@@ -23,13 +23,14 @@
     </style>
 
     <style name="CardNotes.AlertDialog"
-        parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="buttonBarNegativeButtonStyle">
             @style/Widget.MaterialComponents.Button.TextButton
         </item>
         <item name="buttonBarPositiveButtonStyle">
             @style/Widget.MaterialComponents.Button
         </item>
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
     <style name="CardNotes.TextView" parent="">

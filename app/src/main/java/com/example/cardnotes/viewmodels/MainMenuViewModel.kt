@@ -126,6 +126,19 @@ class MainMenuViewModel
         }
     }
 
+    fun setCurrentGroup(groupId: Int) {
+
+        if(groupId == -1) {
+            currentGroup.value = allGroup
+        }
+
+        viewModelScope.launch {
+            currentGroup.postValue(
+                groupsRepo.getById(groupId)
+            )
+        }
+    }
+
     fun addGroup(group: GroupDomain) {
         viewModelScope.launch {
             addGroupImpl(group)

@@ -1,20 +1,12 @@
 package com.example.cardnotes.fragments
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.app.AlertDialog
 import android.content.Context
-import android.graphics.Point
-import android.os.Build
 import android.os.Bundle
-import android.view.Display
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import androidx.annotation.RequiresApi
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -23,12 +15,10 @@ import com.example.cardnotes.R
 import com.example.cardnotes.databinding.BottomSelectionMenuFragmentBinding
 import com.example.cardnotes.dialog.AddGroupDialog
 import com.example.cardnotes.domain.GroupDomain
-import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.utils.styleDialogButton
 import com.example.cardnotes.viewmodels.MainMenuViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.lang.reflect.Array
 
 
 class BottomSelectionMenuFragment: Fragment() {
@@ -136,5 +126,6 @@ class BottomSelectionMenuFragment: Fragment() {
     fun setOnEndSelectionCallback(callback: Runnable) {
         onEndSelectionCallback = callback
     }
+
 
 }

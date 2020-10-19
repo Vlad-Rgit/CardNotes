@@ -119,7 +119,6 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
             note.value!!.groupId =
                 groupRepo.addGroup(groupDomain)
 
-
             folderNote.postValue(groupDomain)
         }
     }
@@ -128,6 +127,8 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
         note.value!!.groupId = groupDomain.groupId
         folderNote.value = groupDomain
     }
+
+
 
 
 }

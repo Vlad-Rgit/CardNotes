@@ -57,7 +57,7 @@ abstract class NotesDB: RoomDatabase() {
          * Do initializations at first database creation
          */
         private val roomCallback = object : RoomDatabase.Callback() {
-            override fun onOpen(db: SupportSQLiteDatabase) {
+            override fun onCreate(db: SupportSQLiteDatabase) {
                 db.execSQL("""
                     Create trigger if not exists TR_notes_AfterInsert
                     after insert on notes 
@@ -67,6 +67,13 @@ abstract class NotesDB: RoomDatabase() {
                         Where noteId = new.noteId;
                      end;
                 """)
+            }
+
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+
+                initGroups(getInstance().groupDao)
+                initNotes(getInstance().noteDao)
             }
         }
 

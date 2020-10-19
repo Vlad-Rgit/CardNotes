@@ -1,21 +1,22 @@
 package com.example.cardnotes.fragments
 
-import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ArrayAdapter
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.cardnotes.R
 import com.example.cardnotes.databinding.FragmentNoteDetailLayoutBinding
 import com.example.cardnotes.dialog.AddGroupDialog
-import com.example.cardnotes.domain.GroupDomain
+import com.example.cardnotes.dialog.GroupsPopupWindow
 import com.example.cardnotes.domain.NoteDomain
 import com.example.cardnotes.utils.hideKeyborad
 import com.example.cardnotes.utils.showKeyboard
@@ -26,9 +27,14 @@ import com.google.android.material.transition.MaterialSharedAxis
 
 class NoteDetailFragment: Fragment() {
 
+
+    companion object {
+        val KEY_CHOSEN_FOLDER = "KeyChosenFolder"
+    }
+
     private lateinit var binding: FragmentNoteDetailLayoutBinding
     private lateinit var viewModel: NoteDetailViewModel
-    private lateinit var groupsAdapter: ArrayAdapter<GroupDomain>
+    private lateinit var groupsPopupWindow: GroupsPopupWindow
 
     override fun onAttach(context: Context) {
 
@@ -60,22 +66,54 @@ class NoteDetailFragment: Fragment() {
         binding = FragmentNoteDetailLayoutBinding.inflate(
             inflater, container, false)
 
-
         binding.lifecycleOwner = viewLifecycleOwner
         binding.viewModel = viewModel
 
-        groupsAdapter = ArrayAdapter<GroupDomain>(requireContext(),
-            android.R.layout.simple_list_item_1)
+        groupsPopupWindow = GroupsPopupWindow(requireContext(),
+            binding.root as ViewGroup, R.string.no_folder)
+
+        groupsPopupWindow.setGroupChosenCallback {
+            if(it.groupId == -1) {
+                viewModel.note.value?.groupId = null
+                viewModel.folderNote.value = null
+            }
+            else {
+                viewModel.note.value?.groupId = it.groupId
+                viewModel.folderNote.value = it
+            }
+
+            hideGroupsPopup()
+        }
+
+        groupsPopupWindow.setNewGroupRequestCallback {
+
+            hideGroupsPopup()
+
+            val dialog = AddGroupDialog {
+                viewModel.addGroup(it)
+            }
+
+            dialog.show(childFragmentManager, null)
+        }
 
         viewModel.endEditEvent.observe(viewLifecycleOwner,
             { endEdit ->
 
                 if(endEdit) {
-                    findNavController().popBackStack()
+
+                    if(viewModel.note.value!!.groupId == null)
+                        setFragmentResult(KEY_CHOSEN_FOLDER,
+                            bundleOf("groupId" to -1))
+                    else
+                        setFragmentResult(KEY_CHOSEN_FOLDER,
+                            bundleOf("groupId" to viewModel.note.value!!.groupId))
+
+                    findNavController().navigateUp()
 
                     hideKeyborad(requireContext(), binding.root)
 
                     viewModel.onEndEditEventComplete()
+
                 }
 
         })
@@ -97,31 +135,21 @@ class NoteDetailFragment: Fragment() {
 
 
         viewModel.groups.observe(viewLifecycleOwner, {
-            groupsAdapter.clear()
-            groupsAdapter.add(
-                GroupDomain(
-                groupName = requireContext()
-                    .getString(R.string.new_folder)))
-            groupsAdapter.addAll(it)
+            groupsPopupWindow.replaceGroups(it)
         })
 
         binding.btnChooseFolder.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setAdapter(groupsAdapter) {
-                        di, i ->
-                    if(i == 0) {
-                        AddGroupDialog(viewModel::addGroup)
-                            .show(childFragmentManager, null)
-                    }
-                    else {
-                        val group = groupsAdapter.getItem(i)
-                        viewModel.setGroup(group!!)
-                    }
-                }
-                .show()
+            hideKeyborad(requireContext(), binding.root)
+            binding.overlay.visibility = View.VISIBLE
+            groupsPopupWindow.showAsDropDown(binding.btnChooseFolder)
         }
 
         return binding.root
+    }
+
+    private fun hideGroupsPopup() {
+        groupsPopupWindow.dismiss()
+        binding.overlay.visibility = View.GONE
     }
 
     override fun onResume() {
@@ -156,6 +184,11 @@ class NoteDetailFragment: Fragment() {
             duration = resources.getInteger(
                 R.integer.transition_animation).toLong()
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.i("NoteDetailFragment", "View destroyed")
     }
 
 }

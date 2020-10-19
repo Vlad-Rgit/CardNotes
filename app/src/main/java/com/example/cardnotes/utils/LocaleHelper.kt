@@ -30,15 +30,24 @@ object LocaleHelper {
         appContext.createConfigurationContext(conf)
     }
 
-    fun setLocaleFromSharedPrefsIfExists(context: Context): Context {
+    fun setLocaleFromSharedPrefsOrSaveDefault(context: Context): Context {
         val currLangCode = getCurrLangFromSharedPrefsOrNull(context)
-        return if(currLangCode != null) {
+        return if(currLangCode == null) {
+            saveLocaleToSharedPrefs(context,
+                context.resources.configuration.locale)
+            context
+        }
+        else {
             val locale = Locale(currLangCode)
             return updateLocale(context, locale)
         }
-        else {
-            context
-        }
+    }
+
+    fun saveLocaleToSharedPrefs(context: Context, locale: Locale) {
+        val prefs = context.getSharedPreferences(PreferencesName, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString(PreferencesLanguageKey, locale.language)
+            .apply()
     }
 
     fun getCurrLangFromSharedPrefsOrNull(context: Context): String? {

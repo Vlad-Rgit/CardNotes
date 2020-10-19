@@ -1,6 +1,7 @@
 package com.example.cardnotes.domain
 
 
+import android.util.Log
 import com.example.cardnotes.NoteApp
 import com.example.cardnotes.database.models.NoteDatabase
 import com.example.cardnotes.interfaces.SortedItem
@@ -78,10 +79,15 @@ data class NoteDomain(
 
     fun addOnIsSelectedChangedListener(listener: OnIsSelectedChangedListener) {
         onIsSelectedChangedListeners.add(listener)
+        Log.i("NoteDomain", "Listener added. Size ${onIsSelectedChangedListeners.size}")
     }
 
     fun removeIsSelectedChangedListener(listener: OnIsSelectedChangedListener) {
         onIsSelectedChangedListeners.remove(listener)
+    }
+
+    fun clearIsSelectedChangedListeners() {
+        onIsSelectedChangedListeners.clear()
     }
 
 

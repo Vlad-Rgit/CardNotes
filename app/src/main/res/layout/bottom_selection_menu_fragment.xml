@@ -11,11 +11,11 @@
         android:elevation="16dp">
 
         <LinearLayout
-            android:id="@+id/delete_option"
+            android:id="@+id/deleteOption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintEnd_toStartOf="@+id/move_to_option"
+            app:layout_constraintEnd_toStartOf="@+id/moveToOption"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
@@ -37,13 +37,13 @@
 
 
         <LinearLayout
-            android:id="@+id/move_to_option"
+            android:id="@+id/moveToOption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/delete_option"
+            app:layout_constraintStart_toEndOf="@+id/deleteOption"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageButton

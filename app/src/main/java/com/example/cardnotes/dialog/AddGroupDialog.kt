@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.widget.Button
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
@@ -47,11 +48,12 @@ class AddGroupDialog
             .setNegativeButton(R.string.cancel) { _, _ -> }
             .show()
 
+        groupDialog.window!!.setBackgroundDrawableResource(R.drawable.dialog_bg)
+
         positiveButton = groupDialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        positiveButton.isEnabled = false
+        disableButton(positiveButton)
 
         negativeButton = groupDialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-
 
         styleDialogButton(negativeButton)
 
@@ -79,15 +81,30 @@ class AddGroupDialog
 
 
 
-    fun setError(resId: Int) {
+    private fun setError(resId: Int) {
         binding.txtGroupNameLayout.error =
             requireContext().getString(resId)
-        positiveButton.isEnabled = false
+        disableButton(positiveButton)
     }
 
-    fun removeError() {
+    private fun removeError() {
         binding.txtGroupNameLayout.error = null
-        positiveButton.isEnabled = true
+        enableButton(positiveButton)
     }
+
+    private fun enableButton(btn: Button) {
+        btn.isEnabled = true
+        btn.setTextColor(ContextCompat.getColor(
+            requireContext(), R.color.colorPrimary))
+    }
+
+    private fun disableButton(btn: Button) {
+        btn.isEnabled = false
+        btn.setTextColor(ContextCompat.getColor(
+            requireContext(), android.R.color.darker_gray
+        ))
+    }
+
+
 
 }

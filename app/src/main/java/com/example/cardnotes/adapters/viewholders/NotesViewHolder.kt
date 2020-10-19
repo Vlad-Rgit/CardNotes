@@ -70,7 +70,7 @@ abstract class NotesViewHolder
         }
     }
 
-    fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
+    open fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
         note?.removeIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
 
@@ -104,6 +104,10 @@ abstract class NotesViewHolder
 
     fun setOnNoteSelectedChangedCallback(callback: OnNoteClick) {
         onNoteSelectedChanged = callback
+    }
+
+    fun detachListeners() {
+        note?.removeIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
     }
 
     private fun enableSelectionMode() {

@@ -9,12 +9,11 @@
         <item name="colorControlNormal">@color/primaryTextColor</item>
         <item name="android:textColor">@color/primaryTextColor</item>
         <item name="android:textColorPrimary">@color/primaryTextColor</item>
-        <item name="android:alertDialogTheme">@style/CardNotes.AlertDialog</item>
+        <item name="materialAlertDialogTheme">@style/CardNotes.AlertDialog</item>
         <item name="popupMenuStyle">@style/CardNotes.PopupMenu</item>
     </style>
 
-    <style name="CardNotes.TextInputLayout"
-            parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
+    <style name="CardNotes.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
 
         <item name="hintEnabled">false</item>
         <item name="boxStrokeWidth">0dp</item>
@@ -22,27 +21,40 @@
 
     </style>
 
-    <style name="CardNotes.AlertDialog"
-        parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
-        <item name="buttonBarNegativeButtonStyle">
-            @style/Widget.MaterialComponents.Button.TextButton
+    <style name="CardNotes.AlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="materialAlertDialogTitleTextStyle">
+            @style/CardNotes.AlertDialog.Title
         </item>
-        <item name="buttonBarPositiveButtonStyle">
-            @style/Widget.MaterialComponents.Button
+        <item name="materialAlertDialogBodyTextStyle">
+            @style/TextAppearance.MaterialComponents.Body1
+        </item>
+        <item name="shapeAppearanceOverlay">
+            @style/CardNotes.AlertDialog.ShapeOverlay
         </item>
     </style>
 
-    <style name="CardNotes.TextView" parent="">
+    <style name="CardNotes.AlertDialog.Title" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/titleTextColor</item>
+    </style>
+
+    <style name="CardNotes.AlertDialog.ShapeOverlay" parent="">
+        <item name="cornerSize">@dimen/default_radius</item>
+    </style>
+
+
+    <style name="CardNotes.TextView" parent="Widget.MaterialComponents.TextView">
         <item name="android:ellipsize">end</item>
     </style>
 
-    <style name="CardNotes.TextView.NoteContent">
+    <style name="CardNotes.TextView.NoteContent" parent="CardNotes.TextView">
         <item name="android:textAppearance">
             @style/TextAppearance.MaterialComponents.Body1
         </item>
     </style>
 
-    <style name="CardNotes.TextView.NoteTitle">
+    <style name="CardNotes.TextView.NoteTitle" parent="CardNotes.TextView">
         <item name="android:textAppearance">
             @style/TextAppearance.MaterialComponents.Subtitle1
         </item>
@@ -51,7 +63,7 @@
         <item name="android:maxLines">1</item>
     </style>
 
-    <style name="CardNotes.TextView.CreatedAt">
+    <style name="CardNotes.TextView.CreatedAt" parent="CardNotes.TextView">
         <item name="android:textColor">@android:color/darker_gray</item>
         <item name="android:textAppearance">
             @style/TextAppearance.MaterialComponents.Body2

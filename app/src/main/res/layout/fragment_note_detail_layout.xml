@@ -7,8 +7,11 @@
         <import type="android.view.View"/>
         <variable
             name="viewModel"
-            type="com.example.cardnotes.viewmodels.NoteDetailViewModel" />
+            type="cf.feuerkrieg.cardnotes.viewmodels.NoteDetailViewModel" />
     </data>
+<FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:transitionName="@string/note_detail_transition_name"
@@ -21,6 +24,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
+            android:contentDescription="@string/choose_folder"
             android:src="@drawable/baseline_folder_24"
             android:tint="@color/colorPrimary"
             app:backgroundTint="@android:color/white"
@@ -31,28 +35,28 @@
 
 
         <ImageButton
-            android:id="@+id/imageButton2"
+            android:id="@+id/btnClose"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@android:color/white"
-            android:onClick="@{() -> viewModel.onEndEditEvent()}"
             android:src="@drawable/baseline_close_black_24"
+            android:contentDescription="@string/close"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/btn_choose_folder"
             app:layout_constraintBottom_toBottomOf="@id/btn_choose_folder"/>
 
         <TextView
             android:id="@+id/tvGroupName"
+            style="@style/CardNotes.TextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constrainedWidth="true"
             android:layout_gravity="center_vertical"
             android:maxLines="1"
-            android:ellipsize="end"
             android:text="@{viewModel.folderNote == null ? @string/no_folder : viewModel.folderNote.groupName}"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
             app:layout_constraintEnd_toStartOf="@+id/btn_choose_folder"
-            app:layout_constraintStart_toEndOf="@+id/imageButton2"
+            app:layout_constraintStart_toEndOf="@+id/btnClose"
             tools:text="Folder name"
             app:layout_constraintTop_toTopOf="@id/btn_choose_folder"
             app:layout_constraintBottom_toBottomOf="@id/btn_choose_folder"
@@ -100,16 +104,17 @@
                     android:hint="@string/write_here_your_note"
                     android:inputType="textMultiLine"
                     android:text="@={viewModel.note.value}"
+                    android:textSize="18sp"
                     android:textAppearance="?attr/textAppearanceBody1" />
 
             </com.google.android.material.textfield.TextInputLayout>
         </ScrollView>
 
-        <com.example.cardnotes.customviews.RevealedImageButton
+        <cf.feuerkrieg.cardnotes.customviews.RevealedImageButton
             android:id="@+id/revealedImageButton2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
             android:backgroundTint="@android:color/white"
             android:onClick="@{() -> viewModel.saveNote()}"
             android:src="@drawable/baseline_done_black_24"
@@ -121,9 +126,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:barrierDirection="bottom"
-            app:constraint_referenced_ids="imageButton2,revealedImageButton2,btn_choose_folder,tvGroupName"
+            app:constraint_referenced_ids="btnClose,revealedImageButton2,btn_choose_folder,tvGroupName"
             tools:layout_editor_absoluteX="16dp"
             tools:layout_editor_absoluteY="715dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@android:color/transparent"/>
+
+</FrameLayout>
+
 </layout>

@@ -5,11 +5,13 @@
 
     <fragment
         android:id="@+id/mainMenuFragment"
-        android:name="com.example.cardnotes.fragments.MainMenuFragment"
+        android:name="cf.feuerkrieg.cardnotes.fragments.MainMenuFragment"
         android:label="MainMenuFragment" >
         <action
             android:id="@+id/action_mainMenuFragment_to_noteDetailFragment"
-            app:destination="@id/noteDetailFragment" />
+            app:destination="@id/noteDetailFragment"
+            app:popUpTo="@id/mainMenuFragment"
+            app:popUpToInclusive="false" />
         <action
             android:id="@+id/action_mainMenuFragment_to_preferencesFragment"
             app:destination="@id/preferencesFragment" />
@@ -17,7 +19,7 @@
 
     <fragment
         android:id="@+id/noteDetailFragment"
-        android:name="com.example.cardnotes.fragments.NoteDetailFragment"
+        android:name="cf.feuerkrieg.cardnotes.fragments.NoteDetailFragment"
         android:label="NoteDetailFragment" >
         <argument
             android:name="noteId"
@@ -30,6 +32,6 @@
     </fragment>
     <fragment
         android:id="@+id/preferencesFragment"
-        android:name="com.example.cardnotes.fragments.PreferencesFragment"
+        android:name="cf.feuerkrieg.cardnotes.fragments.PreferencesFragment"
         android:label="PreferencesFragment" />
 </navigation>

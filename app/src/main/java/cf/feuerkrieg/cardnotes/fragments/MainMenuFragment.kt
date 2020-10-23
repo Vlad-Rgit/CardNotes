@@ -23,10 +23,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.*
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
@@ -207,6 +204,7 @@ class MainMenuFragment: Fragment() {
                     sidePadding, sidePadding, sidePadding, sidePadding
                 )
             )
+            itemAnimator = DefaultItemAnimator()
 
             ItemTouchHelper(ItemTouchHelperCallback())
                 .attachToRecyclerView(this)

@@ -4,10 +4,10 @@ import android.os.Parcel
 import android.os.Parcelable
 import cf.feuerkrieg.cardnotes.database.models.GroupDatabase
 
-data class GroupDomain(
-    var groupId: Int = 0,
-    var groupName: String = "")
-    : Parcelable{
+class GroupDomain(
+    id: Int = 0,
+    name: String = ""
+) : BaseDomain(id, name), Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
@@ -16,17 +16,15 @@ data class GroupDomain(
 
     fun asDatabase(): GroupDatabase {
         return GroupDatabase(
-            groupId = this.groupId,
-            groupName = this.groupName)
+            groupId = this.id,
+            groupName = this.name
+        )
     }
 
-    override fun toString(): String {
-        return this.groupName
-    }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(groupId)
-        parcel.writeString(groupName)
+        parcel.writeInt(id)
+        parcel.writeString(name)
     }
 
     override fun describeContents(): Int {

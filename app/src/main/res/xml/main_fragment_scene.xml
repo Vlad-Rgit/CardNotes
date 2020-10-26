@@ -14,6 +14,7 @@
     </Transition>
 
     <ConstraintSet android:id="@+id/startScrolling">
+
         <Constraint
             android:id="@+id/txt_search_layout"
             android:layout_width="0dp"
@@ -22,11 +23,13 @@
             motion:layout_constraintLeft_toLeftOf="parent"
             motion:layout_constraintRight_toRightOf="parent"
             motion:layout_constraintTop_toBottomOf="@id/topHost" />
+
         <Constraint android:id="@+id/topHost">
             <CustomAttribute
                 motion:attributeName="elevation"
                 motion:customFloatValue="0" />
         </Constraint>
+
         <Constraint
             android:id="@+id/rvNotes"
             android:layout_marginTop="16dp"
@@ -74,8 +77,6 @@
             motion:deriveConstraintsFrom="@id/startScrolling">
 
         </Constraint>
-
-
     </ConstraintSet>
 
 

@@ -3,45 +3,30 @@ package cf.feuerkrieg.cardnotes.domain
 
 import cf.feuerkrieg.cardnotes.NoteApp
 import cf.feuerkrieg.cardnotes.database.models.NoteDatabase
-import cf.feuerkrieg.cardnotes.interfaces.SortedItem
 import org.joda.time.DateTimeComparator
 import org.joda.time.DateTimeFieldType
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 
-data class NoteDomain(
-    var noteId: Int = 0,
+class NoteDomain(
+    id: Int = 0,
     var groupId: Int? = null,
-    var position: Int = noteId,
-    var name: String = "",
+    var position: Int = id,
+    name: String = "",
     var value: String = "",
     var groupName: String? = null,
-    val createdAt: Timestamp = Timestamp(System.currentTimeMillis()))
-    : SortedItem<NoteDomain> {
-
-
-    fun interface OnIsSelectedChangedListener {
-        fun onIsSelectedChanged(note: NoteDomain)
-    }
-
-    var isSelected = false
-        set(value) {
-            field = value
-            for(listener in onIsSelectedChangedListeners)
-                listener.onIsSelectedChanged(this)
-        }
-
-    private val onIsSelectedChangedListeners = mutableSetOf<OnIsSelectedChangedListener>()
+    val createdAt: Timestamp = Timestamp(System.currentTimeMillis())
+) : BaseDomain(id, name) {
 
 
     val dateCreatedString: String
-     get() {
-         var dateComparator = DateTimeComparator.getDateOnlyInstance()
-         val dateNow = Date()
-         val locale = NoteApp.getLocale()
+        get() {
+            var dateComparator = DateTimeComparator.getDateOnlyInstance()
+            val dateNow = Date()
+            val locale = NoteApp.getLocale()
 
-         if (dateComparator.compare(createdAt, dateNow) == 0) {
+            if (dateComparator.compare(createdAt, dateNow) == 0) {
 
              var timeFormat: String
 
@@ -68,51 +53,13 @@ data class NoteDomain(
 
     fun asDatabase(): NoteDatabase {
         return NoteDatabase(
-            noteId = this.noteId,
+            noteId = this.id,
             groupId = this.groupId,
             title = this.name,
             position = position,
             value = this.value,
-            createdAt = this.createdAt.time)
+            createdAt = this.createdAt.time
+        )
     }
 
-    fun addOnIsSelectedChangedListener(listener: OnIsSelectedChangedListener) {
-        onIsSelectedChangedListeners.add(listener)
-    }
-
-    fun removeIsSelectedChangedListener(listener: OnIsSelectedChangedListener) {
-        onIsSelectedChangedListeners.remove(listener)
-    }
-
-    fun clearIsSelectedChangedListeners() {
-        onIsSelectedChangedListeners.clear()
-    }
-
-
-    override fun areContentsTheSame(other: NoteDomain): Boolean {
-        return this == other
-    }
-
-    override fun areItemsTheSame(other: NoteDomain): Boolean {
-        return this.noteId == other.noteId
-    }
-
-    override fun compareTo(other: NoteDomain): Int {
-        return noteId.compareTo(other.noteId)
-    }
-
-    override fun equals(other: Any?): Boolean {
-
-        val otherNote = other as? NoteDomain
-            ?: throw IllegalArgumentException()
-
-        return this.noteId == otherNote.noteId
-                && this.name == otherNote.name
-                && this.value == otherNote.value
-    }
-
-
-    override fun hashCode(): Int {
-        return noteId.hashCode()
-    }
 }

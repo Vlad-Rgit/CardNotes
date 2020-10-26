@@ -4,31 +4,38 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.NotesViewHolder
+import cf.feuerkrieg.cardnotes.domain.GroupDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.ListAccessor
 import java.util.*
 
 class NotesAdapter(
-    private val selectedNotes: ListAccessor<NoteDomain>)
-    : RecyclerView.Adapter<NotesViewHolder>(){
+    private val selectedNotes: ListAccessor<NoteDomain>
+) : RecyclerView.Adapter<BaseViewHolder<Any>>() {
 
     enum class LayoutType {
         List,
         Grid
     }
 
+    enum class ViewType {
+        Note,
+        Folder
+    }
+
     var layoutType: LayoutType = LayoutType.Grid
 
-    private val boundViewHolders = mutableListOf<NotesViewHolder>()
+    private val boundViewHolders = mutableListOf<BaseViewHolder<Any>>()
 
     private val selectedChangedListener = NoteDomain.OnIsSelectedChangedListener {
-        if(it.isSelected) {
+        if (it.isSelected) {
             selectedNotes.add(it)
-        }
-        else {
+        } else {
             selectedNotes.remove(it)
         }
     }
@@ -42,7 +49,7 @@ class NotesAdapter(
     private var onNoteClickCallback
             : ((note: NoteDomain, root: View) -> Unit)? = null
 
-    private val notes = mutableListOf<NoteDomain>()
+    private val items = mutableListOf<Any>()
 
     var isSelectionMode: Boolean = false
         private set
@@ -53,22 +60,27 @@ class NotesAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
 
-        val holder = when (layoutType) {
-            LayoutType.Grid -> {
-                GridViewHolder.from(parent)
+        if (viewType == ViewType.Note.ordinal) {
+            val holder = when (layoutType) {
+                LayoutType.Grid -> {
+                    GridViewHolder.from(parent)
+                }
+                LayoutType.List -> {
+                    ListViewHolder.from(parent)
+                }
             }
-            LayoutType.List -> {
-                ListViewHolder.from(parent)
-            }
+            return holder
+
+        } else {
+            return null
         }
-
-
-        return holder
     }
 
     override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
-        val note = notes[position]
-        holder.performBind(note, isSelectionMode)
+
+        val note = items[position]
+        if (note is NoteDomain)
+            holder.performBind(note, isSelectionMode)
 
         holder.setOnNoteClickCallback {
             if (isSelectionMode) {
@@ -83,10 +95,10 @@ class NotesAdapter(
         boundViewHolders.add(holder)
     }
 
-    override fun onViewRecycled(holder: NotesViewHolder) {
+    override fun onViewRecycled(holder: BaseViewHolder) {
         super.onViewRecycled(holder)
         boundViewHolders.remove(holder)
-        holder.detachListeners()
+        //holder.detachListeners()
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
@@ -95,11 +107,11 @@ class NotesAdapter(
     }
 
     override fun getItemCount(): Int {
-        return notes.size
+        return items.size
     }
 
     override fun getItemId(position: Int): Long {
-        return notes[position].noteId.toLong()
+        return items[position].hashCode().toLong()
     }
 
 
@@ -118,21 +130,21 @@ class NotesAdapter(
      */
     fun replaceAll(list: List<NoteDomain>) {
 
-        for (note in notes.toList()) {
-            if(!list.contains(note)) {
-                val index = notes.indexOf(note)
-                note.removeIsSelectedChangedListener(selectedChangedListener)
-                notes.removeAt(index)
+        for (note in items.toList()) {
+            if (!list.contains(note)) {
+                val index = items.indexOf(note)
+                // note.removeIsSelectedChangedListener(selectedChangedListener)
+                items.removeAt(index)
                 notifyItemRemoved(index)
             }
         }
 
         for(note in list) {
 
-            if(!notes.contains(note)) {
-                notes.add(note)
+            if (!items.contains(note)) {
+                items.add(note)
                 note.addOnIsSelectedChangedListener(selectedChangedListener)
-                notifyItemInserted(notes.size)
+                notifyItemInserted(items.size)
             }
         }
     }
@@ -159,26 +171,26 @@ class NotesAdapter(
 
     fun <E : Comparable<E>> sort(isDescending: Boolean = false, by: (note: NoteDomain) -> E) {
 
-        for (i in 0 until notes.size) {
+        /* for (i in 0 until items.size) {
 
-            var min = by(notes[i])
-            var index = -1
+             var min = by(items[i])
+             var index = -1
 
-            for(j in i until notes.size) {
-                val v = by(notes[j])
-                if(v < min && !isDescending || v > min && isDescending) {
-                    min = v
-                    index = j
-                }
-            }
+             for(j in i until items.size) {
+                 val v = by(items[j])
+                 if(v < min && !isDescending || v > min && isDescending) {
+                     min = v
+                     index = j
+                 }
+             }
 
-            if(index != -1
-                && index != i) {
-                Collections.swap(notes, i, index)
-                notifyItemMoved(i, index)
-                notifyItemChanged(i)
-            }
-        }
+             if(index != -1
+                 && index != i) {
+                 Collections.swap(items, i, index)
+                 notifyItemMoved(i, index)
+                 notifyItemChanged(i)
+             }
+         }*/
     }
 
     /**
@@ -187,19 +199,19 @@ class NotesAdapter(
      */
     fun moveItem(fromIndex: Int, toIndex: Int) {
 
-        Collections.swap(notes, fromIndex, toIndex)
+        Collections.swap(items, fromIndex, toIndex)
 
-        val tempPosition = notes[fromIndex].position
-        notes[fromIndex].position = notes[toIndex].position
-        notes[toIndex].position = tempPosition
+        val tempPosition = items[fromIndex].position
+        // items[fromIndex].position = items[toIndex].position
+        // items[toIndex].position = tempPosition
 
         notifyItemMoved(fromIndex, toIndex)
 
 
         //Call this to update the information
         //about notes in the database
-        noteUpdatedCallback?.invoke(notes[fromIndex])
-        noteUpdatedCallback?.invoke(notes[toIndex])
+        // noteUpdatedCallback?.invoke(items[fromIndex])
+        // noteUpdatedCallback?.invoke(items[toIndex])
     }
 
     //Setters for callbacks
@@ -219,8 +231,10 @@ class NotesAdapter(
     }
 
     fun setIsSelectedForAllNotes(isSelected: Boolean) {
-        for(note in notes) {
-            if(note.isSelected != isSelected)
+        for (note in items) {
+            if (note is NoteDomain &&
+                note.isSelected != isSelected
+            )
                 note.isSelected = isSelected
         }
     }
@@ -307,10 +321,42 @@ class NotesAdapter(
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                return ListViewHolder(inflater.inflate(
-                    R.layout.note_list_item, parent, false))
+                return ListViewHolder(
+                    inflater.inflate(
+                        R.layout.note_list_item, parent, false
+                    )
+                )
             }
         }
     }
+
+    class FolderViewHolder
+    private constructor(view: View)
+
+        : BaseViewHolder<GroupDomain>(view) {
+
+        private val tvFolderName = view.findViewById<TextView>(
+            R.id.tvFolderName
+        )
+
+        companion object {
+            fun from(parent: ViewGroup): FolderViewHolder {
+
+                val inflater = LayoutInflater.from(parent.context)
+
+                return FolderViewHolder(
+                    inflater.inflate(
+                        R.layout.folder_item, parent, false
+                    )
+                )
+            }
+        }
+
+        override fun performBind(model: GroupDomain, isSelectionMode: Boolean) {
+            tvFolderName.text = model.groupName
+        }
+
+    }
+
 
 }

@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:tools="http://schemas.android.com/tools"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
-        <import type="android.view.View"/>
+
+        <import type="android.view.View" />
+
         <import type="cf.feuerkrieg.cardnotes.domain.NoteDomain" />
 
         <variable
@@ -16,203 +17,122 @@
             type="cf.feuerkrieg.cardnotes.fragments.MainMenuFragment" />
     </data>
 
-    <FrameLayout
-        android:id="@+id/master_frame"
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/main_menu_host"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:layoutDescription="@xml/main_fragment_scene">
 
-        <androidx.constraintlayout.motion.widget.MotionLayout
-            android:id="@+id/main_menu_host"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/topHost"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutDescription="@xml/main_fragment_scene">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:liftOnScroll="true"
+            android:background="@android:color/white"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <FrameLayout
-                android:id="@+id/topHost"
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/main_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="8dp"
-                android:paddingEnd="@dimen/side_padding"
-                android:paddingStart="@dimen/side_padding"
-                android:paddingBottom="8dp"
-                android:background="@android:color/white"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_scrollFlags="noScroll"
+                app:menu="@menu/main_menu"
+                app:popupTheme="@style/CardNotes.PopupMenu"
+                app:title="Card notes">
+
+            </androidx.appcompat.widget.Toolbar>
+
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/selection_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_scrollFlags="noScroll">
 
                 <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/selectionHost"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/btnEndEdit"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintLeft_toLeftOf="parent"
-                        app:backgroundTint="@android:color/white"
-                        android:src="@drawable/baseline_close_24"
-                        android:layout_alignParentStart="true"
-                        android:contentDescription="@string/close_edit_mode"
-                        android:layout_marginEnd="16dp" />
-
-
-                    <TextView
-                        android:id="@+id/tvSelectItems"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceHeadline6"
-                        app:layout_constraintBottom_toBottomOf="@id/btnEndEdit"
-                        app:layout_constraintLeft_toLeftOf="@id/btnEndEdit"
-                        app:layout_constraintRight_toRightOf="@id/btnSelectAll"
-                        android:text="@{ui.selectedItemsString}"
-                        app:layout_constraintTop_toTopOf="@id/btnEndEdit" />
-
-                    <cf.feuerkrieg.cardnotes.customviews.ImageToggleButton
-                        android:id="@+id/btnSelectAll"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:backgroundTint="@android:color/white"
-                        app:layout_constraintBottom_toBottomOf="@id/btnEndEdit"
-                        android:src="@drawable/select_all"
-                        app:layout_constraintTop_toTopOf="@id/btnEndEdit" />
-
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/group_host"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <TextView
-                        android:id="@+id/txt_folder_layout"
-                        style="@style/CardNotes.TextView"
-                        android:layout_width="0dp"
+                    <ImageButton
+                        android:id="@+id/btn_end_edit"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:maxLines="1"
-                        android:text="@{viewModel.currentGroup.groupId == -1 ? @string/all_folders : viewModel.currentGroup.groupName}"
+                        android:backgroundTint="@android:color/white"
+                        android:src="@drawable/baseline_close_black_24"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintLeft_toLeftOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@{ui.selectedItemsString}"
                         android:textAppearance="?attr/textAppearanceHeadline6"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@+id/btn_folder"
-                        app:layout_constraintHorizontal_bias="0.51"
-                        app:layout_constraintHorizontal_chainStyle="packed"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        tools:text="Group name" />
+                        app:layout_constraintLeft_toRightOf="@id/btn_end_edit"
+                        app:layout_constraintRight_toLeftOf="@id/btn_select_all"
+                        app:layout_constraintTop_toTopOf="parent" />
 
-                    <ImageButton
-                        android:id="@+id/btn_folder"
+                    <cf.feuerkrieg.cardnotes.customviews.ImageToggleButton
+                        android:id="@+id/btn_select_all"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        app:backgroundTint="@android:color/white"
-                        android:src="@drawable/baseline_folder_24"
-                        android:tint="@color/colorPrimary"
-                        android:contentDescription="@string/choose_folder"
-                        app:layout_constraintEnd_toStartOf="@id/btn_menu"
-                        app:layout_constraintStart_toEndOf="@+id/txt_folder_layout"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
-
-                    <cf.feuerkrieg.cardnotes.customviews.RevealedImageButton
-                        android:id="@+id/btn_menu"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:backgroundTint="@android:color/white"
+                        android:src="@drawable/select_all"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        android:src="@drawable/more_vert"
-                        app:backgroundTint="@android:color/white" />
+                        app:layout_constraintRight_toRightOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.appcompat.widget.Toolbar>
 
-            </FrameLayout>
+        </com.google.android.material.appbar.AppBarLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/txt_search_layout"
-                style="@style/CardNotes.TextInputLayout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/topHost"
-                android:paddingStart="@dimen/side_padding"
-                android:paddingEnd="@dimen/side_padding"
-                android:hint="@string/search_by_title_or_content"
-                app:endIconDrawable="@drawable/baseline_search_black_24"
-                app:endIconMode="custom">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/ed_search"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/search_bg"
-                    android:hint="@string/search_by_title_or_content"
-                    android:inputType="text"
-                    android:maxLines="1"
-                    android:textAppearance="?attr/textAppearanceBody1"
-                    android:textColorHint="#99000000" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <TextView
-                android:id="@+id/tvNoNotes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceHeadline6"
-                android:text="@string/no_notes_here"
-                android:visibility="@{viewModel.notes.size() == 0 ? View.VISIBLE : View.GONE}"
-                app:layout_constraintBottom_toBottomOf="parent"
+        <TextView
+            android:id="@+id/tvNoNotes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:text="@string/no_notes_here"
+            android:visibility="@{viewModel.notes.size() == 0 ? View.VISIBLE : View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/txt_search_layout" />
 
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvNotes"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:transitionGroup="true"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/txt_search_layout"
-                app:layout_constraintVertical_bias="0.0" />
-
-        </androidx.constraintlayout.motion.widget.MotionLayout>
-
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/btn_add_note"
-            android:transitionName="btn_add_note_transition"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:backgroundTint="@color/colorPrimary"
-            android:src="@drawable/baseline_add_black_48"
-            app:borderWidth="0dp"
-            android:layout_margin="16dp"
-            android:layout_gravity="bottom|end"/>
-
-
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvNotes"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:transitionGroup="true"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txt_search_layout"
+            app:layout_constraintVertical_bias="0.0" />
 
 
         <FrameLayout
             android:id="@+id/bottomSelectionMenuHost"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_gravity="bottom">
+            android:layout_height="1dp"
+            android:layout_gravity="bottom"
+            app:layout_constraintTop_toBottomOf="@id/rvNotes">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bottom_selection_menu_bg"
+                android:elevation="16dp"
                 android:paddingTop="6dp"
-                android:paddingBottom="6dp"
-                android:elevation="16dp">
+                android:paddingBottom="6dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnDelete"
@@ -248,14 +168,18 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </FrameLayout>
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btn_add_note"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/add_note_or_folder"
+            android:src="@drawable/baseline_add_black_48"
+            android:transitionName="btn_add_note_transition"
+            app:backgroundTint="@color/colorPrimary"
+            app:borderWidth="0dp" />
 
-        <View
-            android:id="@+id/overlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/transparent"
-            android:visibility="gone" />
-
-    </FrameLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </layout>

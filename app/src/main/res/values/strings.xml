@@ -71,4 +71,7 @@
         <item quantity="other">Do you want to delete %d notes?</item>
     </plurals>
     <string name="accept">Аccept</string>
+    <string name="search_notes">Search notes</string>
+    <string name="add_note_or_folder">Add note or folder</string>
+    <string name="folder">Folder</string>
 </resources>

@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_search"
+        android:icon="@drawable/baseline_search_black_24"
+        android:title="@string/search_notes"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_change_layout"
-        android:title="@string/list_view"/>
+        android:title="@string/list_view" />
     <item android:title="@string/sort_by_date">
         <menu>
             <item
                 android:id="@+id/menu_new_first"
-                android:title="@string/new_first"/>
+                android:title="@string/new_first" />
             <item
                 android:id="@+id/menu_old_first"
                 android:title="@string/old_first"/>

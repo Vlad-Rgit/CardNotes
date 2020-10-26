@@ -314,7 +314,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/home/vlad/Android/android-studio/plugins/android/lib/android.jar!/images/material/icons/materialicons/arrow_back/baseline_arrow_back_24.xml" />
+                                      <entry key="url" value="file:/$PROJECT_DIR$/../../../AndroidSDK/icons/material/materialicons/search/baseline_search_24.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -324,7 +324,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="outputName" value="back" />
+                            <entry key="outputName" value="ic_baseline_search_24" />
+                            <entry key="sourceFile" value="C:\Projects\Android\CardNotes" />
                           </map>
                         </option>
                       </PersistentState>

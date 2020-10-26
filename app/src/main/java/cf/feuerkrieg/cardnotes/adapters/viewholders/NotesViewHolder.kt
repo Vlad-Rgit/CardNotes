@@ -1,36 +1,30 @@
 package cf.feuerkrieg.cardnotes.adapters.viewholders
 
-import android.animation.ValueAnimator
 import android.view.View
 import android.widget.TextView
-import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.Observer
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.OnNoteClick
-import com.google.android.material.card.MaterialCardView
 
 abstract class NotesViewHolder
-    (view: View)
-    : RecyclerView.ViewHolder(view), ItemTouchViewHolder {
+    (view: View) : BaseViewHolder<NoteDomain>(view) {
 
 
     var isSelectionMode = false
         set(value) {
             field = value
-            if(value) {
+            if (value) {
                 enableSelectionMode()
-            }
-            else {
+            } else {
                 disableSelectionMode()
             }
         }
 
-    protected val cardHost: MaterialCardView = itemView as MaterialCardView
 
     protected var onNoteClick: OnNoteClick? = null
     protected var onLongNoteClick: OnNoteClick? = null
-    protected var onNoteSelectedChanged: OnNoteClick? = null
 
     protected val tvNoteName: TextView = itemView.findViewById(R.id.tvNoteName)
     protected val tvNoteValue: TextView = itemView.findViewById(R.id.tvNoteValue)
@@ -39,9 +33,9 @@ abstract class NotesViewHolder
 
     protected var note: NoteDomain? = null
 
-    protected val onNoteIsSelectedChangedCallback = NoteDomain.OnIsSelectedChangedListener {
-        if (it.isSelected != cbIsSelected.isChecked) {
-            cbIsSelected.isChecked = it.isSelected
+    private val isSelectedObserver = Observer<Boolean> {
+        if (it != cbIsSelected.isChecked) {
+            cbIsSelected.isChecked = it
         }
     }
 
@@ -63,20 +57,22 @@ abstract class NotesViewHolder
 
         cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
             note?.let {
-                if(it.isSelected != isChecked) {
-                    it.isSelected = isChecked
+                if (it.isSelected.value != isChecked) {
+                    it.isSelected.value = isChecked
                 }
             }
         }
     }
 
-    open fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
+    override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
-        note?.removeIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
+        note?.isSelected?.removeObserver(isSelectedObserver)
 
         note = model
 
-        if(model.name.isBlank()) {
+        note!!.isSelected.observe(lifecycleOwner, isSelectedObserver)
+
+        if (model.name.isBlank()) {
             tvNoteName.visibility = View.GONE
         } else {
             tvNoteName.visibility = View.VISIBLE
@@ -85,8 +81,8 @@ abstract class NotesViewHolder
 
         tvNoteValue.text = model.value
         tvCreatedAt.text = model.dateCreatedString
-        cbIsSelected.isChecked = model.isSelected
-        cardHost.transitionName = model.noteId.toString()
+        cbIsSelected.isChecked = model.isSelected.value!!
+        cardHost.transitionName = model.hashCode().toString()
 
         if (model.name.isBlank()) {
             tvNoteName.visibility = View.GONE
@@ -100,9 +96,6 @@ abstract class NotesViewHolder
             tvNoteValue.visibility = View.VISIBLE
         }
 
-
-        model.addOnIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
-
         this.isSelectionMode = isSelectionMode
     }
 
@@ -112,14 +105,6 @@ abstract class NotesViewHolder
 
     fun setOnNoteLongClickCallback(callback: OnNoteClick) {
         onLongNoteClick = callback
-    }
-
-    fun setOnNoteSelectedChangedCallback(callback: OnNoteClick) {
-        onNoteSelectedChanged = callback
-    }
-
-    fun detachListeners() {
-        note?.removeIsSelectedChangedListener(onNoteIsSelectedChangedCallback)
     }
 
     private fun enableSelectionMode() {
@@ -135,27 +120,4 @@ abstract class NotesViewHolder
         }
     }
 
-    override fun downTouch() {
-
-        val elevationAnimation = ValueAnimator.ofFloat(3f, 16f).apply {
-            addUpdateListener {
-                val animatedValue = animatedValue as Float
-                cardHost.cardElevation = animatedValue
-            }
-        }
-
-        elevationAnimation.start()
-    }
-
-    override fun upTouch() {
-
-        val elevationAnimation = ValueAnimator.ofFloat(3f, 16f).apply {
-            addUpdateListener {
-                val animatedValue = animatedValue as Float
-                cardHost.cardElevation = animatedValue
-            }
-        }
-
-        elevationAnimation.reverse()
-    }
 }

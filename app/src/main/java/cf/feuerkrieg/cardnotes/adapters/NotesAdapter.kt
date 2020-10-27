@@ -5,10 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.NotesViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ViewHolderFactory
+import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import cf.feuerkrieg.cardnotes.domain.GroupDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.ListAccessor
@@ -16,7 +19,7 @@ import java.util.*
 
 class NotesAdapter(
     private val selectedNotes: ListAccessor<NoteDomain>
-) : RecyclerView.Adapter<BaseViewHolder<Any>>() {
+) : RecyclerView.Adapter<BaseViewHolder<BaseDomain>>() {
 
     enum class LayoutType {
         List,
@@ -30,16 +33,9 @@ class NotesAdapter(
 
     var layoutType: LayoutType = LayoutType.Grid
 
-    private val boundViewHolders = mutableListOf<BaseViewHolder<Any>>()
+    val lifecycleOwner: LifecycleOwner? = null
 
-    private val selectedChangedListener = NoteDomain.OnIsSelectedChangedListener {
-        if (it.isSelected) {
-            selectedNotes.add(it)
-        } else {
-            selectedNotes.remove(it)
-        }
-    }
-
+    private val boundViewHolders = mutableListOf<BaseViewHolder<BaseDomain>>()
 
     private var startEditCallback: Runnable? = null
 
@@ -58,39 +54,47 @@ class NotesAdapter(
         setHasStableIds(true)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NotesViewHolder {
-
-        if (viewType == ViewType.Note.ordinal) {
-            val holder = when (layoutType) {
-                LayoutType.Grid -> {
-                    GridViewHolder.from(parent)
-                }
-                LayoutType.List -> {
-                    ListViewHolder.from(parent)
-                }
-            }
-            return holder
-
-        } else {
-            return null
+    private fun requireLifecycleOwner(): LifecycleOwner {
+        return requireNotNull(
+            lifecycleOwner
+        ) {
+            "Lifecycle owner of the notes adapter " +
+                    "must be initialized!"
         }
     }
 
-    override fun onBindViewHolder(holder: NotesViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<BaseDomain> {
 
-        val note = items[position]
-        if (note is NoteDomain)
-            holder.performBind(note, isSelectionMode)
+        val holder: BaseViewHolder<BaseDomain>
 
-        holder.setOnNoteClickCallback {
-            if (isSelectionMode) {
-                it.isSelected = !it.isSelected
-            } else {
-                onNoteClickCallback?.invoke(it, holder.itemView)
-            }
+        if (viewType == ViewType.Note.ordinal) {
+            holder = when (layoutType) {
+                LayoutType.Grid -> {
+                    GridViewHolder.from(parent, requireLifecycleOwner())
+                }
+                LayoutType.List -> {
+                    ListViewHolder.from(parent, requireLifecycleOwner())
+                }
+            } as BaseViewHolder<BaseDomain>
+
+        } else {
+            holder = when(layoutType) {
+                LayoutType.Grid -> {
+                    FolderViewHolder.from(parent, requireLifecycleOwner())
+                }
+                LayoutType.List -> {
+                    FolderViewHolder.from(parent, requireLifecycleOwner())
+                }
+            } as BaseViewHolder<BaseDomain>
         }
 
-        holder.setOnNoteLongClickCallback { startEdit() }
+        return holder
+    }
+
+    override fun onBindViewHolder(holder: BaseViewHolder<BaseDomain>, position: Int) {
+
+        val note = items[position]
+
 
         boundViewHolders.add(holder)
     }
@@ -271,20 +275,22 @@ class NotesAdapter(
 
 
     class GridViewHolder
-    private constructor(view: View) : NotesViewHolder(view) {
+    private constructor(view: View, lifecycleOwner: LifecycleOwner)
+        : NotesViewHolder(view, lifecycleOwner) {
 
         private lateinit var titleSeparator: View
 
-        companion object {
+        companion object : ViewHolderFactory<GridViewHolder>{
 
-            fun from(parent: ViewGroup): GridViewHolder {
+            override fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): GridViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
                 val holder = GridViewHolder(
                     inflater.inflate(
                         R.layout.note_grid_item, parent, false
-                    )
+                    ),
+                    lifecycleOwner
                 )
 
                 holder.titleSeparator = holder.itemView.findViewById(
@@ -313,47 +319,48 @@ class NotesAdapter(
     }
 
     class ListViewHolder
-    private constructor(view: View)
-        : NotesViewHolder(view) {
+    private constructor(view: View, lifecycleOwner: LifecycleOwner)
+        : NotesViewHolder(view, lifecycleOwner) {
 
-        companion object {
-            fun from(parent: ViewGroup): ListViewHolder {
+        companion object : ViewHolderFactory<ListViewHolder> {
+            override fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): ListViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
                 return ListViewHolder(
                     inflater.inflate(
                         R.layout.note_list_item, parent, false
-                    )
+                    ),
+                    lifecycleOwner
                 )
             }
         }
     }
 
     class FolderViewHolder
-    private constructor(view: View)
-
-        : BaseViewHolder<GroupDomain>(view) {
+    private constructor(view: View, lifecycleOwner: LifecycleOwner)
+        : BaseViewHolder<GroupDomain>(view, lifecycleOwner) {
 
         private val tvFolderName = view.findViewById<TextView>(
             R.id.tvFolderName
         )
 
-        companion object {
-            fun from(parent: ViewGroup): FolderViewHolder {
+        companion object : ViewHolderFactory<FolderViewHolder>{
+            override fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): FolderViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
                 return FolderViewHolder(
                     inflater.inflate(
                         R.layout.folder_item, parent, false
-                    )
+                    ),
+                    lifecycleOwner
                 )
             }
         }
 
         override fun performBind(model: GroupDomain, isSelectionMode: Boolean) {
-            tvFolderName.text = model.groupName
+            tvFolderName.text = model.name
         }
 
     }

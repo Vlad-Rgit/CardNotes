@@ -2,6 +2,7 @@ package cf.feuerkrieg.cardnotes.adapters.viewholders
 
 import android.view.View
 import android.widget.TextView
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
@@ -9,8 +10,9 @@ import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.OnNoteClick
 
 abstract class NotesViewHolder
-    (view: View) : BaseViewHolder<NoteDomain>(view) {
-
+    (view: View,
+    lifecycleOwner: LifecycleOwner)
+    : BaseViewHolder<NoteDomain>(view, lifecycleOwner) {
 
     var isSelectionMode = false
         set(value) {

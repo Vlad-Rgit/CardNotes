@@ -3,6 +3,10 @@ package cf.feuerkrieg.cardnotes.domain
 import androidx.lifecycle.MutableLiveData
 import cf.feuerkrieg.cardnotes.interfaces.SortedItem
 
+
+/**
+ * Base class for all Domain Models
+ */
 abstract class BaseDomain(
     var id: Int = -1,
     var name: String = ""

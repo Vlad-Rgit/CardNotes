@@ -66,6 +66,12 @@ abstract class NotesDB: RoomDatabase() {
                      end;
                 """)
             }
+
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                initGroups(getInstance().groupDao)
+                initNotes(getInstance().noteDao)
+            }
         }
 
         /**

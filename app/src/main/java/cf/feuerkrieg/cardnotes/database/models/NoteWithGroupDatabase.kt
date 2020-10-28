@@ -10,14 +10,16 @@ data class NoteWithGroupDatabase(
     var noteDatabase: NoteDatabase,
 
     @Relation(
-        parentColumn = "groupId",
-        entity = GroupDatabase::class,
-        entityColumn = "groupId")
-    var group: GroupDatabase) {
+        parentColumn = "folderId",
+        entity = FolderDatabase::class,
+        entityColumn = "folderId"
+    )
+    var folder: FolderDatabase
+) {
 
     fun asDomain(): NoteDomain {
         val noteDomain = noteDatabase.asDomain()
-        noteDomain.groupName = group.groupName
+        noteDomain.groupName = folder.folderName
         return noteDomain
     }
 }

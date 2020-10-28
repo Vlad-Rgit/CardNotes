@@ -1,6 +1,6 @@
 package cf.feuerkrieg.cardnotes.interfaces
 
-interface ListAccessor<T> {
+interface ListAccessor<in T> {
 
     fun add(item: T)
     fun remove(item: T)

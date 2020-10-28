@@ -1,7 +1,13 @@
 package cf.feuerkrieg.cardnotes.domain
 
 import androidx.lifecycle.MutableLiveData
+import cf.feuerkrieg.cardnotes.NoteApp
 import cf.feuerkrieg.cardnotes.interfaces.SortedItem
+import org.joda.time.DateTimeComparator
+import org.joda.time.DateTimeFieldType
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 /**
@@ -9,10 +15,44 @@ import cf.feuerkrieg.cardnotes.interfaces.SortedItem
  */
 abstract class BaseDomain(
     var id: Int = -1,
-    var name: String = ""
+    var name: String = "",
+    val createdAt: Timestamp,
+    var modifiedAt: Timestamp
 ) : SortedItem<BaseDomain> {
 
     val isSelected = MutableLiveData<Boolean>(false)
+
+
+    open val dateCreatedString: String
+        get() {
+            var dateComparator = DateTimeComparator.getDateOnlyInstance()
+            val dateNow = Date()
+            val locale = NoteApp.getLocale()
+
+            if (dateComparator.compare(createdAt, dateNow) == 0) {
+
+                var timeFormat: String
+
+                if (NoteApp.is24hourFormat()) {
+                    timeFormat = "H:mm"
+                } else {
+                    timeFormat = "h:mm a"
+                }
+
+                val formatter = SimpleDateFormat(timeFormat, locale)
+                return formatter.format(createdAt)
+            }
+
+            dateComparator = DateTimeComparator.getInstance(DateTimeFieldType.year())
+
+            if (dateComparator.compare(createdAt, dateNow) == 0) {
+                val formatter = SimpleDateFormat("d MMMM", locale)
+                return formatter.format(createdAt)
+            }
+
+            val formatter = SimpleDateFormat.getDateInstance(SimpleDateFormat.DEFAULT, locale)
+            return formatter.format(createdAt)
+        }
 
     override fun equals(other: Any?): Boolean {
 

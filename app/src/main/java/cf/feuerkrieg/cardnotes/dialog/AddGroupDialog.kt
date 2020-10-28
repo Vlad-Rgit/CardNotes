@@ -12,15 +12,15 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.databinding.GroupDialogLayoutBinding
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
-import cf.feuerkrieg.cardnotes.repos.GroupsRepo
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
+import cf.feuerkrieg.cardnotes.repos.FolderRepo
 import cf.feuerkrieg.cardnotes.utils.toggleHideKeyboard
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class AddGroupDialog
-    (private val onCreateGroupCallback: (group: GroupDomain) -> Unit)
+    (private val onCreateGroupCallback: (folder: FolderDomain) -> Unit)
     : DialogFragment() {
 
 
@@ -28,7 +28,7 @@ class AddGroupDialog
     private lateinit var negativeButton: Button
 
     private lateinit var binding: GroupDialogLayoutBinding
-    private val groupsRepo = GroupsRepo()
+    private val groupsRepo = FolderRepo()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
@@ -43,8 +43,8 @@ class AddGroupDialog
 
                     lifecycleScope.launch(Dispatchers.Main) {
                         onCreateGroupCallback(
-                            GroupDomain(
-                                groupName = binding.edGroupName.text.toString()
+                            FolderDomain(
+                                name = binding.edGroupName.text.toString()
                             )
                         )
                     }
@@ -116,7 +116,4 @@ class AddGroupDialog
             requireContext(), android.R.color.darker_gray
         ))
     }
-
-
-
 }

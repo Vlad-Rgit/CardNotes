@@ -5,12 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cf.feuerkrieg.cardnotes.NoteApp
 import cf.feuerkrieg.cardnotes.R
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.BaseDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.ListAccessor
-import cf.feuerkrieg.cardnotes.repos.GroupsRepo
+import cf.feuerkrieg.cardnotes.repos.FolderRepo
 import cf.feuerkrieg.cardnotes.repos.NotesRepo
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -24,11 +26,11 @@ class MainMenuViewModel
         .applicationContext
 
     private val notesRepo = NotesRepo()
-    private val groupsRepo = GroupsRepo()
+    private val groupsRepo = FolderRepo()
 
     private val _selectedNotesAmount = MutableLiveData<Int>(0)
 
-    val selectedNotesAccessor = SelectedNotesAccessor()
+    val selectedItemsAccessor = SelectedItemsAccessor()
 
     val selectedNotesAmount
         get() = _selectedNotesAmount
@@ -44,26 +46,28 @@ class MainMenuViewModel
             refreshNotes()
         }
 
-    private val allGroup = GroupDomain(
-        groupId = -1,
-        groupName = context.getString(R.string.all_folders))
+    private val allGroup = FolderDomain(
+        id = -1,
+        name = context.getString(R.string.all_folders)
+    )
 
-    val currentGroup = MutableLiveData<GroupDomain>()
+    val currentGroup = MutableLiveData<FolderDomain>()
 
-    private val _selectedNotes = mutableSetOf<NoteDomain>()
+    private val _selectedItems = mutableSetOf<BaseDomain>()
 
-    val selectedNotes: Set<NoteDomain>
-        get() = _selectedNotes
+    val selectedItems: Set<BaseDomain>
+        get() = _selectedItems
+
+    /**
+     * All available groups
+     */
+    val groups = groupsRepo.groups
 
     /**
      * Notes filtered with searchQuery
      */
     val notes = notesRepo.notes
 
-    /**
-     * All available groups
-     */
-    val groups = groupsRepo.groups
 
     init {
 
@@ -95,8 +99,25 @@ class MainMenuViewModel
      */
     fun removeSelectedNotes() {
         viewModelScope.launch(Dispatchers.IO) {
-            notesRepo.removeAll(_selectedNotes.toList())
-            _selectedNotes.clear()
+
+            coroutineScope {
+
+                launch {
+                    val folders = _selectedItems
+                        .filterIsInstance<FolderDomain>()
+
+                    groupsRepo.removeAll(folders)
+                }
+
+                launch {
+                    val notes = _selectedItems
+                        .filterIsInstance<NoteDomain>()
+
+                    notesRepo.removeAll(notes)
+                }
+            }
+
+            _selectedItems.clear()
             refreshNotesImpl()
         }
     }
@@ -105,13 +126,36 @@ class MainMenuViewModel
     /**
      * Move selected notes to group
      */
-    fun moveSelectedNotes(group: GroupDomain) {
+    fun moveSelectedNotes(folder: FolderDomain) {
         viewModelScope.launch {
-            _selectedNotes.forEach {
-                it.groupId = group.groupId
+
+            coroutineScope {
+
+                launch {
+
+                    val folders = _selectedItems
+                        .filterIsInstance<FolderDomain>()
+
+                    folders.forEach {
+                        it.parentFolderId = folder.id
+                    }
+
+                    groupsRepo.updateAll(folders)
+                }
+
+                launch {
+                    val notes = _selectedItems
+                        .filterIsInstance<NoteDomain>()
+
+                    notes.forEach {
+                        it.groupId = folder.id
+                    }
+
+                    notesRepo.updateNotes(notes)
+                }
             }
-            notesRepo.updateNotes(_selectedNotes.toList())
-            _selectedNotes.clear()
+
+            _selectedItems.clear()
             refreshNotesImpl()
         }
     }
@@ -129,7 +173,7 @@ class MainMenuViewModel
     suspend fun updateCurrentGroup(name: String) {
         withContext(Dispatchers.IO) {
             val group = currentGroup.value!!
-            group.groupName = name
+            group.name = name
             currentGroup.postValue(group)
             groupsRepo.updateGroup(group)
         }
@@ -156,16 +200,16 @@ class MainMenuViewModel
         }
     }
 
-    fun addGroup(group: GroupDomain) {
+    fun addGroup(folder: FolderDomain) {
         viewModelScope.launch {
-            addGroupImpl(group)
+            addGroupImpl(folder)
         }
     }
 
-    fun removeGroup(group: GroupDomain) {
+    fun removeGroup(folder: FolderDomain) {
         viewModelScope.launch {
-            notesRepo.removeByGroupId(group.groupId)
-            groupsRepo.removeGroup(group)
+            notesRepo.removeByGroupId(folder.id)
+            groupsRepo.removeGroup(folder)
         }
     }
 
@@ -173,9 +217,9 @@ class MainMenuViewModel
         removeGroup(currentGroup.value!!)
     }
 
-    suspend fun addGroupImpl(group: GroupDomain): Int {
+    suspend fun addGroupImpl(folder: FolderDomain): Int {
         return withContext(Dispatchers.IO) {
-            val id = groupsRepo.addGroup(group)
+            val id = groupsRepo.addGroup(folder)
             id
         }
     }
@@ -186,44 +230,44 @@ class MainMenuViewModel
      */
     private suspend fun refreshNotesImpl() {
         withContext(Dispatchers.IO) {
-            if(currentGroup.value!!.groupId == -1) {
+            if (currentGroup.value!!.id == -1) {
                 notesRepo.refreshItemsByQuery(searchQuery)
-            }
-            else {
+            } else {
                 notesRepo.refreshItemsByQueryByGroup(
-                    searchQuery, requireNotNull(currentGroup.value))
+                    searchQuery, requireNotNull(currentGroup.value)
+                )
             }
         }
     }
 
-    inner class SelectedNotesAccessor: ListAccessor<NoteDomain> {
+    inner class SelectedItemsAccessor : ListAccessor<BaseDomain> {
 
-        override fun add(item: NoteDomain) {
-            _selectedNotes.add(item)
-            _selectedNotesAmount.value = _selectedNotes.size
+        override fun add(item: BaseDomain) {
+            _selectedItems.add(item)
+            _selectedNotesAmount.value = _selectedItems.size
         }
 
-        override fun remove(item: NoteDomain) {
-            _selectedNotes.remove(item)
-            _selectedNotesAmount.value = _selectedNotes.size
+        override fun remove(item: BaseDomain) {
+            _selectedItems.remove(item)
+            _selectedNotesAmount.value = _selectedItems.size
         }
 
         override fun clear() {
-            _selectedNotes.clear()
-            _selectedNotesAmount.value = _selectedNotes.size
+            _selectedItems.clear()
+            _selectedNotesAmount.value = _selectedItems.size
         }
 
-        override fun addAll(collection: Collection<NoteDomain>) {
-            _selectedNotes.addAll(collection)
-            _selectedNotesAmount.value = _selectedNotes.size
+        override fun addAll(collection: Collection<BaseDomain>) {
+            _selectedItems.addAll(collection)
+            _selectedNotesAmount.value = _selectedItems.size
         }
 
-        override fun contains(item: NoteDomain): Boolean {
-            return _selectedNotes.contains(item)
+        override fun contains(item: BaseDomain): Boolean {
+            return _selectedItems.contains(item)
         }
 
         override fun getSize(): Int {
-            return _selectedNotes.size
+            return _selectedItems.size
         }
     }
 }

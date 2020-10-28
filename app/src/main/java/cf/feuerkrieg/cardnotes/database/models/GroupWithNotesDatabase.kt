@@ -7,11 +7,12 @@ import androidx.room.Relation
 data class GroupWithNotesDatabase(
 
     @Embedded
-    var group: GroupDatabase,
+    var folder: FolderDatabase,
 
     @Relation(
-        parentColumn = "groupId",
+        parentColumn = "folderId",
         entity = NoteDatabase::class,
-        entityColumn = "groupId")
+        entityColumn = "folderId"
+    )
     var notes: List<NoteDatabase>
 )

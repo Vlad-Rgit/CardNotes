@@ -28,7 +28,7 @@ import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
 import cf.feuerkrieg.cardnotes.databinding.FragmentMainMenuBinding
 import cf.feuerkrieg.cardnotes.decorators.PaddingDecorator
 import cf.feuerkrieg.cardnotes.dialog.AddGroupDialog
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.utils.ItemTouchHelperCallback
 import cf.feuerkrieg.cardnotes.utils.hideKeyborad
 import cf.feuerkrieg.cardnotes.viewmodels.MainMenuViewModel
@@ -85,7 +85,7 @@ class MainMenuFragment: Fragment() {
         super.onCreate(savedInstanceState)
 
         //Init note adapter for recycler view
-        notesAdapter = NotesAdapter(viewModel.selectedNotesAccessor)
+        notesAdapter = NotesAdapter(viewModel.selectedItemsAccessor)
 
         savedInstanceState?.let {
             notesAdapter.layoutType = NotesAdapter.LayoutType
@@ -131,7 +131,7 @@ class MainMenuFragment: Fragment() {
             )
 
             val action = MainMenuFragmentDirections
-                .actionMainMenuFragmentToNoteDetailFragment(note.noteId)
+                .actionMainMenuFragmentToNoteDetailFragment(note.id)
 
             findNavController().navigate(action, extras)
         }
@@ -143,7 +143,7 @@ class MainMenuFragment: Fragment() {
 
 
         setFragmentResultListener(NoteDetailFragment.KEY_CHOSEN_FOLDER) { _, bundle ->
-            if (viewModel.currentGroup.value!!.groupId != -1) {
+            if (!viewModel.currentGroup.value!!.isDefaultFolder) {
                 val groupId = bundle.getInt("groupId")
                 viewModel.setCurrentGroup(groupId)
                 updatePopupMenu(groupId)
@@ -166,9 +166,10 @@ class MainMenuFragment: Fragment() {
         )
 
         binding.lifecycleOwner = viewLifecycleOwner
-
         binding.viewModel = viewModel
         binding.ui = this
+
+        notesAdapter.lifecycleOwner = viewLifecycleOwner
 
         //Init options menu
         popupMenu = binding.mainToolbar.menu
@@ -225,11 +226,16 @@ class MainMenuFragment: Fragment() {
             }
         })
 
-          //Attach observer to notes collection
+        //Attach observer to notes collection
         //And reflect any changes within the adapter
         viewModel.notes.observe(viewLifecycleOwner, { notes ->
-            notesAdapter.replaceAll(notes)
-            notesAdapter.sortByPosition()
+            notesAdapter.addAll(notes)
+        })
+
+
+        viewModel.groups.observe(viewLifecycleOwner, { folders ->
+            notesAdapter.addFirst(folders)
+            binding.rvNotes.scrollToPosition(0)
         })
 
 
@@ -312,7 +318,7 @@ class MainMenuFragment: Fragment() {
 
             val action = MainMenuFragmentDirections
                 .actionMainMenuFragmentToNoteDetailFragment(
-                    newGroupId = viewModel.currentGroup.value!!.groupId
+                    newGroupId = viewModel.currentGroup.value!!.id
                 )
 
             findNavController().navigate(action)
@@ -332,7 +338,7 @@ class MainMenuFragment: Fragment() {
         binding.btnDelete.setOnClickListener {
 
             val res = requireContext().resources
-            val count = viewModel.selectedNotes.size
+            val count = viewModel.selectedItems.size
 
             val title = res.getString(R.string.delete_notes)
             val message = res.getQuantityString(
@@ -352,7 +358,7 @@ class MainMenuFragment: Fragment() {
 
         }
 
-        val groupsAdapter = ArrayAdapter<GroupDomain>(
+        val groupsAdapter = ArrayAdapter<FolderDomain>(
             requireContext(),
             android.R.layout.simple_list_item_1
         )
@@ -361,8 +367,8 @@ class MainMenuFragment: Fragment() {
             groupsAdapter.clear()
 
             groupsAdapter.add(
-                GroupDomain(
-                    groupName = requireContext()
+                FolderDomain(
+                    name = requireContext()
                         .getString(R.string.new_folder)
                 )
             )
@@ -378,7 +384,7 @@ class MainMenuFragment: Fragment() {
                     if (i == 0) {
                         AddGroupDialog {
                             lifecycleScope.launch(Dispatchers.Main) {
-                                it.groupId = viewModel.addGroupImpl(it)
+                                it.id = viewModel.addGroupImpl(it)
                                 viewModel.moveSelectedNotes(it)
                                 endSelection()
                             }

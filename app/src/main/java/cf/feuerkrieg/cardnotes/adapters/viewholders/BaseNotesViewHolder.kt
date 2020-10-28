@@ -9,12 +9,13 @@ import cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.OnNoteClick
 
-abstract class NotesViewHolder
-    (view: View,
-    lifecycleOwner: LifecycleOwner)
-    : BaseViewHolder<NoteDomain>(view, lifecycleOwner) {
+abstract class BaseNotesViewHolder
+    (
+    view: View,
+    lifecycleOwner: LifecycleOwner
+) : BaseViewHolder<NoteDomain>(view, lifecycleOwner) {
 
-    var isSelectionMode = false
+    override var isSelectionMode = false
         set(value) {
             field = value
             if (value) {
@@ -108,6 +109,7 @@ abstract class NotesViewHolder
     fun setOnNoteLongClickCallback(callback: OnNoteClick) {
         onLongNoteClick = callback
     }
+
 
     private fun enableSelectionMode() {
         if (cbIsSelected.visibility != View.VISIBLE) {

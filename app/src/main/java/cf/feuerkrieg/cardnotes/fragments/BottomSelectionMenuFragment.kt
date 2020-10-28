@@ -13,7 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.databinding.BottomSelectionMenuFragmentBinding
 import cf.feuerkrieg.cardnotes.dialog.AddGroupDialog
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.viewmodels.MainMenuViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +28,7 @@ class BottomSelectionMenuFragment: Fragment() {
 
     private lateinit var viewModel: MainMenuViewModel
 
-    private lateinit var groupsAdapter: ArrayAdapter<GroupDomain>
+    private lateinit var groupsAdapter: ArrayAdapter<FolderDomain>
 
 
     private var onEndSelectionCallback: Runnable? = null
@@ -53,7 +53,7 @@ class BottomSelectionMenuFragment: Fragment() {
         binding.btnDelete.setOnClickListener {
 
             val res = requireContext().resources
-            val count = viewModel.selectedNotes.size
+            val count = viewModel.selectedItems.size
 
             val title = res.getString(R.string.delete_notes)
             val message = res.getQuantityString(
@@ -73,15 +73,17 @@ class BottomSelectionMenuFragment: Fragment() {
 
         }
 
-        groupsAdapter = ArrayAdapter<GroupDomain>(requireContext(),
-            android.R.layout.simple_list_item_1)
+        groupsAdapter = ArrayAdapter<FolderDomain>(
+            requireContext(),
+            android.R.layout.simple_list_item_1
+        )
 
         viewModel.groups.observe(viewLifecycleOwner, {
             groupsAdapter.clear()
 
             groupsAdapter.add(
-                GroupDomain(
-                    groupName = requireContext()
+                FolderDomain(
+                    name = requireContext()
                         .getString(R.string.new_folder)
                 )
             )
@@ -97,7 +99,7 @@ class BottomSelectionMenuFragment: Fragment() {
                     if(i == 0) {
                         AddGroupDialog {
                             lifecycleScope.launch(Dispatchers.Main) {
-                                it.groupId = viewModel.addGroupImpl(it)
+                                it.id = viewModel.addGroupImpl(it)
                                 viewModel.moveSelectedNotes(it)
                                 onEndSelectionCallback?.run()
                             }

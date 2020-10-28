@@ -4,21 +4,22 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.NotesViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ViewHolderFactory
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.ListAccessor
 import java.util.*
 
 class NotesAdapter(
-    private val selectedNotes: ListAccessor<NoteDomain>
+    private val selectedNotes: ListAccessor<BaseDomain>
 ) : RecyclerView.Adapter<BaseViewHolder<BaseDomain>>() {
 
     enum class LayoutType {
@@ -33,7 +34,7 @@ class NotesAdapter(
 
     var layoutType: LayoutType = LayoutType.Grid
 
-    val lifecycleOwner: LifecycleOwner? = null
+    var lifecycleOwner: LifecycleOwner? = null
 
     private val boundViewHolders = mutableListOf<BaseViewHolder<BaseDomain>>()
 
@@ -45,7 +46,7 @@ class NotesAdapter(
     private var onNoteClickCallback
             : ((note: NoteDomain, root: View) -> Unit)? = null
 
-    private val items = mutableListOf<Any>()
+    private val items = mutableListOf<BaseDomain>()
 
     var isSelectionMode: Boolean = false
         private set
@@ -63,6 +64,16 @@ class NotesAdapter(
         }
     }
 
+    override fun getItemViewType(position: Int): Int {
+        return when (items[position]) {
+            is FolderDomain -> ViewType.Folder.ordinal
+            is NoteDomain -> ViewType.Note.ordinal
+            else -> throw IllegalArgumentException()
+        }
+    }
+
+
+    @Suppress("Unchecked_Cast")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<BaseDomain> {
 
         val holder: BaseViewHolder<BaseDomain>
@@ -70,20 +81,20 @@ class NotesAdapter(
         if (viewType == ViewType.Note.ordinal) {
             holder = when (layoutType) {
                 LayoutType.Grid -> {
-                    GridViewHolder.from(parent, requireLifecycleOwner())
+                    NoteGridViewHolderBase.from(parent, requireLifecycleOwner())
                 }
                 LayoutType.List -> {
-                    ListViewHolder.from(parent, requireLifecycleOwner())
+                    NoteListViewHolderBase.from(parent, requireLifecycleOwner())
                 }
             } as BaseViewHolder<BaseDomain>
 
         } else {
             holder = when(layoutType) {
                 LayoutType.Grid -> {
-                    FolderViewHolder.from(parent, requireLifecycleOwner())
+                    FolderGridViewHolder.from(parent, requireLifecycleOwner())
                 }
                 LayoutType.List -> {
-                    FolderViewHolder.from(parent, requireLifecycleOwner())
+                    FolderListViewHolder.from(parent, requireLifecycleOwner())
                 }
             } as BaseViewHolder<BaseDomain>
         }
@@ -91,18 +102,21 @@ class NotesAdapter(
         return holder
     }
 
+    fun moveItem(fromPosition: Int, toPosition: Int) {
+        Collections.swap(items, fromPosition, toPosition)
+        notifyItemMoved(fromPosition, toPosition)
+    }
+
     override fun onBindViewHolder(holder: BaseViewHolder<BaseDomain>, position: Int) {
 
-        val note = items[position]
-
-
+        val item = items[position]
+        holder.performBind(item, isSelectionMode)
         boundViewHolders.add(holder)
     }
 
-    override fun onViewRecycled(holder: BaseViewHolder) {
+    override fun onViewRecycled(holder: BaseViewHolder<BaseDomain>) {
         super.onViewRecycled(holder)
         boundViewHolders.remove(holder)
-        //holder.detachListeners()
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
@@ -120,11 +134,37 @@ class NotesAdapter(
 
 
     fun dispose() {
-
-        for (holder in boundViewHolders)
-            holder.detachListeners()
-
         boundViewHolders.clear()
+    }
+
+    fun addAll(collection: Collection<BaseDomain>) {
+        val start = items.size
+        val count = collection.size
+        items.addAll(collection)
+        notifyItemRangeInserted(start, count)
+    }
+
+    fun addFirst(collection: Collection<BaseDomain>) {
+        val start = 0
+        val count = collection.size
+        items.addAll(start, collection)
+        notifyItemRangeInserted(start, count)
+    }
+
+    fun sortFirstFolders() {
+        for (i in items.indices) {
+            val item = items[i]
+            for (j in i + 1 until items.size) {
+                val other = items[j]
+                if (other is FolderDomain &&
+                    item is NoteDomain
+                ) {
+                    Collections.swap(items, i, j)
+                    notifyItemMoved(i, j)
+                    notifyItemChanged(i)
+                }
+            }
+        }
     }
 
     /**
@@ -132,38 +172,30 @@ class NotesAdapter(
      * contain only the notes within the
      * list argument
      */
-    fun replaceAll(list: List<NoteDomain>) {
+    fun replaceAll(list: List<BaseDomain>) {
 
-        for (note in items.toList()) {
-            if (!list.contains(note)) {
-                val index = items.indexOf(note)
-                // note.removeIsSelectedChangedListener(selectedChangedListener)
+        for (item in items.toList()) {
+            if (!list.contains(item)) {
+                val index = items.indexOf(item)
                 items.removeAt(index)
                 notifyItemRemoved(index)
             }
         }
 
-        for(note in list) {
-
-            if (!items.contains(note)) {
-                items.add(note)
-                note.addOnIsSelectedChangedListener(selectedChangedListener)
-                notifyItemInserted(items.size)
+        for (item in list) {
+            if (!items.contains(item)) {
+                items.add(item)
+                item.isSelected.observe(
+                    requireLifecycleOwner(),
+                    ItemIsSelectedObserver(item, selectedNotes)
+                )
+                notifyItemInserted(items.size - 1)
             }
         }
     }
 
-
-
     private fun getSelectedNotesCount(): Int {
         return selectedNotes.getSize()
-    }
-
-    /**
-     * Sort elements by their position
-     */
-    fun sortByPosition() {
-        sort { note -> note.position  }
     }
 
     /**
@@ -173,19 +205,19 @@ class NotesAdapter(
         sort(isDescending) { note -> note.createdAt }
     }
 
-    fun <E : Comparable<E>> sort(isDescending: Boolean = false, by: (note: NoteDomain) -> E) {
+    fun <E : Comparable<E>> sort(isDescending: Boolean = false, by: (note: BaseDomain) -> E) {
 
-        /* for (i in 0 until items.size) {
+        for (i in 0 until items.size) {
 
-             var min = by(items[i])
-             var index = -1
+            var min = by(items[i])
+            var index = -1
 
-             for(j in i until items.size) {
-                 val v = by(items[j])
-                 if(v < min && !isDescending || v > min && isDescending) {
-                     min = v
-                     index = j
-                 }
+            for (j in i until items.size) {
+                val v = by(items[j])
+                if (v < min && !isDescending || v > min && isDescending) {
+                    min = v
+                    index = j
+                }
              }
 
              if(index != -1
@@ -194,29 +226,29 @@ class NotesAdapter(
                  notifyItemMoved(i, index)
                  notifyItemChanged(i)
              }
-         }*/
+        }
     }
 
-    /**
-     * Move item in the recycler view and
-     * update moved notes with new position
-     */
-    fun moveItem(fromIndex: Int, toIndex: Int) {
+    /* /**
+      * Move item in the recycler view and
+      * update moved notes with new position
+      */
+     fun moveItem(fromIndex: Int, toIndex: Int) {
 
-        Collections.swap(items, fromIndex, toIndex)
+         Collections.swap(items, fromIndex, toIndex)
 
-        val tempPosition = items[fromIndex].position
-        // items[fromIndex].position = items[toIndex].position
-        // items[toIndex].position = tempPosition
+         val tempPosition = items[fromIndex].position
+         // items[fromIndex].position = items[toIndex].position
+         // items[toIndex].position = tempPosition
 
-        notifyItemMoved(fromIndex, toIndex)
+         notifyItemMoved(fromIndex, toIndex)
 
 
-        //Call this to update the information
-        //about notes in the database
-        // noteUpdatedCallback?.invoke(items[fromIndex])
-        // noteUpdatedCallback?.invoke(items[toIndex])
-    }
+         //Call this to update the information
+         //about notes in the database
+         // noteUpdatedCallback?.invoke(items[fromIndex])
+         // noteUpdatedCallback?.invoke(items[toIndex])
+     }*/
 
     //Setters for callbacks
 
@@ -237,9 +269,9 @@ class NotesAdapter(
     fun setIsSelectedForAllNotes(isSelected: Boolean) {
         for (note in items) {
             if (note is NoteDomain &&
-                note.isSelected != isSelected
+                note.isSelected.value != isSelected
             )
-                note.isSelected = isSelected
+                note.isSelected.value = isSelected
         }
     }
 
@@ -268,25 +300,46 @@ class NotesAdapter(
     fun disableSelection() {
         isSelectionMode = false
 
-        for(holder in boundViewHolders) {
+        for (holder in boundViewHolders) {
             holder.isSelectionMode = false
         }
     }
 
 
-    class GridViewHolder
-    private constructor(view: View, lifecycleOwner: LifecycleOwner)
-        : NotesViewHolder(view, lifecycleOwner) {
+    class ItemIsSelectedObserver(
+        private val item: BaseDomain,
+        private val selectedItems: ListAccessor<BaseDomain>
+    ) : Observer<Boolean> {
+
+        private var oldIsSelected = false
+
+        override fun onChanged(t: Boolean?) {
+            if (t != null && oldIsSelected != t) {
+                oldIsSelected = t
+                if (t)
+                    selectedItems.add(item)
+                else
+                    selectedItems.remove(item)
+            }
+        }
+    }
+
+    class NoteGridViewHolderBase
+    private constructor(view: View, lifecycleOwner: LifecycleOwner) :
+        BaseNotesViewHolder(view, lifecycleOwner) {
 
         private lateinit var titleSeparator: View
 
-        companion object : ViewHolderFactory<GridViewHolder>{
+        companion object : ViewHolderFactory<NoteGridViewHolderBase> {
 
-            override fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): GridViewHolder {
+            override fun from(
+                parent: ViewGroup,
+                lifecycleOwner: LifecycleOwner
+            ): NoteGridViewHolderBase {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                val holder = GridViewHolder(
+                val holder = NoteGridViewHolderBase(
                     inflater.inflate(
                         R.layout.note_grid_item, parent, false
                     ),
@@ -318,16 +371,19 @@ class NotesAdapter(
         }
     }
 
-    class ListViewHolder
-    private constructor(view: View, lifecycleOwner: LifecycleOwner)
-        : NotesViewHolder(view, lifecycleOwner) {
+    class NoteListViewHolderBase
+    private constructor(view: View, lifecycleOwner: LifecycleOwner) :
+        BaseNotesViewHolder(view, lifecycleOwner) {
 
-        companion object : ViewHolderFactory<ListViewHolder> {
-            override fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): ListViewHolder {
+        companion object : ViewHolderFactory<NoteListViewHolderBase> {
+            override fun from(
+                parent: ViewGroup,
+                lifecycleOwner: LifecycleOwner
+            ): NoteListViewHolderBase {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                return ListViewHolder(
+                return NoteListViewHolderBase(
                     inflater.inflate(
                         R.layout.note_list_item, parent, false
                     ),
@@ -337,30 +393,44 @@ class NotesAdapter(
         }
     }
 
-    class FolderViewHolder
-    private constructor(view: View, lifecycleOwner: LifecycleOwner)
-        : BaseViewHolder<GroupDomain>(view, lifecycleOwner) {
+    class FolderListViewHolder
+    private constructor(view: View, lifecycleOwner: LifecycleOwner) :
+        BaseFolderViewHolder(view, lifecycleOwner) {
 
-        private val tvFolderName = view.findViewById<TextView>(
-            R.id.tvFolderName
-        )
-
-        companion object : ViewHolderFactory<FolderViewHolder>{
-            override fun from(parent: ViewGroup, lifecycleOwner: LifecycleOwner): FolderViewHolder {
-
+        companion object : ViewHolderFactory<FolderListViewHolder> {
+            override fun from(
+                parent: ViewGroup,
+                lifecycleOwner: LifecycleOwner
+            ): FolderListViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
 
-                return FolderViewHolder(
-                    inflater.inflate(
-                        R.layout.folder_item, parent, false
-                    ),
+                return FolderListViewHolder(
+                    inflater.inflate(R.layout.folder_list_item, parent, false),
                     lifecycleOwner
                 )
             }
         }
+    }
 
-        override fun performBind(model: GroupDomain, isSelectionMode: Boolean) {
-            tvFolderName.text = model.name
+    class FolderGridViewHolder
+    private constructor(view: View, lifecycleOwner: LifecycleOwner) :
+        BaseFolderViewHolder(view, lifecycleOwner) {
+
+        companion object : ViewHolderFactory<FolderGridViewHolder> {
+            override fun from(
+                parent: ViewGroup,
+                lifecycleOwner: LifecycleOwner
+            ): FolderGridViewHolder {
+
+                val inflater = LayoutInflater.from(parent.context)
+
+                return FolderGridViewHolder(
+                    inflater.inflate(
+                        R.layout.folder_grid_item, parent, false
+                    ),
+                    lifecycleOwner
+                )
+            }
         }
 
     }

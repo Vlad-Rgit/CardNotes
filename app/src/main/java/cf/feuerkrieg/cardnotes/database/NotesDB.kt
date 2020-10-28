@@ -5,9 +5,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import cf.feuerkrieg.cardnotes.NoteApp
-import cf.feuerkrieg.cardnotes.database.dao.GroupDao
+import cf.feuerkrieg.cardnotes.database.dao.FolderDao
 import cf.feuerkrieg.cardnotes.database.dao.NoteDao
-import cf.feuerkrieg.cardnotes.database.models.GroupDatabase
+import cf.feuerkrieg.cardnotes.database.models.FolderDatabase
 import cf.feuerkrieg.cardnotes.database.models.NoteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,13 +16,14 @@ import kotlinx.coroutines.launch
 @Database(
     entities =
     [NoteDatabase::class,
-     GroupDatabase::class],
-    version = 16,
-    exportSchema = false)
+        FolderDatabase::class],
+    version = 18,
+    exportSchema = false
+)
 abstract class NotesDB: RoomDatabase() {
 
     abstract val noteDao: NoteDao
-    abstract val groupDao: GroupDao
+    abstract val folderDao: FolderDao
 
     companion object {
 
@@ -69,7 +70,7 @@ abstract class NotesDB: RoomDatabase() {
 
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
-                initGroups(getInstance().groupDao)
+                initGroups(getInstance().folderDao)
                 initNotes(getInstance().noteDao)
             }
         }
@@ -77,27 +78,27 @@ abstract class NotesDB: RoomDatabase() {
         /**
          * Init table group with some data
          */
-        private fun initGroups(groupDao: GroupDao) {
+        private fun initGroups(folderDao: FolderDao) {
             CoroutineScope(Dispatchers.IO).launch {
 
-                if(groupDao.count() == 0) {
+                if (folderDao.count() == 0) {
 
-                    val groups = listOf<GroupDatabase>(
-                        GroupDatabase(
-                            groupName = "Work"
+                    val groups = listOf<FolderDatabase>(
+                        FolderDatabase(
+                            folderName = "Work"
                         ),
-                        GroupDatabase(
-                            groupName = "School"
+                        FolderDatabase(
+                            folderName = "School"
                         ),
-                        GroupDatabase(
-                            groupName = "Family"
+                        FolderDatabase(
+                            folderName = "Family"
                         ),
-                        GroupDatabase(
-                            groupName = "Food"
+                        FolderDatabase(
+                            folderName = "Food"
                         )
                     )
 
-                    groupDao.insertAll(groups)
+                    folderDao.insertAll(groups)
                 }
             }
         }

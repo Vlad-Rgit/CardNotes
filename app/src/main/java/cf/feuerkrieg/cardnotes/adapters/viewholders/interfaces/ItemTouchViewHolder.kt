@@ -1,4 +1,4 @@
-package cf.feuerkrieg.cardnotes.adapters.viewholders
+package cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces
 
 interface ItemTouchViewHolder {
     fun downTouch()

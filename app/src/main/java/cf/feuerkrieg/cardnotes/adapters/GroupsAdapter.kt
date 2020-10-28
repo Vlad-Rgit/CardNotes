@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.databinding.GroupItemBinding
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.utils.replaceAll
 
 class GroupsAdapter(
@@ -17,23 +17,26 @@ class GroupsAdapter(
 
 
     private val inflater = LayoutInflater.from(context)
-    private val groups = mutableListOf<GroupDomain>()
+    private val groups = mutableListOf<FolderDomain>()
 
     private var groupClickedCallback:
-            ((group: GroupDomain, position: Int) -> Unit)? = null
+            ((folder: FolderDomain, position: Int) -> Unit)? = null
 
-    fun replaceAll(items: List<GroupDomain>) {
+    fun replaceAll(items: List<FolderDomain>) {
 
         groups.replaceAll(items, this)
 
-        groups.add(0, GroupDomain(
-            groupName = context.getString(R.string.new_folder)))
+        groups.add(
+            0, FolderDomain(
+                name = context.getString(R.string.new_folder)
+            )
+        )
 
         notifyItemInserted(0)
 
         groups.add(
-            1, GroupDomain(
-                groupName = context.getString(defaulGroupStringResId)
+            1, FolderDomain(
+                name = context.getString(defaulGroupStringResId)
             )
         )
 
@@ -42,7 +45,7 @@ class GroupsAdapter(
 
     fun setGroupClickedCallback(
         callback:
-            (group: GroupDomain, position: Int) -> Unit
+            (folder: FolderDomain, position: Int) -> Unit
     ) {
         groupClickedCallback = callback
     }
@@ -50,7 +53,7 @@ class GroupsAdapter(
 
     fun refreshGroup(groupId: Int) {
         for (i in groups.indices) {
-            if (groups[i].groupId == groupId) {
+            if (groups[i].id == groupId) {
                 notifyItemChanged(i)
             }
         }
@@ -84,18 +87,19 @@ class GroupsAdapter(
             }
         }
 
-        fun performBind(group: GroupDomain, position: Int) {
+        fun performBind(folder: FolderDomain, position: Int) {
 
-            if(position == 0 || position == 1) {
+            if (position == 0 || position == 1) {
                 binding.tvGroupName.setTypeface(
-                    null, Typeface.BOLD)
-            }
-            else {
+                    null, Typeface.BOLD
+                )
+            } else {
                 binding.tvGroupName.setTypeface(
-                    null, Typeface.NORMAL)
+                    null, Typeface.NORMAL
+                )
             }
 
-            binding.group = group
+            binding.group = folder
         }
 
     }

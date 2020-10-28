@@ -3,7 +3,7 @@ package cf.feuerkrieg.cardnotes.repos
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import cf.feuerkrieg.cardnotes.database.NotesDB
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -47,11 +47,13 @@ class NotesRepo {
         }
     }
 
-    suspend fun refreshItemsByQueryByGroup(searchQuery: String,
-                                            groupDomain: GroupDomain) {
+    suspend fun refreshItemsByQueryByGroup(
+        searchQuery: String,
+        folderDomain: FolderDomain
+    ) {
         withContext(Dispatchers.IO) {
             _notes.postValue(database.noteDao
-                .getAllBySearchQueryByGroup(searchQuery, groupDomain.groupId)
+                .getAllBySearchQueryByGroup(searchQuery, folderDomain.id)
                 .map { it.asDomain() })
         }
     }

@@ -73,12 +73,11 @@ class NoteDetailFragment: Fragment() {
             binding.root as ViewGroup, R.string.no_folder)
 
         groupsPopupWindow.setGroupChosenCallback {
-            if(it.groupId == -1) {
+            if (it.isDefaultFolder) {
                 viewModel.note.value?.groupId = null
                 viewModel.folderNote.value = null
-            }
-            else {
-                viewModel.note.value?.groupId = it.groupId
+            } else {
+                viewModel.note.value?.groupId = it.id
                 viewModel.folderNote.value = it
             }
 

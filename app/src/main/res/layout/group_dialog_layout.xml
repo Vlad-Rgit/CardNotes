@@ -4,7 +4,7 @@
     <data>
         <variable
             name="group"
-            type="cf.feuerkrieg.cardnotes.domain.GroupDomain" />
+            type="cf.feuerkrieg.cardnotes.domain.FolderDomain" />
     </data>
 
     <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"

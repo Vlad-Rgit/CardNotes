@@ -25,7 +25,6 @@ class RecyclerViewBehavior: CoordinatorLayout.Behavior<RecyclerView> {
         return dependency.id == R.id.txt_search_layout
     }
 
-
     override fun onDependentViewChanged(
         parent: CoordinatorLayout,
         child: RecyclerView,

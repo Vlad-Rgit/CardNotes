@@ -13,24 +13,27 @@ data class NoteDatabase(
     var noteId: Int = 0,
 
     @ForeignKey(
-        entity = GroupDatabase::class,
-        parentColumns = ["groupId"],
-        childColumns = ["groupId"],
+        entity = FolderDatabase::class,
+        parentColumns = ["folderId"],
+        childColumns = ["folderId"],
         onDelete = ForeignKey.CASCADE,
-        onUpdate = ForeignKey.CASCADE)
-    var groupId: Int? = null,
+        onUpdate = ForeignKey.CASCADE
+    )
+    var folderId: Int? = null,
     var position: Int = noteId,
     var title: String,
     var value: String,
-    val createdAt: Long = System.currentTimeMillis()) {
+    val createdAt: Long = System.currentTimeMillis()
+) {
 
     fun asDomain(): NoteDomain {
         return NoteDomain(
-            noteId = this.noteId,
-            groupId = this.groupId,
+            id = this.noteId,
+            groupId = this.folderId,
             position = this.position,
             name = this.title,
             value = this.value,
-            createdAt = Timestamp(createdAt))
+            createdAt = Timestamp(createdAt)
+        )
     }
 }

@@ -6,19 +6,16 @@
     <data>
         <variable
             name="group"
-            type="cf.feuerkrieg.cardnotes.domain.GroupDomain" />
+            type="cf.feuerkrieg.cardnotes.domain.FolderDomain" />
     </data>
 
 
-
-        <TextView
-            android:id="@+id/tvGroupName"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:textAppearance="?attr/textAppearanceSubtitle1"
-            android:layout_margin="16dp"
-            android:text="@{group.groupName}">
-        </TextView>
+    <TextView
+        android:id="@+id/tvGroupName"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:layout_margin="16dp"></TextView>
 
 
 

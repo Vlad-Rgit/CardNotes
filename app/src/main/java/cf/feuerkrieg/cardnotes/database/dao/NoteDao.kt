@@ -23,7 +23,7 @@ interface NoteDao {
     @Delete
     suspend fun delete(noteDatabase: NoteDatabase)
 
-    @Query("Delete from notes where groupId = :groupId")
+    @Query("Delete from notes where folderId = :groupId")
     suspend fun deleteByGroupId(groupId: Int)
 
     @Delete
@@ -56,9 +56,10 @@ interface NoteDao {
     @Query(
         """
         Select * from notes
-            Where groupId = :groupId and
+            Where folderId = :groupId and
                   (instr(title, :searchQuery) > 0 or
-                    instr(value, :searchQuery) > 0)""")
+                    instr(value, :searchQuery) > 0)"""
+    )
     suspend fun getAllBySearchQueryByGroup(searchQuery: String, groupId: Int)
         : List<NoteWithGroupDatabase>
 

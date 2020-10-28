@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.adapters.GroupsAdapter
 import cf.feuerkrieg.cardnotes.databinding.GroupPopupLayoutBinding
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 
 class GroupsPopupWindow
     (context: Context,
@@ -23,7 +23,7 @@ class GroupsPopupWindow
 
     //Callbacks
     private var groupChosenCallback:
-            ((group: GroupDomain) -> Unit)? = null
+            ((folder: FolderDomain) -> Unit)? = null
 
     private var newGroupRequestCallback:
             (() -> Unit)? = null
@@ -37,16 +37,15 @@ class GroupsPopupWindow
         groupsAdapter = GroupsAdapter(context, defaultGroupStringResId)
 
         groupsAdapter.setGroupClickedCallback { group, position ->
-            //If new group clicked
+            //If new folder clicked
             if(position == 0) {
                 newGroupRequestCallback?.invoke()
             }
-            //If All groups clicked
+            //If All folders clicked
             else if (position == 1) {
                 groupChosenCallback?.invoke(
-                    GroupDomain(
-                        groupId = -1,
-                        groupName = ""))
+                    FolderDomain.createDefaultFolder()
+                )
             }
             else {
                 groupChosenCallback?.invoke(group)
@@ -59,8 +58,10 @@ class GroupsPopupWindow
             adapter = groupsAdapter
         }
 
-        val background = ContextCompat.getDrawable(context,
-            R.drawable.popup_bg_with_shadow)
+        val background = ContextCompat.getDrawable(
+            context,
+            R.drawable.popup_bg_with_shadow
+        )
 
         isOutsideTouchable = true
 
@@ -69,12 +70,12 @@ class GroupsPopupWindow
         contentView = binding.root
     }
 
-    fun replaceGroups(groups: List<GroupDomain>) {
-        groupsAdapter.replaceAll(groups)
+    fun replaceGroups(folders: List<FolderDomain>) {
+        groupsAdapter.replaceAll(folders)
     }
 
     //Setter for callbacks
-    fun setGroupChosenCallback(callback: (group: GroupDomain) -> Unit) {
+    fun setGroupChosenCallback(callback: (folder: FolderDomain) -> Unit) {
         groupChosenCallback = callback
     }
 

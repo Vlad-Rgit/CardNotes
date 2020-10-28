@@ -4,9 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cf.feuerkrieg.cardnotes.domain.GroupDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
-import cf.feuerkrieg.cardnotes.repos.GroupsRepo
+import cf.feuerkrieg.cardnotes.repos.FolderRepo
 import cf.feuerkrieg.cardnotes.repos.NotesRepo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -16,7 +16,7 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
     private val _isEdit: Boolean
 
     private val notesRepo = NotesRepo()
-    private val groupRepo = GroupsRepo()
+    private val groupRepo = FolderRepo()
 
 
     private lateinit var oldNote: NoteDomain
@@ -30,7 +30,7 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
         get() = _note
 
 
-    val folderNote = MutableLiveData<GroupDomain>()
+    val folderNote = MutableLiveData<FolderDomain>()
 
     val groups = groupRepo.groups
 
@@ -122,19 +122,19 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
         }
     }
 
-    fun addGroup(groupDomain: GroupDomain) {
+    fun addGroup(folderDomain: FolderDomain) {
         viewModelScope.launch {
 
             note.value!!.groupId =
-                groupRepo.addGroup(groupDomain)
+                groupRepo.addGroup(folderDomain)
 
-            folderNote.postValue(groupDomain)
+            folderNote.postValue(folderDomain)
         }
     }
 
-    fun setGroup(groupDomain: GroupDomain) {
-        note.value!!.groupId = groupDomain.groupId
-        folderNote.value = groupDomain
+    fun setGroup(folderDomain: FolderDomain) {
+        note.value!!.groupId = folderDomain.id
+        folderNote.value = folderDomain
     }
 
     fun hasChanges(): Boolean {

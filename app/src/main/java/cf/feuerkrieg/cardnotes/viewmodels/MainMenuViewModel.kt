@@ -129,36 +129,26 @@ class MainMenuViewModel
     }
 
     fun moveNoteToFolder(note: NoteDomain, folder: FolderDomain) {
+        note.groupId = folder.id
+        folder.notesCount.value = folder.notesCount.value!!.plus(1)
+        notes.value!!.remove(note)
+        notes.value = notes.value
         viewModelScope.launch {
-            note.groupId = folder.id
             notesRepo.updateNote(note)
-            folder.notesCount.postValue(
-                folder.notesCount.value?.plus(1)
-            )
             folderRepo.updateGroup(folder)
-            notes.value!!.remove(note)
-            notes.postValue(notes.value!!)
         }
     }
 
     fun moveFolderToFolder(from: FolderDomain, to: FolderDomain) {
+        from.parentFolderId = to.id
+        to.notesCount.value = to.notesCount.value!!.plus(
+            from.notesCount.value!!
+        )
+        folders.value!!.remove(from)
+        folders.value = folders.value
         viewModelScope.launch {
-
-            from.parentFolderId = to.id
-
-            to.notesCount.postValue(
-                to.notesCount.value!!.plus(
-                    from.notesCount.value!!
-                )
-            )
-
             folderRepo.updateGroup(from)
             folderRepo.updateGroup(to)
-
-            folders.value!!.remove(from)
-            folders.postValue(
-                folders.value!!
-            )
         }
     }
 

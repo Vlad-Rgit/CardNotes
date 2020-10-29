@@ -1,15 +1,19 @@
 package cf.feuerkrieg.cardnotes.adapters.viewholders
 
 import android.animation.ValueAnimator
+import android.os.Build
+import android.view.DragEvent
 import android.view.View
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ItemTouchViewHolder
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
+import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import com.google.android.material.card.MaterialCardView
 
 private const val CLASS_NAME_LABEL = "ClassNameLabel"
@@ -41,25 +45,25 @@ abstract class BaseViewHolder<T : BaseDomain>(
 
     abstract var isSelectionMode: Boolean
 
-    abstract fun performBind(model: T, isSelectionMode: Boolean)
 
-    protected fun highlight(color: Int) {
-        buildStrokeColorAnimator(0, color).start()
+    private val isSelectedObserver = Observer<Boolean> {
+
     }
+
 
     init {
 
-        /* cardHost.setOnLongClickListener {
+        cardHost.setOnLongClickListener {
 
-             val shadow = View.DragShadowBuilder(it)
+            val shadow = View.DragShadowBuilder(it)
 
-             if(Build.VERSION.SDK_INT >= 24) {
-                 it.startDragAndDrop(
-                     null,
-                     shadow,
-                     model,
-                     0
-                 )
+            if (Build.VERSION.SDK_INT >= 24) {
+                it.startDragAndDrop(
+                    null,
+                    shadow,
+                    model,
+                    0
+                )
              }
              else {
                  @Suppress("Deprecation")
@@ -112,7 +116,17 @@ abstract class BaseViewHolder<T : BaseDomain>(
              }
 
              true
-         }*/
+         }
+    }
+
+    open fun performBind(model: T, isSelectionMode: Boolean) {
+        detachObservers()
+        this.model = model
+        model.isSelected.observe(lifecycleOwner, isSelectedObserver)
+    }
+
+    protected fun highlight(color: Int) {
+        buildStrokeColorAnimator(0, color).start()
     }
 
     open fun highlight() {
@@ -123,7 +137,7 @@ abstract class BaseViewHolder<T : BaseDomain>(
     }
 
     open fun detachObservers() {
-
+        model?.isSelected?.removeObserver(isSelectedObserver)
     }
 
     fun stopHighlight() {
@@ -157,6 +171,8 @@ abstract class BaseViewHolder<T : BaseDomain>(
                 if (toColor == 0) {
                     cardHost.strokeWidth = 0
                 }
+
+                cardHost.setHasTransientState(false)
             }
         }
     }
@@ -169,7 +185,12 @@ abstract class BaseViewHolder<T : BaseDomain>(
                 val animatedValue = animatedValue as Float
                 cardHost.cardElevation = animatedValue
             }
+
+            doOnEnd {
+                cardHost.setHasTransientState(false)
+            }
         }
+
 
         elevationAnimation.start()
     }
@@ -180,6 +201,10 @@ abstract class BaseViewHolder<T : BaseDomain>(
             addUpdateListener {
                 val animatedValue = animatedValue as Float
                 cardHost.cardElevation = animatedValue
+            }
+
+            doOnEnd {
+                cardHost.setHasTransientState(false)
             }
         }
 

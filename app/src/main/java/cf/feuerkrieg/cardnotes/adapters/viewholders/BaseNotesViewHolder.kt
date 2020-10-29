@@ -25,7 +25,6 @@ abstract class BaseNotesViewHolder
             }
         }
 
-
     protected var onNoteClick: OnNoteClick? = null
     protected var onLongNoteClick: OnNoteClick? = null
 
@@ -35,39 +34,34 @@ abstract class BaseNotesViewHolder
     protected val cbIsSelected: RevealedCheckBox = itemView.findViewById(R.id.chIsSelected)
 
 
-
-
     init {
 
-        /*  cardHost.setOnClickListener {
-              model?.let {
-                  onNoteClick?.onNoteClick(it)
-              }
-          }*/
 
-        /*  cardHost.setOnLongClickListener {
-              note?.let {
+        cardHost.setOnClickListener {
+            model?.let {
+                onNoteClick?.onNoteClick(it)
+            }
+        }
+
+        /* cardHost.setOnLongClickListener {
+              model?.let {
                   onLongNoteClick?.onNoteClick(it)
               }
               true
-          }*/
-
-        /*  cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
-              model?.let {
-                  if (it.isSelected.value != isChecked) {
-                      it.isSelected.value = isChecked
-                  }
-              }
-          }*/
+          }
+*/
+        cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
+            model?.let {
+                if (it.isSelected.value != isChecked) {
+                    it.isSelected.value = isChecked
+                }
+            }
+        }
     }
 
     override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
-        detachObservers()
-
-        this.model = model
-
-        //this.model!!.isSelected.observe(lifecycleOwner, isSelectedObserver)
+        super.performBind(model, isSelectionMode)
 
         if (model.name.isBlank()) {
             tvNoteName.visibility = View.GONE
@@ -121,7 +115,6 @@ abstract class BaseNotesViewHolder
     override fun detachObservers() {
         super.detachObservers()
         Log.i("Observers", "Detach")
-        // this.model?.isSelected?.removeObserver(isSelectedObserver)
     }
 
 }

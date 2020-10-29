@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.Observer
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 
@@ -25,8 +26,12 @@ abstract class BaseFolderViewHolder
         R.id.tvCount
     )
 
+    private val countObserver = Observer<Int> {
+        tvNotesCount.text = it.toString()
+    }
 
-    /* override fun highlight() {
+
+    /*override fun highlight() {
          if(::folder.isInitialized) {
              if(folder.colorHex.isBlank()) {
                  super.highlight()
@@ -44,14 +49,16 @@ abstract class BaseFolderViewHolder
 
     @SuppressLint("ClickableViewAccessibility")
     override fun performBind(model: FolderDomain, isSelectionMode: Boolean) {
-
-        detachObservers()
-
-        this.model = model
-
+        super.performBind(model, isSelectionMode)
+        model.notesCount.observe(lifecycleOwner, countObserver)
         tvFolderName.text = model.name
         tvModifiedAt.text = model.dateCreatedString
 
+    }
+
+    override fun detachObservers() {
+        super.detachObservers()
+        model?.notesCount?.removeObserver(countObserver)
     }
 
 

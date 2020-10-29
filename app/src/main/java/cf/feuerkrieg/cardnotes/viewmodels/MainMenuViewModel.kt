@@ -26,7 +26,7 @@ class MainMenuViewModel
         .applicationContext
 
     private val notesRepo = NotesRepo()
-    private val groupsRepo = FolderRepo()
+    private val folderRepo = FolderRepo()
 
     private val _selectedNotesAmount = MutableLiveData<Int>(0)
 
@@ -61,7 +61,7 @@ class MainMenuViewModel
     /**
      * All available groups
      */
-    val groups = groupsRepo.groups
+    val folders = folderRepo.folders
 
     /**
      * Notes filtered with searchQuery
@@ -75,7 +75,10 @@ class MainMenuViewModel
         currentGroup.value = allGroup
 
         currentGroup.observeForever {
-            refreshNotes()
+            viewModelScope.launch {
+                refreshNotesImpl()
+                refreshGroupsImpl()
+            }
         }
     }
 
@@ -106,7 +109,7 @@ class MainMenuViewModel
                     val folders = _selectedItems
                         .filterIsInstance<FolderDomain>()
 
-                    groupsRepo.removeAll(folders)
+                    folderRepo.removeAll(folders)
                 }
 
                 launch {
@@ -119,6 +122,40 @@ class MainMenuViewModel
 
             _selectedItems.clear()
             refreshNotesImpl()
+        }
+    }
+
+    fun moveNoteToFolder(note: NoteDomain, folder: FolderDomain) {
+        viewModelScope.launch {
+            note.groupId = folder.id
+            notesRepo.updateNote(note)
+            folder.notesCount.postValue(
+                folder.notesCount.value?.plus(1)
+            )
+            folderRepo.updateGroup(folder)
+            notes.value!!.remove(note)
+            notes.postValue(notes.value!!)
+        }
+    }
+
+    fun moveFolderToFolder(from: FolderDomain, to: FolderDomain) {
+        viewModelScope.launch {
+
+            from.parentFolderId = to.id
+
+            to.notesCount.postValue(
+                to.notesCount.value!!.plus(
+                    from.notesCount.value!!
+                )
+            )
+
+            folderRepo.updateGroup(from)
+            folderRepo.updateGroup(to)
+
+            folders.value!!.remove(from)
+            folders.postValue(
+                folders.value!!
+            )
         }
     }
 
@@ -140,7 +177,7 @@ class MainMenuViewModel
                         it.parentFolderId = folder.id
                     }
 
-                    groupsRepo.updateAll(folders)
+                    folderRepo.updateAll(folders)
                 }
 
                 launch {
@@ -175,14 +212,14 @@ class MainMenuViewModel
             val group = currentGroup.value!!
             group.name = name
             currentGroup.postValue(group)
-            groupsRepo.updateGroup(group)
+            folderRepo.updateGroup(group)
         }
     }
 
 
     suspend fun isGroupNameExists(name: String): Boolean {
         return withContext(Dispatchers.IO) {
-            groupsRepo.isExist(name)
+            folderRepo.isExist(name)
         }
     }
 
@@ -194,7 +231,7 @@ class MainMenuViewModel
 
             viewModelScope.launch {
                 currentGroup.postValue(
-                    groupsRepo.getById(groupId)
+                    folderRepo.getById(groupId)
                 )
             }
         }
@@ -209,7 +246,7 @@ class MainMenuViewModel
     fun removeGroup(folder: FolderDomain) {
         viewModelScope.launch {
             notesRepo.removeByGroupId(folder.id)
-            groupsRepo.removeGroup(folder)
+            folderRepo.removeGroup(folder)
         }
     }
 
@@ -219,7 +256,7 @@ class MainMenuViewModel
 
     suspend fun addGroupImpl(folder: FolderDomain): Int {
         return withContext(Dispatchers.IO) {
-            val id = groupsRepo.addGroup(folder)
+            val id = folderRepo.addGroup(folder)
             id
         }
     }
@@ -230,12 +267,20 @@ class MainMenuViewModel
      */
     private suspend fun refreshNotesImpl() {
         withContext(Dispatchers.IO) {
-            if (currentGroup.value!!.id == -1) {
-                notesRepo.refreshItemsByQuery(searchQuery)
+            if (currentGroup.value!!.isDefaultFolder) {
+                notesRepo.refreshWithoutFolder()
             } else {
-                notesRepo.refreshItemsByQueryByGroup(
-                    searchQuery, requireNotNull(currentGroup.value)
-                )
+                notesRepo.refreshByFolderId(currentGroup.value!!.id)
+            }
+        }
+    }
+
+    private suspend fun refreshGroupsImpl() {
+        viewModelScope.launch {
+            if (currentGroup.value!!.isDefaultFolder) {
+                folderRepo.getWithoutParentFolder()
+            } else {
+                folderRepo.getByParentFolderId(currentGroup.value!!.id)
             }
         }
     }

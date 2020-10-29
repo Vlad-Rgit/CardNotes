@@ -12,11 +12,16 @@ import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ItemTouchViewHold
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import com.google.android.material.card.MaterialCardView
 
-abstract class BaseViewHolder<in T : BaseDomain>(
+private const val CLASS_NAME_LABEL = "ClassNameLabel"
+
+abstract class BaseViewHolder<T : BaseDomain>(
     view: View,
     protected val lifecycleOwner: LifecycleOwner,
 ) : RecyclerView.ViewHolder(view),
     ItemTouchViewHolder {
+
+    private var onDropListener:
+            ((from: BaseDomain, to: BaseDomain) -> Unit)? = null
 
     var isHighlighted: Boolean = false
         private set
@@ -24,10 +29,12 @@ abstract class BaseViewHolder<in T : BaseDomain>(
     protected val context = itemView.context
 
     protected val cardHost = view as MaterialCardView
+
     protected val primaryColorHighlight = ContextCompat.getColor(
         context,
         R.color.colorPrimary
     )
+    protected var model: T? = null
 
     protected val highlightedStrokeWidth = context.resources
         .getDimension(R.dimen.card_border_width)
@@ -40,11 +47,83 @@ abstract class BaseViewHolder<in T : BaseDomain>(
         buildStrokeColorAnimator(0, color).start()
     }
 
+    init {
+
+        /* cardHost.setOnLongClickListener {
+
+             val shadow = View.DragShadowBuilder(it)
+
+             if(Build.VERSION.SDK_INT >= 24) {
+                 it.startDragAndDrop(
+                     null,
+                     shadow,
+                     model,
+                     0
+                 )
+             }
+             else {
+                 @Suppress("Deprecation")
+                 it.startDrag(
+                     null,
+                     shadow,
+                     model,
+                     0
+                 )
+             }
+
+             true
+         }
+
+         cardHost.setOnDragListener { v, event ->
+
+             when(event.action) {
+                 DragEvent.ACTION_DRAG_STARTED -> {
+
+                     if(event.localState == model) {
+                         //v.visibility = View.INVISIBLE
+                         return@setOnDragListener false
+                     }
+
+                     if(event.localState is NoteDomain) {
+                         return@setOnDragListener true
+                     }
+
+                     if(model is NoteDomain) {
+                         return@setOnDragListener false
+                     }
+
+                     return@setOnDragListener true
+                 }
+                 DragEvent.ACTION_DRAG_ENTERED -> {
+                     highlight()
+                 }
+                 DragEvent.ACTION_DRAG_EXITED -> {
+                     stopHighlight()
+                 }
+                 DragEvent.ACTION_DRAG_ENDED -> {
+                     stopHighlight()
+                 }
+                 DragEvent.ACTION_DROP -> {
+                     onDropListener?.invoke(
+                         event.localState as BaseDomain,
+                         model!!
+                     )
+                 }
+             }
+
+             true
+         }*/
+    }
+
     open fun highlight() {
         if (!isHighlighted) {
             isHighlighted = true
             highlight(primaryColorHighlight)
         }
+    }
+
+    open fun detachObservers() {
+
     }
 
     fun stopHighlight() {
@@ -53,6 +132,10 @@ abstract class BaseViewHolder<in T : BaseDomain>(
             buildStrokeColorAnimator(cardHost.strokeColor, 0)
                 .start()
         }
+    }
+
+    fun setOnDropListener(listener: (from: BaseDomain, to: BaseDomain) -> Unit) {
+        onDropListener = listener
     }
 
     private fun buildStrokeColorAnimator(fromColor: Int, toColor: Int): ValueAnimator {

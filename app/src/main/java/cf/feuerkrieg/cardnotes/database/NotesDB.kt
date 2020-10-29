@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
     entities =
     [NoteDatabase::class,
         FolderDatabase::class],
-    version = 18,
+    version = 22,
     exportSchema = false
 )
 abstract class NotesDB: RoomDatabase() {
@@ -31,7 +31,6 @@ abstract class NotesDB: RoomDatabase() {
          * Instance of database
          */
         private lateinit var instance: NotesDB
-
 
         /**
          * Get instance of Room database

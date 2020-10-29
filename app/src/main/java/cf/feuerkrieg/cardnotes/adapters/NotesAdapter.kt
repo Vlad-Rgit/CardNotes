@@ -1,17 +1,20 @@
 package cf.feuerkrieg.cardnotes.adapters
 
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ViewHolderFactory
+import cf.feuerkrieg.cardnotes.callbacks.NotesDiffUtilCallback
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
@@ -36,9 +39,12 @@ class NotesAdapter(
 
     var lifecycleOwner: LifecycleOwner? = null
 
-    private val boundViewHolders = mutableListOf<BaseViewHolder<BaseDomain>>()
+    private val boundViewHolders = mutableSetOf<BaseViewHolder<BaseDomain>>()
 
     private var startEditCallback: Runnable? = null
+
+    private var onDropListener:
+            ((from: BaseDomain, to: BaseDomain) -> Unit)? = null
 
     private var noteUpdatedCallback
             : ((note: NoteDomain) -> Unit)? = null
@@ -51,9 +57,6 @@ class NotesAdapter(
     var isSelectionMode: Boolean = false
         private set
 
-    init {
-        setHasStableIds(true)
-    }
 
     private fun requireLifecycleOwner(): LifecycleOwner {
         return requireNotNull(
@@ -76,6 +79,8 @@ class NotesAdapter(
     @Suppress("Unchecked_Cast")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<BaseDomain> {
 
+        Log.i("MemoryLeak", "Create View Holder!")
+
         val holder: BaseViewHolder<BaseDomain>
 
         if (viewType == ViewType.Note.ordinal) {
@@ -89,7 +94,7 @@ class NotesAdapter(
             } as BaseViewHolder<BaseDomain>
 
         } else {
-            holder = when(layoutType) {
+            holder = when (layoutType) {
                 LayoutType.Grid -> {
                     FolderGridViewHolder.from(parent, requireLifecycleOwner())
                 }
@@ -99,16 +104,47 @@ class NotesAdapter(
             } as BaseViewHolder<BaseDomain>
         }
 
+
+        holder.setOnDropListener { from, to ->
+            onDropListener?.invoke(from, to)
+        }
+
+
         return holder
     }
+
+    fun getFolders(): List<FolderDomain> = items.filterIsInstance<FolderDomain>()
+
+    fun getNotes(): List<NoteDomain> = items.filterIsInstance<NoteDomain>()
 
     fun moveItem(fromPosition: Int, toPosition: Int) {
         Collections.swap(items, fromPosition, toPosition)
         notifyItemMoved(fromPosition, toPosition)
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<BaseDomain>, position: Int) {
+    fun setFolders(newFolders: List<FolderDomain>) {
+        val oldFolders = getFolders()
+        val diffCallback = NotesDiffUtilCallback(oldFolders, newFolders)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+        items.removeAll(oldFolders)
+        items.addAll(0, newFolders)
+        diffResult.dispatchUpdatesTo(this)
+    }
 
+    fun setNotes(newNotes: List<NoteDomain>) {
+        val oldNotes = getNotes()
+        val diffCallback = NotesDiffUtilCallback(oldNotes, newNotes)
+        val diffResult = DiffUtil.calculateDiff(diffCallback)
+        items.removeAll(oldNotes)
+        items.addAll(newNotes)
+        diffResult.dispatchUpdatesTo(this)
+    }
+
+    fun setOnDropListener(listener: (from: BaseDomain, to: BaseDomain) -> Unit) {
+        onDropListener = listener
+    }
+
+    override fun onBindViewHolder(holder: BaseViewHolder<BaseDomain>, position: Int) {
         val item = items[position]
         holder.performBind(item, isSelectionMode)
         boundViewHolders.add(holder)
@@ -116,7 +152,9 @@ class NotesAdapter(
 
     override fun onViewRecycled(holder: BaseViewHolder<BaseDomain>) {
         super.onViewRecycled(holder)
+        holder.detachObservers()
         boundViewHolders.remove(holder)
+        Log.i("MemoryLeak", "BoundViewHolders: ${boundViewHolders.size}")
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
@@ -126,10 +164,6 @@ class NotesAdapter(
 
     override fun getItemCount(): Int {
         return items.size
-    }
-
-    override fun getItemId(position: Int): Long {
-        return items[position].hashCode().toLong()
     }
 
 

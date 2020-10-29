@@ -29,6 +29,12 @@ interface NoteDao {
     @Delete
     suspend fun deleteAll(notes: Iterable<NoteDatabase>)
 
+    @Query("Select * from notes where folderId = :folderId")
+    suspend fun getByFolder(folderId: Int?): List<NoteDatabase>
+
+    @Query("Select * from notes where folderId is NULL")
+    suspend fun getWithoutFolder(): List<NoteDatabase>
+
     @Query("Select * from notes")
     fun getAll(): LiveData<List<NoteDatabase>>
 
@@ -39,7 +45,8 @@ interface NoteDao {
         """
         Select * from notes
             Where instr(title, :searchQuery) > 0 or
-                    instr(value, :searchQuery) > 0""")
+                    instr(value, :searchQuery) > 0"""
+    )
     suspend fun getAllBySearchQuery(searchQuery: String)
             : List<NoteDatabase>
 

@@ -1,6 +1,5 @@
 package cf.feuerkrieg.cardnotes.repos
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import cf.feuerkrieg.cardnotes.database.NotesDB
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
@@ -12,10 +11,7 @@ class NotesRepo {
 
     private val database = NotesDB.getInstance()
 
-    private val _notes = MutableLiveData<List<NoteDomain>>()
-
-    val notes: LiveData<List<NoteDomain>>
-        get() = _notes
+    val notes = MutableLiveData<MutableList<NoteDomain>>()
 
     suspend fun getById(noteId: Int): NoteDomain {
         return withContext(Dispatchers.IO) {
@@ -26,18 +22,41 @@ class NotesRepo {
 
     suspend fun refreshItems() {
         withContext(Dispatchers.IO) {
-            _notes.postValue(database.noteDao
+            notes.postValue(database.noteDao
                 .getAllBySearchQuery("").map {
                     it.asDomain()
-                })
+                }
+                .toMutableList())
         }
     }
 
     suspend fun refreshItemsByQuery(searchQuery: String) {
         withContext(Dispatchers.IO) {
-            _notes.postValue(database.noteDao
+            notes.postValue(database.noteDao
                 .getAllBySearchQuery(searchQuery)
-                .map { it.asDomain() })
+                .map { it.asDomain() }
+                .toMutableList())
+        }
+    }
+
+    suspend fun refreshByFolderId(folderId: Int?) {
+        withContext(Dispatchers.IO) {
+            notes.postValue(database.noteDao
+                .getByFolder(folderId)
+                .map { it.asDomain() }
+                .toMutableList()
+            )
+        }
+    }
+
+    suspend fun refreshWithoutFolder() {
+        withContext(Dispatchers.IO) {
+            notes.postValue(database.noteDao
+                .getWithoutFolder()
+                .map { it.asDomain() }
+                .toMutableList()
+            )
+
         }
     }
 
@@ -52,9 +71,11 @@ class NotesRepo {
         folderDomain: FolderDomain
     ) {
         withContext(Dispatchers.IO) {
-            _notes.postValue(database.noteDao
+            notes.postValue(database.noteDao
                 .getAllBySearchQueryByGroup(searchQuery, folderDomain.id)
-                .map { it.asDomain() })
+                .map { it.asDomain() }
+                .toMutableList()
+            )
         }
     }
 

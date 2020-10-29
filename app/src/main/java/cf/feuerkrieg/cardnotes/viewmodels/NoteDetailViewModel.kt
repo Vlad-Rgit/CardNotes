@@ -32,7 +32,7 @@ class NoteDetailViewModel(noteId: Int, groupId: Int): ViewModel() {
 
     val folderNote = MutableLiveData<FolderDomain>()
 
-    val groups = groupRepo.groups
+    val groups = groupRepo.folders
 
     /**
      * End edit event

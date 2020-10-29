@@ -7,6 +7,6 @@ class GroupDialogViewModel: ViewModel() {
 
     private val groupsRepo = FolderRepo()
 
-    val groups = groupsRepo.groups
+    val groups = groupsRepo.folders
 
 }

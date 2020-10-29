@@ -18,7 +18,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
@@ -29,7 +31,7 @@ import cf.feuerkrieg.cardnotes.databinding.FragmentMainMenuBinding
 import cf.feuerkrieg.cardnotes.decorators.PaddingDecorator
 import cf.feuerkrieg.cardnotes.dialog.AddGroupDialog
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
-import cf.feuerkrieg.cardnotes.utils.ItemTouchHelperCallback
+import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.utils.hideKeyborad
 import cf.feuerkrieg.cardnotes.viewmodels.MainMenuViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -136,6 +138,15 @@ class MainMenuFragment: Fragment() {
             findNavController().navigate(action, extras)
         }
 
+        notesAdapter.setOnDropListener { from, to ->
+            if (from is NoteDomain && to is FolderDomain) {
+                viewModel.moveNoteToFolder(from, to)
+            }
+            if (from is FolderDomain && to is FolderDomain) {
+                viewModel.moveFolderToFolder(from, to)
+            }
+        }
+
         //Init select items string
         selectedItemsString.value = resources.getQuantityString(
             R.plurals.selected_items, 0, 0
@@ -188,10 +199,9 @@ class MainMenuFragment: Fragment() {
                     sidePadding, sidePadding, sidePadding, sidePadding
                 )
             )
-            itemAnimator = DefaultItemAnimator()
 
-            ItemTouchHelper(ItemTouchHelperCallback())
-                .attachToRecyclerView(this)
+            /*     ItemTouchHelper(ItemTouchHelperCallback())
+                     .attachToRecyclerView(this)*/
 
             applyLayoutType(notesAdapter.layoutType)
 
@@ -229,13 +239,12 @@ class MainMenuFragment: Fragment() {
         //Attach observer to notes collection
         //And reflect any changes within the adapter
         viewModel.notes.observe(viewLifecycleOwner, { notes ->
-            notesAdapter.addAll(notes)
+            notesAdapter.setNotes(notes)
         })
 
 
-        viewModel.groups.observe(viewLifecycleOwner, { folders ->
-            notesAdapter.addFirst(folders)
-            binding.rvNotes.scrollToPosition(0)
+        viewModel.folders.observe(viewLifecycleOwner, { folders ->
+            notesAdapter.setFolders(folders)
         })
 
 
@@ -363,7 +372,7 @@ class MainMenuFragment: Fragment() {
             android.R.layout.simple_list_item_1
         )
 
-        viewModel.groups.observe(viewLifecycleOwner, {
+        viewModel.folders.observe(viewLifecycleOwner, {
             groupsAdapter.clear()
 
             groupsAdapter.add(

@@ -13,8 +13,6 @@ abstract class BaseFolderViewHolder
 
     override var isSelectionMode: Boolean = false
 
-    private lateinit var folder: FolderDomain
-
     private val tvFolderName = view.findViewById<TextView>(
         R.id.tvFolderName
     )
@@ -26,6 +24,7 @@ abstract class BaseFolderViewHolder
     private val tvNotesCount = view.findViewById<TextView>(
         R.id.tvCount
     )
+
 
     /* override fun highlight() {
          if(::folder.isInitialized) {
@@ -46,11 +45,14 @@ abstract class BaseFolderViewHolder
     @SuppressLint("ClickableViewAccessibility")
     override fun performBind(model: FolderDomain, isSelectionMode: Boolean) {
 
-        folder = model
+        detachObservers()
+
+        this.model = model
 
         tvFolderName.text = model.name
         tvModifiedAt.text = model.dateCreatedString
-        tvNotesCount.text = model.notesCount.toString()
+
     }
+
 
 }

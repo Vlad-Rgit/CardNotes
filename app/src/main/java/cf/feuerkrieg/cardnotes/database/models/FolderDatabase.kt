@@ -1,5 +1,6 @@
 package cf.feuerkrieg.cardnotes.database.models
 
+import androidx.lifecycle.MutableLiveData
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -22,7 +23,8 @@ data class FolderDatabase(
     )
     var parentFolderId: Int? = null,
     var folderName: String = "",
-    var colorHex: String = ""
+    var colorHex: String = "",
+    var notesCount: Int = 0
 ) {
 
     fun asDomain(): FolderDomain {
@@ -30,7 +32,8 @@ data class FolderDatabase(
             id = this.folderId,
             name = this.folderName,
             parentFolderId = this.parentFolderId,
-            colorHex = this.colorHex
+            colorHex = this.colorHex,
+            notesCount = MutableLiveData(notesCount)
         )
     }
 }

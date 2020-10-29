@@ -22,9 +22,7 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
         target: RecyclerView.ViewHolder
     ): Boolean {
 
-
-        Log.i("DropTarget", "OnMove target: ${target.javaClass.canonicalName}")
-
+       // Log.i("DropTarget", "OnMove target: ${target.javaClass.canonicalName}")
 
         val adapter = recyclerView.adapter as NotesAdapter
         val fromPosition = viewHolder.adapterPosition
@@ -76,7 +74,7 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
         super.onSelectedChanged(viewHolder, actionState)
         if (actionState == ACTION_STATE_DRAG) {
             Log.i("DropTarget", "SelectedChanged")
-            val notesViewHolder = viewHolder as? ItemTouchViewHolder
+            val notesViewHolder = viewHolder as? BaseViewHolder<*>
             notesViewHolder?.downTouch()
         }
     }
@@ -91,6 +89,5 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
         if (viewHolder is BaseFolderViewHolder) {
             viewHolder.stopHighlight()
         }
-
     }
 }

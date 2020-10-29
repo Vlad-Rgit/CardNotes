@@ -3,7 +3,6 @@ package cf.feuerkrieg.cardnotes.database.dao
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import cf.feuerkrieg.cardnotes.database.models.FolderDatabase
-import cf.feuerkrieg.cardnotes.database.models.FolderWithCount
 import cf.feuerkrieg.cardnotes.database.models.GroupWithNotesDatabase
 
 @Dao
@@ -39,17 +38,29 @@ interface FolderDao {
             (Select Count(notes.noteId) from notes where notes.folderId = folder.folderId) as notesCount
             from folder"""
     )
-    fun getAllWithNotesCount(): LiveData<List<FolderWithCount>>
+    fun getAllWithNotesCount(): LiveData<List<FolderDatabase>>
+
+
+    @Query("Select * from folder where parentFolderId = :folderId")
+    suspend fun getChildren(folderId: Int): List<FolderDatabase>
 
     @Transaction
     @Query("Select * from `folder` where folderId = :groupId")
     suspend fun getGroupWithNotes(groupId: Int)
             : List<GroupWithNotesDatabase>
 
-
     @Query("Select Count(folderId) from `folder`")
     suspend fun count(): Int
 
-    @Query("Select * from `folder` where folderName = :groupName")
+    @Query("Select Count(noteId) from notes where folderId = :folderId")
+    suspend fun notesCount(folderId: Int): Int
+
+    @Query("""Select * from `folder` where folderName = :groupName""")
     suspend fun getByName(groupName: String): List<FolderDatabase>
+
+    @Query("""Select * from `folder` where parentFolderId is NULL""")
+    suspend fun getWithoutParentFolder(): List<FolderDatabase>
+
+    @Query("""Select * from `folder` where parentFolderId = :parentFolderId""")
+    suspend fun getByParentFolderId(parentFolderId: Int): List<FolderDatabase>
 }

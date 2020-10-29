@@ -2,6 +2,7 @@ package cf.feuerkrieg.cardnotes.domain
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.lifecycle.MutableLiveData
 import cf.feuerkrieg.cardnotes.database.models.FolderDatabase
 import java.sql.Timestamp
 
@@ -13,7 +14,7 @@ class FolderDomain(
     name: String = "",
     var parentFolderId: Int? = null,
     createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
-    var notesCount: Int = -1,
+    var notesCount: MutableLiveData<Int> = MutableLiveData(-1),
     var colorHex: String = ""
 ) : BaseDomain(id, name, createdAt, createdAt), Parcelable {
 
@@ -29,10 +30,10 @@ class FolderDomain(
         return FolderDatabase(
             folderId = this.id,
             folderName = this.name,
-            parentFolderId = this.parentFolderId
+            parentFolderId = this.parentFolderId,
+            notesCount = this.notesCount.value!!
         )
     }
-
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(id)
@@ -43,6 +44,18 @@ class FolderDomain(
         return 0
     }
 
+    override fun equals(other: Any?): Boolean {
+
+        val result = super.equals(other)
+
+        if (!result)
+            return result
+
+        return if (other is FolderDomain)
+            this.notesCount == other.notesCount
+        else
+            false
+    }
 
     companion object CREATOR : Parcelable.Creator<FolderDomain> {
 

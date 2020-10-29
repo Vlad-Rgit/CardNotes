@@ -78,7 +78,7 @@ class BottomSelectionMenuFragment: Fragment() {
             android.R.layout.simple_list_item_1
         )
 
-        viewModel.groups.observe(viewLifecycleOwner, {
+        viewModel.folders.observe(viewLifecycleOwner, {
             groupsAdapter.clear()
 
             groupsAdapter.add(

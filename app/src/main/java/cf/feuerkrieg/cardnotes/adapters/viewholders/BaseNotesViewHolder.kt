@@ -1,9 +1,9 @@
 package cf.feuerkrieg.cardnotes.adapters.viewholders
 
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
@@ -34,46 +34,40 @@ abstract class BaseNotesViewHolder
     protected val tvCreatedAt: TextView = itemView.findViewById(R.id.tvCreatedAt)
     protected val cbIsSelected: RevealedCheckBox = itemView.findViewById(R.id.chIsSelected)
 
-    protected var note: NoteDomain? = null
 
-    private val isSelectedObserver = Observer<Boolean> {
-        if (it != cbIsSelected.isChecked) {
-            cbIsSelected.isChecked = it
-        }
-    }
 
 
     init {
 
-        cardHost.setOnClickListener {
-            note?.let {
-                onNoteClick?.onNoteClick(it)
-            }
-        }
+        /*  cardHost.setOnClickListener {
+              model?.let {
+                  onNoteClick?.onNoteClick(it)
+              }
+          }*/
 
-        cardHost.setOnLongClickListener {
-            note?.let {
-                onLongNoteClick?.onNoteClick(it)
-            }
-            true
-        }
+        /*  cardHost.setOnLongClickListener {
+              note?.let {
+                  onLongNoteClick?.onNoteClick(it)
+              }
+              true
+          }*/
 
-        cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
-            note?.let {
-                if (it.isSelected.value != isChecked) {
-                    it.isSelected.value = isChecked
-                }
-            }
-        }
+        /*  cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
+              model?.let {
+                  if (it.isSelected.value != isChecked) {
+                      it.isSelected.value = isChecked
+                  }
+              }
+          }*/
     }
 
     override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
-        note?.isSelected?.removeObserver(isSelectedObserver)
+        detachObservers()
 
-        note = model
+        this.model = model
 
-        note!!.isSelected.observe(lifecycleOwner, isSelectedObserver)
+        //this.model!!.isSelected.observe(lifecycleOwner, isSelectedObserver)
 
         if (model.name.isBlank()) {
             tvNoteName.visibility = View.GONE
@@ -122,6 +116,12 @@ abstract class BaseNotesViewHolder
             cbIsSelected.isChecked = false
             cbIsSelected.unreveal()
         }
+    }
+
+    override fun detachObservers() {
+        super.detachObservers()
+        Log.i("Observers", "Detach")
+        // this.model?.isSelected?.removeObserver(isSelectedObserver)
     }
 
 }

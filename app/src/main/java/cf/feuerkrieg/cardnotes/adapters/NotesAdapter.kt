@@ -52,10 +52,18 @@ class NotesAdapter(
     private var onNoteClickCallback
             : ((note: NoteDomain, root: View) -> Unit)? = null
 
+    private var onFolderClickCallback
+            : ((folder: FolderDomain, root: View) -> Unit)? = null
+
     private var items = listOf<BaseDomain>()
 
     var isSelectionMode: Boolean = false
         private set
+
+
+    fun setOnFolderClickCallback(callback: (folder: FolderDomain, root: View) -> Unit) {
+        onFolderClickCallback = callback
+    }
 
 
     private fun requireLifecycleOwner(): LifecycleOwner {
@@ -103,6 +111,17 @@ class NotesAdapter(
                     FolderListViewHolder.from(parent, requireLifecycleOwner())
                 }
             } as BaseViewHolder<BaseDomain>
+        }
+
+        holder.setOnDropListener { from, to ->
+            onDropListener?.invoke(from, to)
+        }
+
+        holder.setOnCardClickCallback { model, root ->
+            when (model) {
+                is NoteDomain -> onNoteClickCallback?.invoke(model, root)
+                is FolderDomain -> onFolderClickCallback?.invoke(model, root)
+            }
         }
 
         return holder

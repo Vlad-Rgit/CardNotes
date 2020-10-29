@@ -41,7 +41,7 @@
                 app:layout_scrollFlags="noScroll"
                 app:menu="@menu/main_menu"
                 app:popupTheme="@style/CardNotes.PopupMenu"
-                app:title="Card notes">
+                app:title="@{viewModel.currentGroup.defaultFolder ? @string/all_folders : viewModel.currentGroup.name}">
 
             </androidx.appcompat.widget.Toolbar>
 
@@ -97,8 +97,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceHeadline6"
-            android:text="@string/no_notes_here"
-            android:visibility="@{viewModel.notes.size() == 0 ? View.VISIBLE : View.GONE}" />
+            android:layout_gravity="center"
+            android:text="@string/nothing_here"
+            android:visibility="@{viewModel.notes.size() + viewModel.folders.size() == 0 ? View.VISIBLE : View.GONE}" />
 
 
         <androidx.recyclerview.widget.RecyclerView

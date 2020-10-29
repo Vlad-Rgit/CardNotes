@@ -27,7 +27,6 @@ import androidx.transition.TransitionSet
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.activities.MainActivity
 import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
-import cf.feuerkrieg.cardnotes.adapters.VIEW_TYPE_NOTE
 import cf.feuerkrieg.cardnotes.databinding.FragmentMainMenuBinding
 import cf.feuerkrieg.cardnotes.decorators.PaddingDecorator
 import cf.feuerkrieg.cardnotes.dialog.AddGroupDialog
@@ -148,6 +147,10 @@ class MainMenuFragment: Fragment() {
             }
         }
 
+        notesAdapter.setOnFolderClickCallback { folder, root ->
+            viewModel.goToFolder(folder)
+        }
+
         //Init select items string
         selectedItemsString.value = resources.getQuantityString(
             R.plurals.selected_items, 0, 0
@@ -163,11 +166,15 @@ class MainMenuFragment: Fragment() {
         }
     }
 
+    fun onBackPressed() {
+        viewModel.goBackFolder()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?): View? {
+        savedInstanceState: Bundle?
+    ): View? {
 
         isNavigating = false
 
@@ -191,8 +198,6 @@ class MainMenuFragment: Fragment() {
         //Init notes recycler view
         binding.rvNotes.apply {
             notesAdapter.recyclerView = this
-            recycledViewPool.setMaxRecycledViews(VIEW_TYPE_NOTE, Int.MAX_VALUE)
-            recycledViewPool.setMaxRecycledViews(VIEW_TYPE_NOTE, Int.MAX_VALUE)
 
             setHasFixedSize(true)
 

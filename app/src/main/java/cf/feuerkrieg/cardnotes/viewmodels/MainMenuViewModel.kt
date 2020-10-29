@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 
 private const val CURRENT_GROUP_KEY = "CurrentGroupKey"
 
@@ -24,6 +25,8 @@ class MainMenuViewModel
 
     private val context = NoteApp.getAppInstance()
         .applicationContext
+
+    private val foldersStack = Stack<FolderDomain>()
 
     private val notesRepo = NotesRepo()
     private val folderRepo = FolderRepo()
@@ -76,8 +79,8 @@ class MainMenuViewModel
 
         currentGroup.observeForever {
             viewModelScope.launch {
+                refreshFoldersImpl()
                 refreshNotesImpl()
-                refreshGroupsImpl()
             }
         }
     }
@@ -223,6 +226,23 @@ class MainMenuViewModel
         }
     }
 
+    fun goToFolder(folder: FolderDomain) {
+        foldersStack.push(folder)
+        currentGroup.value = folder
+    }
+
+    fun goBackFolder() {
+        //Pop current folder
+        foldersStack.pop()
+        if (foldersStack.empty()) {
+            //If empty set all folders
+            currentGroup.value = allGroup
+        } else {
+            //Set previous folder as current
+            currentGroup.value = foldersStack.peek()
+        }
+    }
+
     fun setCurrentGroup(groupId: Int) {
 
         if (groupId == -1) {
@@ -275,7 +295,7 @@ class MainMenuViewModel
         }
     }
 
-    private suspend fun refreshGroupsImpl() {
+    private suspend fun refreshFoldersImpl() {
         viewModelScope.launch {
             if (currentGroup.value!!.isDefaultFolder) {
                 folderRepo.getWithoutParentFolder()

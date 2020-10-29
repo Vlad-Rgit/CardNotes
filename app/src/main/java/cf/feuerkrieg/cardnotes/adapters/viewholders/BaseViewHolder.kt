@@ -24,6 +24,12 @@ abstract class BaseViewHolder<T : BaseDomain>(
 ) : RecyclerView.ViewHolder(view),
     ItemTouchViewHolder {
 
+    private var onCardClickCallback:
+            ((model: BaseDomain, root: View) -> Unit)? = null
+
+    private var onCardLongClickCallback:
+            ((model: BaseDomain, root: View) -> Unit)? = null
+
     private var onDropListener:
             ((from: BaseDomain, to: BaseDomain) -> Unit)? = null
 
@@ -53,6 +59,10 @@ abstract class BaseViewHolder<T : BaseDomain>(
 
     init {
 
+        cardHost.setOnClickListener {
+            onCardClickCallback?.invoke(model!!, it)
+        }
+
         cardHost.setOnLongClickListener {
 
             val shadow = View.DragShadowBuilder(it)
@@ -64,35 +74,36 @@ abstract class BaseViewHolder<T : BaseDomain>(
                     model,
                     0
                 )
-             }
-             else {
-                 @Suppress("Deprecation")
-                 it.startDrag(
-                     null,
-                     shadow,
-                     model,
-                     0
-                 )
-             }
+            } else {
+                @Suppress("Deprecation")
+                it.startDrag(
+                    null,
+                    shadow,
+                    model,
+                    0
+                )
+            }
 
-             true
-         }
+            onCardLongClickCallback?.invoke(model!!, it)
+
+            true
+        }
 
          cardHost.setOnDragListener { v, event ->
 
              when(event.action) {
                  DragEvent.ACTION_DRAG_STARTED -> {
 
-                     if(event.localState == model) {
+                     if (event.localState == model) {
                          //v.visibility = View.INVISIBLE
                          return@setOnDragListener false
                      }
 
-                     if(event.localState is NoteDomain) {
+                     if (event.localState is NoteDomain) {
                          return@setOnDragListener true
                      }
 
-                     if(model is NoteDomain) {
+                     if (model is NoteDomain) {
                          return@setOnDragListener false
                      }
 
@@ -106,6 +117,9 @@ abstract class BaseViewHolder<T : BaseDomain>(
                  }
                  DragEvent.ACTION_DRAG_ENDED -> {
                      stopHighlight()
+                 }
+                 DragEvent.ACTION_DRAG_STARTED -> {
+
                  }
                  DragEvent.ACTION_DROP -> {
                      onDropListener?.invoke(
@@ -150,6 +164,14 @@ abstract class BaseViewHolder<T : BaseDomain>(
 
     fun setOnDropListener(listener: (from: BaseDomain, to: BaseDomain) -> Unit) {
         onDropListener = listener
+    }
+
+    fun setOnCardClickCallback(callback: (model: BaseDomain, root: View) -> Unit) {
+        onCardClickCallback = callback
+    }
+
+    fun setOnCardLongClickCallback(callback: (model: BaseDomain, root: View) -> Unit) {
+        onCardLongClickCallback = callback
     }
 
     private fun buildStrokeColorAnimator(fromColor: Int, toColor: Int): ValueAnimator {

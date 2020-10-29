@@ -7,7 +7,6 @@ import androidx.lifecycle.LifecycleOwner
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
-import cf.feuerkrieg.cardnotes.interfaces.OnNoteClick
 
 abstract class BaseNotesViewHolder
     (
@@ -25,9 +24,6 @@ abstract class BaseNotesViewHolder
             }
         }
 
-    protected var onNoteClick: OnNoteClick? = null
-    protected var onLongNoteClick: OnNoteClick? = null
-
     protected val tvNoteName: TextView = itemView.findViewById(R.id.tvNoteName)
     protected val tvNoteValue: TextView = itemView.findViewById(R.id.tvNoteValue)
     protected val tvCreatedAt: TextView = itemView.findViewById(R.id.tvCreatedAt)
@@ -35,21 +31,6 @@ abstract class BaseNotesViewHolder
 
 
     init {
-
-
-        cardHost.setOnClickListener {
-            model?.let {
-                onNoteClick?.onNoteClick(it)
-            }
-        }
-
-        /* cardHost.setOnLongClickListener {
-              model?.let {
-                  onLongNoteClick?.onNoteClick(it)
-              }
-              true
-          }
-*/
         cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
             model?.let {
                 if (it.isSelected.value != isChecked) {
@@ -88,14 +69,6 @@ abstract class BaseNotesViewHolder
         }
 
         this.isSelectionMode = isSelectionMode
-    }
-
-    fun setOnNoteClickCallback(callback: OnNoteClick) {
-        onNoteClick = callback
-    }
-
-    fun setOnNoteLongClickCallback(callback: OnNoteClick) {
-        onLongNoteClick = callback
     }
 
 

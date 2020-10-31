@@ -15,7 +15,6 @@
     <string name="all_folders">All folders</string>
     <string name="create_folder">Create folder</string>
     <string name="cancel">Cancel</string>
-    <string name="delete">Delete</string>
     <string name="move_to">Move to</string>
     <string name="no_folder">No folder</string>
 
@@ -75,4 +74,7 @@
     <string name="add_note_or_folder">Add note or folder</string>
     <string name="folder">Folder</string>
     <string name="nothing_here">Nothing here</string>
+    <string name="item_options">Item options</string>
+    <string name="move">Move</string>
+    <string name="delete">Delete</string>
 </resources>

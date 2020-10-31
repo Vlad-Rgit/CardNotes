@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+
+    <cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
+        android:id="@+id/chIsSelected"
+        android:layout_width="@dimen/ch_width"
+        android:layout_height="@dimen/ch_height"
+        android:buttonTint="?attr/colorPrimary"
+        android:visibility="gone" />
+
+    <cf.feuerkrieg.cardnotes.customviews.RevealedImageButton
+        android:id="@+id/btn_card_options"
+        android:layout_width="@dimen/ch_width"
+        android:layout_height="@dimen/ch_height"
+        android:backgroundTint="@android:color/transparent"
+        android:contentDescription="@string/item_options"
+        android:src="@drawable/more_vert"
+        android:tint="#C4000000" />
+
+</FrameLayout>

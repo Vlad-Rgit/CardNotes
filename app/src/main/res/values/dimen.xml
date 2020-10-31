@@ -6,4 +6,6 @@
     <dimen name="spinner_radius">8dp</dimen>
     <dimen name="spinner_padding">8dp</dimen>
     <dimen name="side_padding">16dp</dimen>
+    <dimen name="ch_width">26dp</dimen>
+    <dimen name="ch_height">20dp</dimen>
 </resources>

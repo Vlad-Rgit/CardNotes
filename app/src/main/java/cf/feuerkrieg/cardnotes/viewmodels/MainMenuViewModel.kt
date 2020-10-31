@@ -35,6 +35,8 @@ class MainMenuViewModel
 
     val selectedItemsAccessor = SelectedItemsAccessor()
 
+    val allFolders = folderRepo.allFolders
+
     val selectedNotesAmount
         get() = _selectedNotesAmount
 
@@ -64,7 +66,7 @@ class MainMenuViewModel
     /**
      * All available groups
      */
-    val folders = folderRepo.folders
+    val folders = folderRepo.filteredFolders
 
     /**
      * Notes filtered with searchQuery

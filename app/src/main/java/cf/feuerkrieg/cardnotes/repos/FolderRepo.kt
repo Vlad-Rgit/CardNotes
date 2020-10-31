@@ -1,6 +1,7 @@
 package cf.feuerkrieg.cardnotes.repos
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import cf.feuerkrieg.cardnotes.database.NotesDB
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import kotlinx.coroutines.Dispatchers
@@ -10,7 +11,11 @@ class FolderRepo {
 
     private val database = NotesDB.getInstance()
 
-    val folders = MutableLiveData<MutableList<FolderDomain>>()
+    val filteredFolders = MutableLiveData<MutableList<FolderDomain>>()
+
+    val allFolders = Transformations.map(database.folderDao.getAll()) {
+        it.map { it.asDomain() }
+    }
 
     suspend fun getById(groupId: Int): FolderDomain {
         return withContext(Dispatchers.IO) {
@@ -21,7 +26,7 @@ class FolderRepo {
 
     suspend fun getWithoutParentFolder() {
         withContext(Dispatchers.IO) {
-            folders.postValue(database.folderDao
+            filteredFolders.postValue(database.folderDao
                 .getWithoutParentFolder()
                 .map { it.asDomain() }
                 .toMutableList()
@@ -31,7 +36,7 @@ class FolderRepo {
 
     suspend fun getByParentFolderId(folderId: Int) {
         withContext(Dispatchers.IO) {
-            folders.postValue(database.folderDao
+            filteredFolders.postValue(database.folderDao
                 .getByParentFolderId(folderId)
                 .map { it.asDomain() }
                 .toMutableList()

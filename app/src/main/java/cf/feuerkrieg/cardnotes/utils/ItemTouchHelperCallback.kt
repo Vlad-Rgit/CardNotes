@@ -5,15 +5,15 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesMainCardViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ItemTouchViewHolder
 
 class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
     UP or DOWN or START or END, 0) {
 
-    private var previousTarget: BaseViewHolder<*>? = null
+    private var previousTarget: BaseMainCardViewHolder<*>? = null
     private var isOverFolder = false
 
     override fun onMove(
@@ -32,14 +32,14 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
 
         if (target != previousTarget) {
             previousTarget?.stopHighlight()
-            previousTarget = target as BaseViewHolder<*>
+            previousTarget = target as BaseMainCardViewHolder<*>
         }
 
-        if (viewHolder is BaseNotesViewHolder) {
+        if (viewHolder is BaseNotesMainCardViewHolder) {
             previousTarget!!.highlight()
         }
-        if (viewHolder is BaseFolderViewHolder &&
-            target !is BaseNotesViewHolder
+        if (viewHolder is BaseFolderMainCardViewHolder &&
+            target !is BaseNotesMainCardViewHolder
         ) {
             previousTarget!!.highlight()
         }
@@ -74,7 +74,7 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
         super.onSelectedChanged(viewHolder, actionState)
         if (actionState == ACTION_STATE_DRAG) {
             Log.i("DropTarget", "SelectedChanged")
-            val notesViewHolder = viewHolder as? BaseViewHolder<*>
+            val notesViewHolder = viewHolder as? BaseMainCardViewHolder<*>
             notesViewHolder?.downTouch()
         }
     }
@@ -86,7 +86,7 @@ class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(
         notesViewHolder?.upTouch()
         previousTarget?.stopHighlight()
 
-        if (viewHolder is BaseFolderViewHolder) {
+        if (viewHolder is BaseFolderMainCardViewHolder) {
             viewHolder.stopHighlight()
         }
     }

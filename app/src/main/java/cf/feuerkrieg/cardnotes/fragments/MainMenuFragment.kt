@@ -2,10 +2,8 @@ package cf.feuerkrieg.cardnotes.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.View.OnTouchListener
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -26,6 +24,7 @@ import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.activities.MainActivity
+import cf.feuerkrieg.cardnotes.adapters.FolderPickerAdapter
 import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
 import cf.feuerkrieg.cardnotes.databinding.FragmentMainMenuBinding
 import cf.feuerkrieg.cardnotes.decorators.PaddingDecorator
@@ -34,6 +33,7 @@ import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.utils.hideKeyborad
 import cf.feuerkrieg.cardnotes.viewmodels.MainMenuViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialFade
@@ -58,9 +58,7 @@ class MainMenuFragment: Fragment() {
     private lateinit var notesAdapter: NotesAdapter
     private var isNavigating = false
 
-
     private var rvNotesLastPosition = 0
-
 
     /**
      * Options menu
@@ -149,6 +147,11 @@ class MainMenuFragment: Fragment() {
 
         notesAdapter.setOnFolderClickCallback { folder, root ->
             viewModel.goToFolder(folder)
+        }
+
+        notesAdapter.setOnItemMoveCallback { model, root ->
+            showFolderPicker()
+
         }
 
         //Init select items string
@@ -639,7 +642,7 @@ class MainMenuFragment: Fragment() {
      */
     private fun endSelection() {
 
-        notesAdapter.disableSelection()
+        notesAdapter.endSelectionMode()
         notesAdapter.setIsSelectedForAllNotes(false)
         binding.btnSelectAll.isChecked = false
 
@@ -722,13 +725,58 @@ class MainMenuFragment: Fragment() {
         outState.putString(KEY_LAYOUT_TYPE, notesAdapter.layoutType.name)
     }
 
+    private fun showFolderPicker() {
+
+
+        val pickerAdapter = FolderPickerAdapter()
+
+        val rvFolderPicker = (layoutInflater.inflate(
+            R.layout.bottom_folder_picker,
+            null
+        ) as RecyclerView).apply {
+            setHasFixedSize(true)
+            isNestedScrollingEnabled = true
+            layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+            adapter = pickerAdapter
+            val sidePadding = resources.getDimension(R.dimen.side_padding).toInt()
+            addItemDecoration(
+                PaddingDecorator(
+                    sidePadding, sidePadding, sidePadding, sidePadding
+                )
+            )
+            setOnTouchListener(OnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN ->                         // Disallow NestedScrollView to intercept touch events.
+                        v.parent.requestDisallowInterceptTouchEvent(true)
+                    MotionEvent.ACTION_UP ->                         // Allow NestedScrollView to intercept touch events.
+                        v.parent.requestDisallowInterceptTouchEvent(false)
+                }
+
+                // Handle RecyclerView touch events.
+                v.onTouchEvent(event)
+                true
+            })
+        }
+
+        viewModel.allFolders.observe(viewLifecycleOwner) {
+            pickerAdapter.setItems(it)
+        }
+
+        val bottomDialog = BottomSheetDialog(requireContext()).apply {
+            setContentView(rvFolderPicker)
+        }
+
+        bottomDialog.show()
+    }
+
+
     private fun getRvNotesPosition(): Int {
 
         val manager = binding.rvNotes.layoutManager
 
-        return if(manager is LinearLayoutManager) {
+        return if (manager is LinearLayoutManager) {
             var position = manager.findFirstVisibleItemPosition()
-            if(position == RecyclerView.NO_POSITION) {
+            if (position == RecyclerView.NO_POSITION) {
                 position = 0
             }
             position
@@ -757,5 +805,6 @@ class MainMenuFragment: Fragment() {
         //Ensure that there is no references to the old view
         bindingHolder = null
     }
+
 
 }

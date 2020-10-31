@@ -72,6 +72,7 @@
     </style>
 
     <style name="CardNotes.PopupMenu" parent="Widget.AppCompat.Light.PopupMenu">
+        <item name="android:popupBackground">@drawable/popup_bg_with_shadow</item>
         <item name="popupMenuBackground">@drawable/popup_bg_with_shadow</item>
     </style>
 

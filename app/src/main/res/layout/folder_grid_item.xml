@@ -25,9 +25,11 @@
         <TextView
             android:id="@+id/tvModifiedAt"
             style="@style/CardNotes.TextView.CreatedAt"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp"
+            app:layout_constraintEnd_toStartOf="@id/card_options_host"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/img_folder" />
@@ -53,6 +55,10 @@
             app:layout_constraintStart_toEndOf="@id/img_folder"
             app:layout_constraintStart_toStartOf="@id/tvFolderName"
             app:layout_constraintTop_toBottomOf="@id/tvFolderName" />
+
+        <include
+            android:id="@+id/card_options_host"
+            layout="@layout/card_options" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

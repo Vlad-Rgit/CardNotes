@@ -5,14 +5,13 @@ import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.LifecycleOwner
 import cf.feuerkrieg.cardnotes.R
-import cf.feuerkrieg.cardnotes.customviews.RevealedCheckBox
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 
-abstract class BaseNotesViewHolder
+abstract class BaseNotesMainCardViewHolder
     (
     view: View,
     lifecycleOwner: LifecycleOwner
-) : BaseViewHolder<NoteDomain>(view, lifecycleOwner) {
+) : BaseMainCardViewHolder<NoteDomain>(view, lifecycleOwner) {
 
     override var isSelectionMode = false
         set(value) {
@@ -27,18 +26,7 @@ abstract class BaseNotesViewHolder
     protected val tvNoteName: TextView = itemView.findViewById(R.id.tvNoteName)
     protected val tvNoteValue: TextView = itemView.findViewById(R.id.tvNoteValue)
     protected val tvCreatedAt: TextView = itemView.findViewById(R.id.tvCreatedAt)
-    protected val cbIsSelected: RevealedCheckBox = itemView.findViewById(R.id.chIsSelected)
 
-
-    init {
-        cbIsSelected.setOnCheckedChangeListener { _, isChecked ->
-            model?.let {
-                if (it.isSelected.value != isChecked) {
-                    it.isSelected.value = isChecked
-                }
-            }
-        }
-    }
 
     override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
@@ -53,8 +41,6 @@ abstract class BaseNotesViewHolder
 
         tvNoteValue.text = model.value
         tvCreatedAt.text = model.dateCreatedString
-        cbIsSelected.isChecked = model.isSelected.value!!
-        cardHost.transitionName = model.hashCode().toString()
 
         if (model.name.isBlank()) {
             tvNoteName.visibility = View.GONE
@@ -71,19 +57,6 @@ abstract class BaseNotesViewHolder
         this.isSelectionMode = isSelectionMode
     }
 
-
-    private fun enableSelectionMode() {
-        if (cbIsSelected.visibility != View.VISIBLE) {
-            cbIsSelected.reveal()
-        }
-    }
-
-    private fun disableSelectionMode() {
-        if (cbIsSelected.visibility != View.GONE) {
-            cbIsSelected.isChecked = false
-            cbIsSelected.unreveal()
-        }
-    }
 
     override fun detachObservers() {
         super.detachObservers()

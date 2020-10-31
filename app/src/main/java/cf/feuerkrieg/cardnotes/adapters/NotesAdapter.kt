@@ -10,9 +10,9 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesMainCardViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ViewHolderFactory
 import cf.feuerkrieg.cardnotes.callbacks.NotesDiffUtilCallback
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
@@ -26,7 +26,7 @@ const val VIEW_TYPE_FOLDER = 2
 
 class NotesAdapter(
     private val selectedNotes: ListAccessor<BaseDomain>
-) : RecyclerView.Adapter<BaseViewHolder<BaseDomain>>() {
+) : RecyclerView.Adapter<BaseMainCardViewHolder<BaseDomain>>() {
 
     enum class LayoutType {
         List,
@@ -39,7 +39,7 @@ class NotesAdapter(
 
     var lifecycleOwner: LifecycleOwner? = null
 
-    private val boundViewHolders = mutableSetOf<BaseViewHolder<BaseDomain>>()
+    private val boundViewHolders = mutableSetOf<BaseMainCardViewHolder<BaseDomain>>()
 
     private var startEditCallback: Runnable? = null
 
@@ -51,6 +51,9 @@ class NotesAdapter(
 
     private var onNoteClickCallback
             : ((note: NoteDomain, root: View) -> Unit)? = null
+
+    private var onItemMoveCallback
+            : ((model: BaseDomain, root: View) -> Unit)? = null
 
     private var onFolderClickCallback
             : ((folder: FolderDomain, root: View) -> Unit)? = null
@@ -85,43 +88,58 @@ class NotesAdapter(
 
 
     @Suppress("Unchecked_Cast")
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<BaseDomain> {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): BaseMainCardViewHolder<BaseDomain> {
 
         Log.i("MemoryLeak", "Create View Holder!")
 
 
-        val holder: BaseViewHolder<BaseDomain>
+        val holder: BaseMainCardViewHolder<BaseDomain>
 
         if (viewType == VIEW_TYPE_NOTE) {
             holder = when (layoutType) {
                 LayoutType.Grid -> {
-                    NoteListViewHolder.from(parent, requireLifecycleOwner())
+                    NoteListMainCardViewHolder.from(parent, requireLifecycleOwner())
                 }
                 LayoutType.List -> {
-                    NoteListViewHolder.from(parent, requireLifecycleOwner())
+                    NoteListMainCardViewHolder.from(parent, requireLifecycleOwner())
                 }
-            } as BaseViewHolder<BaseDomain>
+            } as BaseMainCardViewHolder<BaseDomain>
 
         } else {
             holder = when (layoutType) {
                 LayoutType.Grid -> {
-                    FolderGridViewHolder.from(parent, requireLifecycleOwner())
+                    FolderGridMainCardViewHolder.from(parent, requireLifecycleOwner())
                 }
                 LayoutType.List -> {
-                    FolderListViewHolder.from(parent, requireLifecycleOwner())
+                    FolderListMainCardViewHolder.from(parent, requireLifecycleOwner())
                 }
-            } as BaseViewHolder<BaseDomain>
+            } as BaseMainCardViewHolder<BaseDomain>
         }
 
         holder.setOnDropListener { from, to ->
             onDropListener?.invoke(from, to)
         }
 
-        holder.setOnCardClickCallback { model, root ->
-            when (model) {
-                is NoteDomain -> onNoteClickCallback?.invoke(model, root)
-                is FolderDomain -> onFolderClickCallback?.invoke(model, root)
+        holder.setOnModelClickedCallback { model, root ->
+            if (isSelectionMode) {
+                model.isSelected.value = !(model.isSelected.value!!)
+            } else {
+                when (model) {
+                    is NoteDomain -> onNoteClickCallback?.invoke(model, root)
+                    is FolderDomain -> onFolderClickCallback?.invoke(model, root)
+                }
             }
+        }
+
+        holder.setOnCardLongClickedCallback { root ->
+            enableSelectionMode()
+        }
+
+        holder.setOnMoveCallback { model, root ->
+            onItemMoveCallback?.invoke(model, root)
         }
 
         return holder
@@ -138,8 +156,12 @@ class NotesAdapter(
         setItems(newItems)
     }
 
-    override fun onFailedToRecycleView(holder: BaseViewHolder<BaseDomain>): Boolean {
+    override fun onFailedToRecycleView(holderMain: BaseMainCardViewHolder<BaseDomain>): Boolean {
         return true
+    }
+
+    fun setOnItemMoveCallback(callback: (model: BaseDomain, root: View) -> Unit) {
+        onItemMoveCallback = callback
     }
 
     fun setNotes(newNotes: List<NoteDomain>) {
@@ -161,16 +183,16 @@ class NotesAdapter(
         onDropListener = listener
     }
 
-    override fun onBindViewHolder(holder: BaseViewHolder<BaseDomain>, position: Int) {
+    override fun onBindViewHolder(holderMain: BaseMainCardViewHolder<BaseDomain>, position: Int) {
         val item = items[position]
-        holder.performBind(item, isSelectionMode)
-        boundViewHolders.add(holder)
+        holderMain.performBind(item, isSelectionMode)
+        boundViewHolders.add(holderMain)
     }
 
-    override fun onViewRecycled(holder: BaseViewHolder<BaseDomain>) {
+    override fun onViewRecycled(holderMain: BaseMainCardViewHolder<BaseDomain>) {
         Log.i("MemoryLeak", boundViewHolders.size.toString())
-        boundViewHolders.remove(holder)
-        holder.detachObservers()
+        boundViewHolders.remove(holderMain)
+        holderMain.detachObservers()
     }
 
     override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
@@ -247,9 +269,9 @@ class NotesAdapter(
     /**
      * Start selection mode
      */
-    fun startEdit() {
+    fun enableSelectionMode() {
 
-        if(!isSelectionMode) {
+        if (!isSelectionMode) {
 
             isSelectionMode = true
 
@@ -265,7 +287,7 @@ class NotesAdapter(
     /**
      * End selection mode
      */
-    fun disableSelection() {
+    fun endSelectionMode() {
         isSelectionMode = false
 
         for (holder in boundViewHolders) {
@@ -292,22 +314,22 @@ class NotesAdapter(
         }
     }
 
-    class NoteGridViewHolder
+    class NoteGridMainCardViewHolder
     private constructor(view: View, lifecycleOwner: LifecycleOwner) :
-        BaseNotesViewHolder(view, lifecycleOwner) {
+        BaseNotesMainCardViewHolder(view, lifecycleOwner) {
 
         private lateinit var titleSeparator: View
 
-        companion object : ViewHolderFactory<NoteGridViewHolder> {
+        companion object : ViewHolderFactory<NoteGridMainCardViewHolder> {
 
             override fun from(
                 parent: ViewGroup,
                 lifecycleOwner: LifecycleOwner
-            ): NoteGridViewHolder {
+            ): NoteGridMainCardViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                val holder = NoteGridViewHolder(
+                val holder = NoteGridMainCardViewHolder(
                     inflater.inflate(
                         R.layout.note_grid_item, parent, false
                     ),
@@ -339,19 +361,19 @@ class NotesAdapter(
         }
     }
 
-    class NoteListViewHolder
+    class NoteListMainCardViewHolder
     private constructor(view: View, lifecycleOwner: LifecycleOwner) :
-        BaseNotesViewHolder(view, lifecycleOwner) {
+        BaseNotesMainCardViewHolder(view, lifecycleOwner) {
 
-        companion object : ViewHolderFactory<NoteListViewHolder> {
+        companion object : ViewHolderFactory<NoteListMainCardViewHolder> {
             override fun from(
                 parent: ViewGroup,
                 lifecycleOwner: LifecycleOwner
-            ): NoteListViewHolder {
+            ): NoteListMainCardViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                return NoteListViewHolder(
+                return NoteListMainCardViewHolder(
                     inflater.inflate(
                         R.layout.note_list_item, parent, false
                     ),
@@ -361,18 +383,18 @@ class NotesAdapter(
         }
     }
 
-    class FolderListViewHolder
+    class FolderListMainCardViewHolder
     private constructor(view: View, lifecycleOwner: LifecycleOwner) :
-        BaseFolderViewHolder(view, lifecycleOwner) {
+        BaseFolderMainCardViewHolder(view, lifecycleOwner) {
 
-        companion object : ViewHolderFactory<FolderListViewHolder> {
+        companion object : ViewHolderFactory<FolderListMainCardViewHolder> {
             override fun from(
                 parent: ViewGroup,
                 lifecycleOwner: LifecycleOwner
-            ): FolderListViewHolder {
+            ): FolderListMainCardViewHolder {
                 val inflater = LayoutInflater.from(parent.context)
 
-                return FolderListViewHolder(
+                return FolderListMainCardViewHolder(
                     inflater.inflate(R.layout.folder_list_item, parent, false),
                     lifecycleOwner
                 )
@@ -380,19 +402,19 @@ class NotesAdapter(
         }
     }
 
-    class FolderGridViewHolder
+    class FolderGridMainCardViewHolder
     private constructor(view: View, lifecycleOwner: LifecycleOwner) :
-        BaseFolderViewHolder(view, lifecycleOwner) {
+        BaseFolderMainCardViewHolder(view, lifecycleOwner) {
 
-        companion object : ViewHolderFactory<FolderGridViewHolder> {
+        companion object : ViewHolderFactory<FolderGridMainCardViewHolder> {
             override fun from(
                 parent: ViewGroup,
                 lifecycleOwner: LifecycleOwner
-            ): FolderGridViewHolder {
+            ): FolderGridMainCardViewHolder {
 
                 val inflater = LayoutInflater.from(parent.context)
 
-                return FolderGridViewHolder(
+                return FolderGridMainCardViewHolder(
                     inflater.inflate(
                         R.layout.folder_grid_item, parent, false
                     ),

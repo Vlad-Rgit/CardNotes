@@ -1,6 +1,7 @@
-package cf.feuerkrieg.cardnotes.adapters.viewholders
+package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 
 import android.view.View
+import androidx.annotation.CallSuper
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
 
 abstract class BaseDomainViewHolder<T : BaseDomain>
@@ -14,10 +15,12 @@ abstract class BaseDomainViewHolder<T : BaseDomain>
 
     protected var model: T? = null
 
+    @CallSuper
     open fun performBind(model: T) {
         this.model = model
     }
 
+    @CallSuper
     override fun onCardClicked() {
         super.onCardClicked()
         model?.let {
@@ -25,6 +28,7 @@ abstract class BaseDomainViewHolder<T : BaseDomain>
         }
     }
 
+    @CallSuper
     override fun onCardLongClicked() {
         super.onCardLongClicked()
         model?.let {

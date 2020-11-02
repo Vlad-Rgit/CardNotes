@@ -1,6 +1,7 @@
-package cf.feuerkrieg.cardnotes.adapters.viewholders
+package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 
 import android.view.View
+import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
 
@@ -26,10 +27,12 @@ abstract class BaseCardViewHolder
         }
     }
 
+    @CallSuper
     protected open fun onCardClicked() {
         onCardClickCallback?.invoke(itemView)
     }
 
+    @CallSuper
     protected open fun onCardLongClicked() {
         onCardLongClickCallback?.invoke(itemView)
     }

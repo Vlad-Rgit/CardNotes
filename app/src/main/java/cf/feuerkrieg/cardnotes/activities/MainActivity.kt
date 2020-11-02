@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.findNavController
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.fragments.MainMenuFragment
 import cf.feuerkrieg.cardnotes.utils.LocaleHelper
@@ -27,6 +28,8 @@ class MainActivity : AppCompatActivity() {
         val currFragment = navFragment!!.childFragmentManager.fragments[0]
         if (currFragment is MainMenuFragment) {
             currFragment.onBackPressed()
+        } else {
+            findNavController(R.id.nav_host).navigateUp()
         }
     }
 }

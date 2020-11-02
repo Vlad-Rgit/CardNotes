@@ -1,6 +1,5 @@
-package cf.feuerkrieg.cardnotes.adapters.viewholders
+package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 
-import android.annotation.SuppressLint
 import android.graphics.Color
 import android.view.View
 import android.widget.TextView
@@ -43,7 +42,6 @@ abstract class BaseFolderMainCardViewHolder
     }
 
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun performBind(model: FolderDomain, isSelectionMode: Boolean) {
         super.performBind(model, isSelectionMode)
         model.notesCount.observe(lifecycleOwner, countObserver)

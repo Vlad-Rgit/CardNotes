@@ -1,4 +1,4 @@
-package cf.feuerkrieg.cardnotes.adapters.viewholders
+package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 
 import android.animation.ValueAnimator
 import android.os.Build
@@ -6,6 +6,7 @@ import android.view.DragEvent
 import android.view.Gravity
 import android.view.View
 import android.widget.PopupMenu
+import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
@@ -38,6 +39,13 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
     private var onMoveCallback:
             ((model: BaseDomain, root: View) -> Unit)? = null
 
+    private var onDeleteCallback:
+            ((model: BaseDomain, root: View) -> Unit)? = null
+
+    fun setOnDeleteCallback(callback: (model: BaseDomain, root: View) -> Unit) {
+        onDeleteCallback = callback
+    }
+
     protected val context = itemView.context
 
     protected val btnOptions =
@@ -59,6 +67,7 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
             setOnMenuItemClickListener {
                 when (it.itemId) {
                     R.id.menu_move -> onMoveCallback?.invoke(model!!, itemView)
+                    R.id.menu_delete -> onDeleteCallback?.invoke(model!!, itemView)
                 }
                 true
             }
@@ -153,6 +162,7 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
         onMoveCallback = callback
     }
 
+    @CallSuper
     override fun onCardLongClicked() {
 
         val shadow = View.DragShadowBuilder(cardHost)
@@ -173,6 +183,7 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
                 0
             )
         }
+
 
         super.onCardLongClicked()
     }
@@ -213,12 +224,14 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
         }
     }
 
+    @CallSuper
     override fun performBind(model: T) {
         detachObservers()
-        this.model = model
+        super.performBind(model)
         model.isSelected.observe(lifecycleOwner, isSelectedObserver)
     }
 
+    @CallSuper
     open fun performBind(model: T, isSelectionMode: Boolean) {
         performBind(model)
         this.isSelectionMode = isSelectionMode
@@ -235,6 +248,7 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
         }
     }
 
+    @CallSuper
     open fun detachObservers() {
         model?.isSelected?.removeObserver(isSelectedObserver)
     }

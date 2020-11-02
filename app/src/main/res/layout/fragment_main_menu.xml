@@ -40,8 +40,7 @@
                 android:layout_height="wrap_content"
                 app:layout_scrollFlags="noScroll"
                 app:menu="@menu/main_menu"
-                app:popupTheme="@style/CardNotes.PopupMenu"
-                app:title="@{viewModel.currentGroup.defaultFolder ? @string/all_folders : viewModel.currentGroup.name}">
+                app:popupTheme="@style/CardNotes.PopupMenu">
 
             </androidx.appcompat.widget.Toolbar>
 

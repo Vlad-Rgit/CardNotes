@@ -9,7 +9,8 @@
             name="viewModel"
             type="cf.feuerkrieg.cardnotes.viewmodels.NoteDetailViewModel" />
     </data>
-<FrameLayout
+
+    <FrameLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 

@@ -84,16 +84,16 @@ abstract class NotesDB: RoomDatabase() {
 
                     val groups = listOf<FolderDatabase>(
                         FolderDatabase(
-                            folderName = "Work"
+                            folderName = "Work2"
                         ),
                         FolderDatabase(
-                            folderName = "School"
+                            folderName = "School2"
                         ),
                         FolderDatabase(
-                            folderName = "Family"
+                            folderName = "Family2"
                         ),
                         FolderDatabase(
-                            folderName = "Food"
+                            folderName = "Food2"
                         )
                     )
 

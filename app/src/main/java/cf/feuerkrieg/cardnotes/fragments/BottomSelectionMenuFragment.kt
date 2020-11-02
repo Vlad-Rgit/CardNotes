@@ -57,7 +57,8 @@ class BottomSelectionMenuFragment: Fragment() {
 
             val title = res.getString(R.string.delete_notes)
             val message = res.getQuantityString(
-                R.plurals.delete_notes, count, count)
+                R.plurals.delete_items, count, count
+            )
 
             MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
                 .setTitle(title)

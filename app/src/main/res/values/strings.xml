@@ -17,6 +17,12 @@
     <string name="cancel">Cancel</string>
     <string name="move_to">Move to</string>
     <string name="no_folder">No folder</string>
+    <string name="undo">Undo</string>
+    <string name="item_moved">%s has been moved to %s</string>
+    <string name="delete_note">Delete note</string>
+    <string name="do_you_want_to_delete_this_note">
+        Do you want to delete this note?
+    </string>
 
     <string name="folder_with_the_same_name_already_exists">
         Folder with the same name already exists</string>
@@ -24,7 +30,7 @@
     <string name="folder_name_must_not_be_empty">
         Folder name must not be empty
     </string>
-    
+
     <string name="delete_notes">Delete notes</string>
 
     <string name="no">No</string>
@@ -65,10 +71,12 @@
         <item quantity="other">%d selected items</item>
     </plurals>
 
-    <plurals name="delete_notes">
-        <item quantity="one">Do you want to delete %d note?</item>
-        <item quantity="other">Do you want to delete %d notes?</item>
+    <plurals name="delete_items">
+        <item quantity="one">Do you want to delete %d item?</item>
+        <item quantity="other">Do you want to delete %d items?</item>
     </plurals>
+
+
     <string name="accept">Аccept</string>
     <string name="search_notes">Search notes</string>
     <string name="add_note_or_folder">Add note or folder</string>
@@ -77,4 +85,6 @@
     <string name="item_options">Item options</string>
     <string name="move">Move</string>
     <string name="delete">Delete</string>
+    <string name="add_folder">Add folder</string>
+    <string name="search_note_or_folder">Search note or folder</string>
 </resources>

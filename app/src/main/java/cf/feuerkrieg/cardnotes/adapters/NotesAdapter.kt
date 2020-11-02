@@ -6,13 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderMainCardViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseMainCardViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.abstracts.BaseAdapter
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseFolderMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseNotesMainCardViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ViewHolderFactory
 import cf.feuerkrieg.cardnotes.callbacks.NotesDiffUtilCallback
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
@@ -21,21 +22,13 @@ import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.ListAccessor
 import java.util.*
 
-const val VIEW_TYPE_NOTE = 7
-const val VIEW_TYPE_FOLDER = 2
 
 class NotesAdapter(
     private val selectedNotes: ListAccessor<BaseDomain>
-) : RecyclerView.Adapter<BaseMainCardViewHolder<BaseDomain>>() {
+) : BaseAdapter<BaseMainCardViewHolder<BaseDomain>>() {
 
-    enum class LayoutType {
-        List,
-        Grid
-    }
 
     lateinit var recyclerView: RecyclerView
-
-    var layoutType: LayoutType = LayoutType.Grid
 
     var lifecycleOwner: LifecycleOwner? = null
 
@@ -49,25 +42,55 @@ class NotesAdapter(
     private var noteUpdatedCallback
             : ((note: NoteDomain) -> Unit)? = null
 
-    private var onNoteClickCallback
-            : ((note: NoteDomain, root: View) -> Unit)? = null
-
     private var onItemMoveCallback
             : ((model: BaseDomain, root: View) -> Unit)? = null
 
-    private var onFolderClickCallback
-            : ((folder: FolderDomain, root: View) -> Unit)? = null
+    private var onItemDeleteCallback:
+            ((model: BaseDomain, root: View) -> Unit)? = null
 
-    private var items = listOf<BaseDomain>()
+    private val itemsUpdateCallback = object : ListUpdateCallback {
+
+        override fun onInserted(position: Int, count: Int) {
+            notifyItemRangeInserted(position, count)
+            for (i in position until position + count) {
+                val item = items[i]
+                item.isSelected.observe(requireLifecycleOwner()) { isSelected ->
+                    if (isSelected && !selectedNotes.contains(item)) {
+                        selectedNotes.add(item)
+                    } else if (!isSelected) {
+                        selectedNotes.remove(item)
+                    }
+                }
+            }
+        }
+
+        override fun onRemoved(position: Int, count: Int) {
+            notifyItemRangeRemoved(position, count)
+            for (i in position until position + count) {
+                val item = oldItems!![i]
+                item.isSelected.removeObservers(requireLifecycleOwner())
+            }
+        }
+
+        override fun onMoved(fromPosition: Int, toPosition: Int) {
+            notifyItemMoved(fromPosition, toPosition)
+        }
+
+        override fun onChanged(position: Int, count: Int, payload: Any?) {
+            notifyItemRangeChanged(position, count, payload)
+        }
+    }
+
+
+    fun setOnItemDeleteCallback(callback: (model: BaseDomain, root: View) -> Unit) {
+        onItemDeleteCallback = callback
+    }
+
+
+    private var oldItems: List<BaseDomain>? = null
 
     var isSelectionMode: Boolean = false
         private set
-
-
-    fun setOnFolderClickCallback(callback: (folder: FolderDomain, root: View) -> Unit) {
-        onFolderClickCallback = callback
-    }
-
 
     private fun requireLifecycleOwner(): LifecycleOwner {
         return requireNotNull(
@@ -75,14 +98,6 @@ class NotesAdapter(
         ) {
             "Lifecycle owner of the notes adapter " +
                     "must be initialized!"
-        }
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
-            is FolderDomain -> VIEW_TYPE_FOLDER
-            is NoteDomain -> VIEW_TYPE_NOTE
-            else -> throw IllegalArgumentException()
         }
     }
 
@@ -94,7 +109,6 @@ class NotesAdapter(
     ): BaseMainCardViewHolder<BaseDomain> {
 
         Log.i("MemoryLeak", "Create View Holder!")
-
 
         val holder: BaseMainCardViewHolder<BaseDomain>
 
@@ -123,6 +137,10 @@ class NotesAdapter(
             onDropListener?.invoke(from, to)
         }
 
+        holder.setOnDeleteCallback { model, root ->
+            onItemDeleteCallback?.invoke(model, root)
+        }
+
         holder.setOnModelClickedCallback { model, root ->
             if (isSelectionMode) {
                 model.isSelected.value = !(model.isSelected.value!!)
@@ -145,39 +163,18 @@ class NotesAdapter(
         return holder
     }
 
-    fun getFolders(): List<FolderDomain> = items.filterIsInstance<FolderDomain>()
-
-    fun getNotes(): List<NoteDomain> = items.filterIsInstance<NoteDomain>()
-
-    fun setFolders(newFolders: List<FolderDomain>) {
-        val newItems = mutableListOf<BaseDomain>()
-        newItems.addAll(newFolders)
-        newItems.addAll(getNotes())
-        setItems(newItems)
-    }
-
-    override fun onFailedToRecycleView(holderMain: BaseMainCardViewHolder<BaseDomain>): Boolean {
-        return true
-    }
-
     fun setOnItemMoveCallback(callback: (model: BaseDomain, root: View) -> Unit) {
         onItemMoveCallback = callback
     }
 
-    fun setNotes(newNotes: List<NoteDomain>) {
-        val newItems = mutableListOf<BaseDomain>()
-        newItems.addAll(getFolders())
-        newItems.addAll(newNotes)
-        setItems(newItems)
-    }
-
-    private fun setItems(newItems: List<BaseDomain>) {
+    override fun setAllItems(newItems: List<BaseDomain>) {
         val diffCallback = NotesDiffUtilCallback(items, newItems)
         val diffResult = DiffUtil.calculateDiff(diffCallback)
+        oldItems = items
         items = newItems
-        diffResult.dispatchUpdatesTo(this)
+        diffResult.dispatchUpdatesTo(itemsUpdateCallback)
+        oldItems = null
     }
-
 
     fun setOnDropListener(listener: (from: BaseDomain, to: BaseDomain) -> Unit) {
         onDropListener = listener
@@ -200,9 +197,6 @@ class NotesAdapter(
         dispose()
     }
 
-    override fun getItemCount(): Int {
-        return items.size
-    }
 
     fun dispose() {
         boundViewHolders.clear()
@@ -247,24 +241,19 @@ class NotesAdapter(
     }
 
     fun setNoteUpdatedCallback(
-        callback: (note: NoteDomain) -> Unit) {
+        callback: (note: NoteDomain) -> Unit
+    ) {
         noteUpdatedCallback = callback
     }
 
-    fun setOnNoteClickCallback(
-        callback: (note: NoteDomain, root: View) -> Unit) {
-        onNoteClickCallback = callback
-    }
 
-    fun setIsSelectedForAllNotes(isSelected: Boolean) {
-        for (note in items) {
-            if (note is NoteDomain &&
-                note.isSelected.value != isSelected
-            )
-                note.isSelected.value = isSelected
+    fun setIsSelectedForAllItems(isSelected: Boolean) {
+        for (item in items) {
+            if (item.isSelected.value != isSelected) {
+                item.isSelected.value = isSelected
+            }
         }
     }
-
 
     /**
      * Start selection mode
@@ -288,6 +277,7 @@ class NotesAdapter(
      * End selection mode
      */
     fun endSelectionMode() {
+
         isSelectionMode = false
 
         for (holder in boundViewHolders) {
@@ -295,24 +285,6 @@ class NotesAdapter(
         }
     }
 
-
-    class ItemIsSelectedObserver(
-        private val item: BaseDomain,
-        private val selectedItems: ListAccessor<BaseDomain>
-    ) : Observer<Boolean> {
-
-        private var oldIsSelected = false
-
-        override fun onChanged(t: Boolean?) {
-            if (t != null && oldIsSelected != t) {
-                oldIsSelected = t
-                if (t)
-                    selectedItems.add(item)
-                else
-                    selectedItems.remove(item)
-            }
-        }
-    }
 
     class NoteGridMainCardViewHolder
     private constructor(view: View, lifecycleOwner: LifecycleOwner) :

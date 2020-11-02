@@ -43,7 +43,7 @@
         <item quantity="other">%d выбранных заметок</item>
     </plurals>
 
-    <plurals name="delete_notes">
+    <plurals name="delete_items">
         <item quantity="one">Вы хотите удалить %d заметку?</item>
         <item quantity="few">Вы хотите удалить %d заметки?</item>
         <item quantity="many">Вы хотите удалить %d заметок?</item>

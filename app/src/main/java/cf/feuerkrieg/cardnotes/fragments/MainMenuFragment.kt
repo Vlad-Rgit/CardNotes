@@ -2,8 +2,10 @@ package cf.feuerkrieg.cardnotes.fragments
 
 import android.content.Context
 import android.os.Bundle
-import android.view.*
-import android.view.View.OnTouchListener
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -16,6 +18,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -26,15 +29,18 @@ import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.activities.MainActivity
 import cf.feuerkrieg.cardnotes.adapters.FolderPickerAdapter
 import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
+import cf.feuerkrieg.cardnotes.adapters.abstracts.BaseAdapter
 import cf.feuerkrieg.cardnotes.databinding.FragmentMainMenuBinding
 import cf.feuerkrieg.cardnotes.decorators.PaddingDecorator
 import cf.feuerkrieg.cardnotes.dialog.AddGroupDialog
+import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.utils.hideKeyborad
 import cf.feuerkrieg.cardnotes.viewmodels.MainMenuViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialElevationScale
 import com.google.android.material.transition.MaterialFade
 import com.google.android.material.transition.MaterialSharedAxis
@@ -88,7 +94,7 @@ class MainMenuFragment: Fragment() {
         notesAdapter = NotesAdapter(viewModel.selectedItemsAccessor)
 
         savedInstanceState?.let {
-            notesAdapter.layoutType = NotesAdapter.LayoutType
+            notesAdapter.layoutType = BaseAdapter.LayoutType
                 .valueOf(it.getString(KEY_LAYOUT_TYPE)!!)
         }
 
@@ -104,11 +110,11 @@ class MainMenuFragment: Fragment() {
 
         //Navigate to NoteDetailsFragment
         //for editing clicked note
-        notesAdapter.setOnNoteClickCallback { note, root ->
+        notesAdapter.setOnNoteClickListener { note, root ->
 
             //Just to prevent double click on card
-            if(isNavigating)
-                return@setOnNoteClickCallback
+            if (isNavigating)
+                return@setOnNoteClickListener
 
             isNavigating = true
 
@@ -143,15 +149,47 @@ class MainMenuFragment: Fragment() {
             if (from is FolderDomain && to is FolderDomain) {
                 viewModel.moveFolderToFolder(from, to)
             }
+            if (from is NoteDomain && to is NoteDomain) {
+                AddGroupDialog { newFolder ->
+                    lifecycleScope.launch {
+                        newFolder.id = viewModel.addGroupImpl(newFolder)
+                        viewModel.moveItemsImpl(listOf(from, to), newFolder)
+                    }
+                }.show(childFragmentManager, null)
+            }
         }
 
-        notesAdapter.setOnFolderClickCallback { folder, root ->
+        notesAdapter.setOnFolderClickListener { folder, root ->
             viewModel.goToFolder(folder)
         }
 
-        notesAdapter.setOnItemMoveCallback { model, root ->
-            showFolderPicker()
+        notesAdapter.setOnItemMoveCallback { model, _ ->
+            showFolderPicker(listOf(model))
+        }
 
+        notesAdapter.setOnItemDeleteCallback { model, root ->
+
+            val titleId: Int
+            val messageId: Int
+
+            if (model is FolderDomain) {
+                titleId = R.string.delete_folder
+                messageId = R.string.do_you_want_to_delete_folder_and_all_the_notes_in_it
+            } else {
+                titleId = R.string.delete_note
+                messageId = R.string.do_you_want_to_delete_this_note
+            }
+
+            MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
+                .setTitle(titleId)
+                .setMessage(messageId)
+                .setPositiveButton(R.string.yes) { _, _ ->
+                    viewModel.removeModel(model)
+                }
+                .setNegativeButton(R.string.no) { _, _ ->
+
+                }
+                .show()
         }
 
         //Init select items string
@@ -170,7 +208,10 @@ class MainMenuFragment: Fragment() {
     }
 
     fun onBackPressed() {
-        viewModel.goBackFolder()
+        if (notesAdapter.isSelectionMode)
+            endSelection()
+        else
+            viewModel.goBackFolder()
     }
 
     override fun onCreateView(
@@ -182,6 +223,8 @@ class MainMenuFragment: Fragment() {
         isNavigating = false
 
         postponeEnterTransition()
+
+
 
         bindingHolder = FragmentMainMenuBinding.inflate(
             inflater, container, false
@@ -254,11 +297,25 @@ class MainMenuFragment: Fragment() {
             notesAdapter.setNotes(notes)
         })
 
-
         viewModel.folders.observe(viewLifecycleOwner, { folders ->
             notesAdapter.setFolders(folders)
         })
 
+        viewModel.currentGroup.observe(viewLifecycleOwner) {
+            if (it.isDefaultFolder) {
+                binding.mainToolbar.setTitle(R.string.app_name)
+                binding.mainToolbar.navigationIcon = null
+                binding.mainToolbar.setNavigationOnClickListener {
+
+                }
+            } else {
+                binding.mainToolbar.title = it.name
+                binding.mainToolbar.setNavigationIcon(R.drawable.back)
+                binding.mainToolbar.setNavigationOnClickListener {
+                    viewModel.goBackFolder()
+                }
+            }
+        }
 
         binding.btnSelectAll.apply {
 
@@ -271,7 +328,7 @@ class MainMenuFragment: Fragment() {
             )
 
             setOnClickListener {
-                notesAdapter.setIsSelectedForAllNotes(isChecked)
+                notesAdapter.setIsSelectedForAllItems(isChecked)
             }
         }
 /*
@@ -287,37 +344,6 @@ class MainMenuFragment: Fragment() {
             }
         }
 
-
-        /*   binding.btnMenu.setOnClickListener {
-               popupMenu.show()
-           }
-   */
-
-        /* //Attach listener to the search text field
-         //Filter listener each time the user types a character
-         binding.edSearch.addTextChangedListener(object : TextWatcher {
-
-             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-
-             }
-
-             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
-             }
-
-             override fun afterTextChanged(s: Editable?) {
-                 viewModel.searchQuery = s.toString()
-             }
-
-         })
- *//*binding.edSearch.onFocusChangeListener = object : View.OnFocusChangeListener {
-            override fun onFocusChange(v: View?, hasFocus: Boolean) {
-                if (hasFocus) {
-                    startSearch()
-                }
-            }
-
-        }*/
 
         //Navigate to NoteDetailsFragment to add the note
         binding.btnAddNote.setOnClickListener {
@@ -345,16 +371,6 @@ class MainMenuFragment: Fragment() {
             findNavController().navigate(action)
         }
 
-        /* binding.btnFolder.setOnClickListener {
-
-             if (groupsPopupWindow.isShowing) {
-                 dismissGroupPopupWindow()
-             } else {
-                 showPopup()
-             }
-         }*/
-
-
 
         binding.btnDelete.setOnClickListener {
 
@@ -363,7 +379,7 @@ class MainMenuFragment: Fragment() {
 
             val title = res.getString(R.string.delete_notes)
             val message = res.getQuantityString(
-                R.plurals.delete_notes, count, count
+                R.plurals.delete_items, count, count
             )
 
             MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
@@ -399,24 +415,7 @@ class MainMenuFragment: Fragment() {
         })
 
         binding.btnMove.setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
-                .setAdapter(groupsAdapter) { _, i ->
-
-                    if (i == 0) {
-                        AddGroupDialog {
-                            lifecycleScope.launch(Dispatchers.Main) {
-                                it.id = viewModel.addGroupImpl(it)
-                                viewModel.moveSelectedNotes(it)
-                                endSelection()
-                            }
-                        }.show(childFragmentManager, null)
-                    } else {
-                        val group = groupsAdapter.getItem(i)!!
-                        viewModel.moveSelectedNotes(group)
-                        endSelection()
-                    }
-                }
-                .show()
+            showFolderPicker(viewModel.selectedItems)
         }
 
         return binding.root
@@ -436,6 +435,15 @@ class MainMenuFragment: Fragment() {
 
                     findNavController()
                         .navigate(R.id.action_mainMenuFragment_to_preferencesFragment)
+                }
+                R.id.menu_search -> {
+
+                    exitTransition = MaterialElevationScale(false)
+                    reenterTransition = MaterialElevationScale(true)
+
+                    findNavController().navigate(
+                        R.id.action_mainMenuFragment_to_searchNotesFragment
+                    )
                 }
             }
 
@@ -554,19 +562,19 @@ class MainMenuFragment: Fragment() {
      }*/
 
 
-    private fun applyLayoutType(layoutType: NotesAdapter.LayoutType) {
+    private fun applyLayoutType(layoutType: BaseAdapter.LayoutType) {
         val item = popupMenu.findItem(R.id.menu_change_layout)
         when (layoutType) {
-            NotesAdapter.LayoutType.Grid -> {
-                notesAdapter.layoutType = NotesAdapter.LayoutType.Grid
+            BaseAdapter.LayoutType.Grid -> {
+                notesAdapter.layoutType = BaseAdapter.LayoutType.Grid
                 binding.rvNotes.layoutManager = StaggeredGridLayoutManager(
                     2, StaggeredGridLayoutManager.VERTICAL
                 )
                 binding.rvNotes.adapter = notesAdapter
                 // item.setTitle(R.string.list_view)
             }
-            NotesAdapter.LayoutType.List -> {
-                notesAdapter.layoutType = NotesAdapter.LayoutType.List
+            BaseAdapter.LayoutType.List -> {
+                notesAdapter.layoutType = BaseAdapter.LayoutType.List
                 binding.rvNotes.layoutManager = LinearLayoutManager(requireContext())
                 binding.rvNotes.adapter = notesAdapter
                 //  item.setTitle(R.string.grid_view)
@@ -575,11 +583,10 @@ class MainMenuFragment: Fragment() {
     }
 
     private fun changeLayoutType() {
-        if(notesAdapter.layoutType == NotesAdapter.LayoutType.Grid) {
-            applyLayoutType(NotesAdapter.LayoutType.List)
-        }
-        else {
-            applyLayoutType(NotesAdapter.LayoutType.Grid)
+        if (notesAdapter.layoutType == BaseAdapter.LayoutType.Grid) {
+            applyLayoutType(BaseAdapter.LayoutType.List)
+        } else {
+            applyLayoutType(BaseAdapter.LayoutType.Grid)
         }
     }
 
@@ -643,7 +650,7 @@ class MainMenuFragment: Fragment() {
     private fun endSelection() {
 
         notesAdapter.endSelectionMode()
-        notesAdapter.setIsSelectedForAllNotes(false)
+        notesAdapter.setIsSelectedForAllItems(false)
         binding.btnSelectAll.isChecked = false
 
         TransitionManager.beginDelayedTransition(
@@ -721,14 +728,60 @@ class MainMenuFragment: Fragment() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-
         outState.putString(KEY_LAYOUT_TYPE, notesAdapter.layoutType.name)
     }
 
-    private fun showFolderPicker() {
+    private fun showFolderPicker(movedItems: Collection<BaseDomain>) {
+
+        fun showSnackbar(dest: FolderDomain) {
+
+            val message: String
+
+            if (movedItems.size == 1) {
+                message = getString(
+                    R.string.item_moved,
+                    movedItems.first().name,
+                    dest.name
+                )
+            } else {
+                message = ""
+            }
+
+            Snackbar.make(binding.mainMenuHost, message, Snackbar.LENGTH_LONG)
+                .setAction(R.string.undo) {
+                    viewModel.moveItems(movedItems, viewModel.currentGroup.value!!)
+                }
+                .show()
+        }
 
 
-        val pickerAdapter = FolderPickerAdapter()
+        val bottomDialog = BottomSheetDialog(requireContext())
+
+        val pickerAdapter = FolderPickerAdapter().apply {
+            setOnNewFolderRequestCallback {
+                AddGroupDialog {
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        it.id = viewModel.addGroupImpl(it)
+                        viewModel.moveItemsImpl(movedItems, it)
+                        bottomDialog.dismiss()
+                        showSnackbar(it)
+                    }
+                }.show(childFragmentManager, null)
+            }
+            setOnFolderPickedCallback {
+                viewModel.moveItems(movedItems, it)
+                bottomDialog.dismiss()
+                showSnackbar(it)
+            }
+        }
+
+
+        viewModel.allFolders.observe(viewLifecycleOwner) {
+            pickerAdapter.setItems(it.filter { item ->
+                !movedItems.contains(item)
+            })
+        }
+
 
         val rvFolderPicker = (layoutInflater.inflate(
             R.layout.bottom_folder_picker,
@@ -736,7 +789,7 @@ class MainMenuFragment: Fragment() {
         ) as RecyclerView).apply {
             setHasFixedSize(true)
             isNestedScrollingEnabled = true
-            layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+            layoutManager = GridLayoutManager(requireContext(), 2)
             adapter = pickerAdapter
             val sidePadding = resources.getDimension(R.dimen.side_padding).toInt()
             addItemDecoration(
@@ -744,29 +797,12 @@ class MainMenuFragment: Fragment() {
                     sidePadding, sidePadding, sidePadding, sidePadding
                 )
             )
-            setOnTouchListener(OnTouchListener { v, event ->
-                when (event.action) {
-                    MotionEvent.ACTION_DOWN ->                         // Disallow NestedScrollView to intercept touch events.
-                        v.parent.requestDisallowInterceptTouchEvent(true)
-                    MotionEvent.ACTION_UP ->                         // Allow NestedScrollView to intercept touch events.
-                        v.parent.requestDisallowInterceptTouchEvent(false)
-                }
-
-                // Handle RecyclerView touch events.
-                v.onTouchEvent(event)
-                true
-            })
         }
 
-        viewModel.allFolders.observe(viewLifecycleOwner) {
-            pickerAdapter.setItems(it)
-        }
-
-        val bottomDialog = BottomSheetDialog(requireContext()).apply {
+        bottomDialog.apply {
             setContentView(rvFolderPicker)
+            show()
         }
-
-        bottomDialog.show()
     }
 
 

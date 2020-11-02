@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layout>
+
+    <data>
+
+        <variable
+            name="model"
+            type="cf.feuerkrieg.cardnotes.domain.NoteDomain" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="@dimen/default_radius">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvNoteName"
+                style="@style/CardNotes.TextView.NoteTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@{model.name}"
+                tools:text="Title" />
+
+            <TextView
+                android:id="@+id/tvNoteValue"
+                style="@style/CardNotes.TextView.NoteContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:maxLines="2"
+                android:text="@{model.value}"
+                tools:text="Content" />
+
+            <TextView
+                android:id="@+id/tvCreatedAt"
+                style="@style/CardNotes.TextView.CreatedAt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@{model.dateCreatedString}"
+                tools:text="Created at" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</layout>

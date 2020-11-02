@@ -5,9 +5,9 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseFolderMainCardViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseMainCardViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseNotesMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseFolderMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseMainCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseNotesMainCardViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ItemTouchViewHolder
 
 class ItemTouchHelperCallback: ItemTouchHelper.SimpleCallback(

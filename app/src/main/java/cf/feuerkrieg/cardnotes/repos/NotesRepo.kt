@@ -30,6 +30,12 @@ class NotesRepo {
         }
     }
 
+    suspend fun getByQuery(query: String): List<NoteDomain> = withContext(Dispatchers.IO) {
+        database.noteDao
+            .getAllBySearchQuery(query)
+            .map { it.asDomain() }
+    }
+
     suspend fun refreshItemsByQuery(searchQuery: String) {
         withContext(Dispatchers.IO) {
             notes.postValue(database.noteDao

@@ -6,7 +6,7 @@
     <fragment
         android:id="@+id/mainMenuFragment"
         android:name="cf.feuerkrieg.cardnotes.fragments.MainMenuFragment"
-        android:label="MainMenuFragment" >
+        android:label="MainMenuFragment">
         <action
             android:id="@+id/action_mainMenuFragment_to_noteDetailFragment"
             app:destination="@id/noteDetailFragment"
@@ -15,6 +15,9 @@
         <action
             android:id="@+id/action_mainMenuFragment_to_preferencesFragment"
             app:destination="@id/preferencesFragment" />
+        <action
+            android:id="@+id/action_mainMenuFragment_to_searchNotesFragment"
+            app:destination="@id/searchNotesFragment" />
     </fragment>
 
     <fragment
@@ -34,4 +37,8 @@
         android:id="@+id/preferencesFragment"
         android:name="cf.feuerkrieg.cardnotes.fragments.PreferencesFragment"
         android:label="PreferencesFragment" />
+    <fragment
+        android:id="@+id/searchNotesFragment"
+        android:name="cf.feuerkrieg.cardnotes.fragments.SearchNotesFragment"
+        android:label="SearchNotesFragment" />
 </navigation>

@@ -14,7 +14,7 @@ class FolderDomain(
     name: String = "",
     var parentFolderId: Int? = null,
     createdAt: Timestamp = Timestamp(System.currentTimeMillis()),
-    var notesCount: MutableLiveData<Int> = MutableLiveData(-1),
+    var notesCount: MutableLiveData<Int> = MutableLiveData(0),
     var colorHex: String = ""
 ) : BaseDomain(id, name, createdAt, createdAt), Parcelable {
 
@@ -52,7 +52,7 @@ class FolderDomain(
             return result
 
         return if (other is FolderDomain)
-            this.notesCount == other.notesCount
+            this.notesCount.value == other.notesCount.value
         else
             false
     }

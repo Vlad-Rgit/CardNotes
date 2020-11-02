@@ -24,6 +24,16 @@
                                 <LayoutPositions />
                               </value>
                             </entry>
+                            <entry key="action_mainMenuFragment_to_preferencesFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
+                            <entry key="action_mainMenuFragment_to_searchNotesFragment">
+                              <value>
+                                <LayoutPositions />
+                              </value>
+                            </entry>
                           </map>
                         </option>
                       </LayoutPositions>
@@ -48,6 +58,18 @@
                           <Point>
                             <option name="x" value="536" />
                             <option name="y" value="-290" />
+                          </Point>
+                        </option>
+                      </LayoutPositions>
+                    </value>
+                  </entry>
+                  <entry key="searchNotesFragment">
+                    <value>
+                      <LayoutPositions>
+                        <option name="myPosition">
+                          <Point>
+                            <option name="x" value="282" />
+                            <option name="y" value="-445" />
                           </Point>
                         </option>
                       </LayoutPositions>

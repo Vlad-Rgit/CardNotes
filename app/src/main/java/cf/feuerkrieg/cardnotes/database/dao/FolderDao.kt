@@ -44,6 +44,9 @@ interface FolderDao {
     @Query("Select * from folder where parentFolderId = :folderId")
     suspend fun getChildren(folderId: Int): List<FolderDatabase>
 
+    @Query("Select * from folder where instr(folderName, :query) > 0")
+    suspend fun getByQuery(query: String): List<FolderDatabase>
+
     @Transaction
     @Query("Select * from `folder` where folderId = :groupId")
     suspend fun getGroupWithNotes(groupId: Int)

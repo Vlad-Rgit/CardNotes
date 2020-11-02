@@ -19,7 +19,6 @@ import java.util.*
 
 private const val CURRENT_GROUP_KEY = "CurrentGroupKey"
 
-
 class MainMenuViewModel
     : ViewModel() {
 
@@ -35,6 +34,7 @@ class MainMenuViewModel
 
     val selectedItemsAccessor = SelectedItemsAccessor()
 
+    private var _allFolders: List<FolderDomain>? = null
     val allFolders = folderRepo.allFolders
 
     val selectedNotesAmount
@@ -85,6 +85,10 @@ class MainMenuViewModel
                 refreshNotesImpl()
             }
         }
+
+        allFolders.observeForever {
+            _allFolders = it
+        }
     }
 
     /**
@@ -130,28 +134,122 @@ class MainMenuViewModel
         }
     }
 
+    fun removeModel(model: BaseDomain, refreshLists: Boolean = true) {
+        viewModelScope.launch(Dispatchers.IO) {
+            removeModelImpl(model)
+            if (refreshLists) {
+                folders.postValue(folders.value)
+                notes.postValue(notes.value)
+            }
+        }
+    }
+
+    suspend fun removeModelImpl(model: BaseDomain) {
+        when (model) {
+            is FolderDomain -> {
+                removeFolderImpl(model)
+                folders.value!!.remove(model)
+            }
+            is NoteDomain -> {
+                removeNoteImpl(model)
+                notes.value!!.remove(model)
+            }
+        }
+    }
+
+    suspend fun removeFolderImpl(folder: FolderDomain) {
+        folderRepo.removeGroup(folder)
+    }
+
+    suspend fun removeNoteImpl(note: NoteDomain) {
+        notesRepo.remove(note)
+        refreshNotesImpl()
+    }
+
+
+    fun moveItems(movedItems: Collection<BaseDomain>, dest: FolderDomain) {
+        viewModelScope.launch(Dispatchers.Main) {
+            moveItemsImpl(movedItems, dest)
+        }
+    }
+
+    suspend fun moveItemsImpl(movedItems: Collection<BaseDomain>, dest: FolderDomain) {
+
+        for (item in movedItems) {
+            when (item) {
+                is FolderDomain -> moveFolderToFolderImpl(item, dest)
+                is NoteDomain -> moveNoteToFolderImpl(item, dest)
+            }
+        }
+
+        refreshFoldersImpl()
+        refreshNotesImpl()
+    }
+
     fun moveNoteToFolder(note: NoteDomain, folder: FolderDomain) {
-        note.groupId = folder.id
-        folder.notesCount.value = folder.notesCount.value!!.plus(1)
-        notes.value!!.remove(note)
-        notes.value = notes.value
         viewModelScope.launch {
-            notesRepo.updateNote(note)
-            folderRepo.updateGroup(folder)
+            moveNoteToFolderImpl(note, folder)
+            refreshNotesImpl()
         }
     }
 
     fun moveFolderToFolder(from: FolderDomain, to: FolderDomain) {
-        from.parentFolderId = to.id
-        to.notesCount.value = to.notesCount.value!!.plus(
-            from.notesCount.value!!
-        )
-        folders.value!!.remove(from)
-        folders.value = folders.value
         viewModelScope.launch {
-            folderRepo.updateGroup(from)
-            folderRepo.updateGroup(to)
+            moveFolderToFolderImpl(from, to)
+            refreshFoldersImpl()
         }
+    }
+
+    suspend fun moveNoteToFolderImpl(note: NoteDomain, folder: FolderDomain) {
+
+        if (note.groupId != null) {
+            _allFolders?.let {
+
+                val previousParent = it.first {
+                    note.groupId == it.id
+                }
+
+                previousParent.notesCount.value = previousParent.notesCount.value!!.minus(1)
+            }
+        }
+
+        if (folder.isDefaultFolder)
+            note.groupId = null
+        else {
+            note.groupId = folder.id
+            folder.notesCount.value = folder.notesCount.value!!.plus(1)
+        }
+
+        notesRepo.updateNote(note)
+        folderRepo.updateGroup(folder)
+    }
+
+    suspend fun moveFolderToFolderImpl(folder: FolderDomain, dest: FolderDomain) {
+
+        if (folder.parentFolderId != null) {
+            _allFolders?.let {
+
+                val previousParent = it.first {
+                    folder.parentFolderId == it.id
+                }
+
+                previousParent.notesCount.value = previousParent.notesCount.value!!.minus(
+                    folder.notesCount.value!!
+                )
+            }
+        }
+
+        if (dest.isDefaultFolder)
+            folder.parentFolderId = null
+        else {
+            folder.parentFolderId = dest.id
+            dest.notesCount.value = dest.notesCount.value!!.plus(
+                folder.notesCount.value!!
+            )
+        }
+
+        folderRepo.updateGroup(folder)
+        folderRepo.updateGroup(dest)
     }
 
 
@@ -290,9 +388,9 @@ class MainMenuViewModel
     private suspend fun refreshFoldersImpl() {
         viewModelScope.launch {
             if (currentGroup.value!!.isDefaultFolder) {
-                folderRepo.getWithoutParentFolder()
+                folderRepo.refreshWithoutParentFolder()
             } else {
-                folderRepo.getByParentFolderId(currentGroup.value!!.id)
+                folderRepo.refreshByParentFolderId(currentGroup.value!!.id)
             }
         }
     }

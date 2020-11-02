@@ -1,8 +1,9 @@
-package cf.feuerkrieg.cardnotes.adapters.viewholders
+package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 
 import android.util.Log
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.CallSuper
 import androidx.lifecycle.LifecycleOwner
 import cf.feuerkrieg.cardnotes.R
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
@@ -13,21 +14,12 @@ abstract class BaseNotesMainCardViewHolder
     lifecycleOwner: LifecycleOwner
 ) : BaseMainCardViewHolder<NoteDomain>(view, lifecycleOwner) {
 
-    override var isSelectionMode = false
-        set(value) {
-            field = value
-            if (value) {
-                enableSelectionMode()
-            } else {
-                disableSelectionMode()
-            }
-        }
-
     protected val tvNoteName: TextView = itemView.findViewById(R.id.tvNoteName)
     protected val tvNoteValue: TextView = itemView.findViewById(R.id.tvNoteValue)
     protected val tvCreatedAt: TextView = itemView.findViewById(R.id.tvCreatedAt)
 
 
+    @CallSuper
     override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
 
         super.performBind(model, isSelectionMode)
@@ -53,11 +45,10 @@ abstract class BaseNotesMainCardViewHolder
         } else {
             tvNoteValue.visibility = View.VISIBLE
         }
-
-        this.isSelectionMode = isSelectionMode
     }
 
 
+    @CallSuper
     override fun detachObservers() {
         super.detachObservers()
         Log.i("Observers", "Detach")

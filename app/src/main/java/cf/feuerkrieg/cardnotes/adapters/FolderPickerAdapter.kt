@@ -6,8 +6,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import cf.feuerkrieg.cardnotes.R
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseCardViewHolder
-import cf.feuerkrieg.cardnotes.adapters.viewholders.BaseDomainViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseCardViewHolder
+import cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts.BaseDomainViewHolder
 import cf.feuerkrieg.cardnotes.adapters.viewholders.interfaces.ViewHolderFactory
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 
@@ -18,6 +18,9 @@ class FolderPickerAdapter : RecyclerView.Adapter<BaseCardViewHolder>() {
         const val VIEW_TYPE_FOLDER = 1
         const val VIEW_TYPE_ADD_FOLDER = 2
     }
+
+    private var onNewFolderRequestCallback: (() -> Unit)? = null
+    private var onFolderPickedCallback: ((folder: FolderDomain) -> Unit)? = null
 
     private var items = listOf<FolderDomain>()
 
@@ -30,21 +33,21 @@ class FolderPickerAdapter : RecyclerView.Adapter<BaseCardViewHolder>() {
         return when (viewType) {
             VIEW_TYPE_ADD_FOLDER -> AddFolderCardViewHolder.from(parent).apply {
                 setOnCardClickedCallback {
-
+                    onNewFolderRequestCallback?.invoke()
                 }
             }
             VIEW_TYPE_FOLDER -> FolderCardViewHolder.from(parent).apply {
-                setOnModelClickedCallback { model, root ->
-
+                setOnModelClickedCallback { model, _ ->
+                    onFolderPickedCallback?.invoke(model as FolderDomain)
                 }
             }
             else -> throw IllegalArgumentException("There is no view type: $viewType")
         }
     }
 
-    override fun onBindViewHolder(holderFolder: BaseCardViewHolder, position: Int) {
-        if (holderFolder is FolderCardViewHolder) {
-            holderFolder.performBind(items[position - 1])
+    override fun onBindViewHolder(holder: BaseCardViewHolder, position: Int) {
+        if (holder is FolderCardViewHolder) {
+            holder.performBind(items[position - 1])
         }
     }
 
@@ -61,6 +64,14 @@ class FolderPickerAdapter : RecyclerView.Adapter<BaseCardViewHolder>() {
         return items.size + 1
     }
 
+    fun setOnNewFolderRequestCallback(callback: () -> Unit) {
+        onNewFolderRequestCallback = callback
+    }
+
+    fun setOnFolderPickedCallback(callback: (folder: FolderDomain) -> Unit) {
+        onFolderPickedCallback = callback
+    }
+
 
     class FolderCardViewHolder
     private constructor(view: View) : BaseDomainViewHolder<FolderDomain>(view) {
@@ -71,6 +82,7 @@ class FolderPickerAdapter : RecyclerView.Adapter<BaseCardViewHolder>() {
 
 
         override fun performBind(model: FolderDomain) {
+            super.performBind(model)
             tvFolderName.text = model.name
         }
 
@@ -109,5 +121,6 @@ class FolderPickerAdapter : RecyclerView.Adapter<BaseCardViewHolder>() {
             }
         }
     }
+
 
 }

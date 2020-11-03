@@ -11,6 +11,8 @@ import cf.feuerkrieg.cardnotes.databinding.SearchGridFolderItemBinding
 import cf.feuerkrieg.cardnotes.databinding.SearchListFolderItemBinding
 import cf.feuerkrieg.cardnotes.databinding.SearchNoteItemBinding
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
+import cf.feuerkrieg.cardnotes.domain.FolderDomain
+import cf.feuerkrieg.cardnotes.domain.NoteDomain
 
 class SearchAdapter : BaseAdapter<BaseDomainViewHolder<BaseDomain>>() {
 
@@ -30,6 +32,13 @@ class SearchAdapter : BaseAdapter<BaseDomainViewHolder<BaseDomain>>() {
             }
         } else {
             NoteViewHolder.from(parent)
+        }
+
+        holder.setOnModelClickedCallback { model, root ->
+            when (model) {
+                is NoteDomain -> onNoteClickCallback?.invoke(model, root)
+                is FolderDomain -> onFolderClickCallback?.invoke(model, root)
+            }
         }
 
         return holder

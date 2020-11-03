@@ -1,5 +1,6 @@
 package cf.feuerkrieg.cardnotes.fragments
 
+import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,6 +12,7 @@ import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.MutableLiveData
@@ -31,12 +33,14 @@ import cf.feuerkrieg.cardnotes.adapters.FolderPickerAdapter
 import cf.feuerkrieg.cardnotes.adapters.NotesAdapter
 import cf.feuerkrieg.cardnotes.adapters.abstracts.BaseAdapter
 import cf.feuerkrieg.cardnotes.databinding.FragmentMainMenuBinding
+import cf.feuerkrieg.cardnotes.databinding.GroupDialogLayoutBinding
 import cf.feuerkrieg.cardnotes.decorators.PaddingDecorator
 import cf.feuerkrieg.cardnotes.dialog.AddGroupDialog
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.utils.hideKeyborad
+import cf.feuerkrieg.cardnotes.utils.toggleHideKeyboard
 import cf.feuerkrieg.cardnotes.viewmodels.MainMenuViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -52,7 +56,10 @@ private const val renameFolderId = 2
 private const val KEY_LAYOUT_TYPE = "KeyLayoutType"
 private const val KEY_SCROLL_POSITION = "KeyScrollPosition"
 
-class MainMenuFragment: Fragment() {
+const val KEY_CHOSEN_FOLDER = "KeyChosenFolder"
+
+
+class MainMenuFragment : Fragment() {
 
     private lateinit var viewModel: MainMenuViewModel
     private lateinit var activity: MainActivity
@@ -198,12 +205,9 @@ class MainMenuFragment: Fragment() {
         )
 
 
-        setFragmentResultListener(NoteDetailFragment.KEY_CHOSEN_FOLDER) { _, bundle ->
-            if (!viewModel.currentGroup.value!!.isDefaultFolder) {
-                val groupId = bundle.getInt("groupId")
-                viewModel.setCurrentGroup(groupId)
-                updatePopupMenu(groupId)
-            }
+        setFragmentResultListener(KEY_CHOSEN_FOLDER) { _, bundle ->
+            val groupId = bundle.getInt("groupId")
+            viewModel.setCurrentGroup(groupId)
         }
     }
 
@@ -223,7 +227,6 @@ class MainMenuFragment: Fragment() {
         isNavigating = false
 
         postponeEnterTransition()
-
 
 
         bindingHolder = FragmentMainMenuBinding.inflate(
@@ -315,6 +318,8 @@ class MainMenuFragment: Fragment() {
                     viewModel.goBackFolder()
                 }
             }
+
+            updatePopupMenu(it.id)
         }
 
         binding.btnSelectAll.apply {
@@ -422,6 +427,7 @@ class MainMenuFragment: Fragment() {
     }
 
     private fun initMenuListeners() {
+
         binding.mainToolbar.setOnMenuItemClickListener {
 
             when (it.itemId) {
@@ -444,6 +450,62 @@ class MainMenuFragment: Fragment() {
                     findNavController().navigate(
                         R.id.action_mainMenuFragment_to_searchNotesFragment
                     )
+                }
+                deleteFolderId -> {
+                    MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
+                        .setTitle(R.string.delete_folder)
+                        .setMessage(R.string.do_you_want_to_delete_folder_and_all_the_notes_in_it)
+                        .setPositiveButton(R.string.yes) { _, _ ->
+                            viewModel.removeCurrentGroup()
+                        }
+                        .setNegativeButton(R.string.no) { _, _ -> }
+                        .show()
+                }
+
+                renameFolderId -> {
+
+                    val groupBinding = GroupDialogLayoutBinding.inflate(layoutInflater)
+
+                    val dialog =
+                        MaterialAlertDialogBuilder(requireContext(), R.style.CardNotes_AlertDialog)
+                            .setTitle(R.string.rename_folder)
+                            .setView(groupBinding.root)
+                            .setPositiveButton(R.string.accept) { _, _ ->
+                                lifecycleScope.launch(Dispatchers.Main) {
+                                    viewModel.updateCurrentGroup(groupBinding.edGroupName.text.toString())
+                                }
+                            }
+                            .setNegativeButton(R.string.cancel) { _, _ -> }
+                            .setOnDismissListener {
+                                toggleHideKeyboard(requireContext())
+                            }
+                            .show()
+
+                    val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+                    groupBinding.edGroupName.requestFocus()
+                    groupBinding.edGroupName.append(viewModel.currentGroup.value!!.name)
+
+                    groupBinding.edGroupName.addTextChangedListener {
+                        if (it.isNullOrBlank()) {
+                            groupBinding.txtGroupNameLayout.error =
+                                resources.getString(R.string.folder_name_must_not_be_empty)
+                            positiveButton.isEnabled = false
+                        } else {
+                            lifecycleScope.launch(Dispatchers.Main) {
+                                if (viewModel.isGroupNameExists(it.toString())) {
+                                    groupBinding.txtGroupNameLayout.error =
+                                        resources.getString(R.string.folder_with_the_same_name_already_exists)
+                                    positiveButton.isEnabled = false
+                                } else {
+                                    groupBinding.txtGroupNameLayout.error = null
+                                    positiveButton.isEnabled = true
+                                }
+                            }
+                        }
+                    }
+
+                    dialog.show()
                 }
             }
 

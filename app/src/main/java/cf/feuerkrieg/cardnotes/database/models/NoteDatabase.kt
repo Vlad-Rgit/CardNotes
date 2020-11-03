@@ -6,19 +6,22 @@ import androidx.room.PrimaryKey
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import java.sql.Timestamp
 
-@Entity(tableName = "notes")
+@Entity(
+    tableName = "notes",
+    foreignKeys = [
+        ForeignKey(
+            entity = FolderDatabase::class,
+            parentColumns = ["folderId"],
+            childColumns = ["folderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ]
+)
 data class NoteDatabase(
 
     @PrimaryKey(autoGenerate = true)
     var noteId: Int = 0,
-
-    @ForeignKey(
-        entity = FolderDatabase::class,
-        parentColumns = ["folderId"],
-        childColumns = ["folderId"],
-        onDelete = ForeignKey.CASCADE,
-        onUpdate = ForeignKey.CASCADE
-    )
     var folderId: Int? = null,
     var position: Int = noteId,
     var title: String,

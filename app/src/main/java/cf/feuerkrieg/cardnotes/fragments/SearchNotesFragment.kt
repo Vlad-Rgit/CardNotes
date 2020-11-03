@@ -4,8 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.bundleOf
+import androidx.core.view.doOnPreDraw
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -31,6 +35,39 @@ class SearchNotesFragment : Fragment() {
 
         searchAdapter = SearchAdapter()
 
+        searchAdapter.setOnNoteClickListener { note, root ->
+
+            exitTransition = MaterialElevationScale(false).apply {
+                duration = resources.getInteger(
+                    R.integer.transition_animation
+                ).toLong()
+            }
+
+            reenterTransition = MaterialElevationScale(true).apply {
+                duration = resources.getInteger(
+                    R.integer.transition_animation
+                ).toLong()
+            }
+
+            val extras = FragmentNavigatorExtras(
+                root to resources.getString(R.string.note_detail_transition_name)
+            )
+
+
+            val action = SearchNotesFragmentDirections
+                .actionSearchNotesFragmentToNoteDetailFragment(note.id)
+
+            findNavController().navigate(action, extras)
+        }
+
+        searchAdapter.setOnFolderClickListener { folder, root ->
+            setFragmentResult(
+                KEY_CHOSEN_FOLDER,
+                bundleOf("groupId" to folder.id)
+            )
+            findNavController().navigateUp()
+        }
+
         enterTransition = MaterialElevationScale(true)
         exitTransition = MaterialElevationScale(false)
     }
@@ -41,6 +78,7 @@ class SearchNotesFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
 
+        postponeEnterTransition()
 
         binding = FragmentSearchNotesBinding.inflate(
             inflater, container, false
@@ -84,6 +122,10 @@ class SearchNotesFragment : Fragment() {
 
         binding.txtSearchLayout.setStartIconOnClickListener {
             findNavController().navigateUp()
+        }
+
+        binding.rvSearch.doOnPreDraw {
+            startPostponedEnterTransition()
         }
     }
 

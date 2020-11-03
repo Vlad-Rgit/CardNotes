@@ -27,11 +27,6 @@ import com.google.android.material.transition.MaterialSharedAxis
 
 class NoteDetailFragment: Fragment() {
 
-
-    companion object {
-        const val KEY_CHOSEN_FOLDER = "KeyChosenFolder"
-    }
-
     private lateinit var binding: FragmentNoteDetailLayoutBinding
     private lateinit var viewModel: NoteDetailViewModel
     private lateinit var groupsPopupWindow: GroupsPopupWindow

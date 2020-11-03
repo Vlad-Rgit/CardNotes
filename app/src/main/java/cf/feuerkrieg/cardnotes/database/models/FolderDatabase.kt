@@ -9,18 +9,20 @@ import cf.feuerkrieg.cardnotes.domain.FolderDomain
 
 @Entity(
     tableName = "folder",
-    indices = [Index("folderName", unique = true)]
+    indices = [Index("folderName", unique = true)],
+    foreignKeys = [
+        ForeignKey(
+            entity = FolderDatabase::class,
+            parentColumns = ["folderId"],
+            childColumns = ["parentFolderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ]
 )
 data class FolderDatabase(
     @PrimaryKey(autoGenerate = true)
     var folderId: Int = 0,
-    @ForeignKey(
-        entity = FolderDatabase::class,
-        parentColumns = ["folderId"],
-        childColumns = ["parentFolderId"],
-        onDelete = ForeignKey.CASCADE,
-        onUpdate = ForeignKey.CASCADE
-    )
     var parentFolderId: Int? = null,
     var folderName: String = "",
     var colorHex: String = "",

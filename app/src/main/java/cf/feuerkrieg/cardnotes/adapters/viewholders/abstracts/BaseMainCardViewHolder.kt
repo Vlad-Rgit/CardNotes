@@ -190,24 +190,36 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
 
     open fun enableSelectionMode() {
 
-        TransitionManager.beginDelayedTransition(
-            cardHost,
-            buildSelectionModeTransitionSet()
-        )
+        if (btnOptions.visibility != View.GONE &&
+            chIsSelected.visibility != View.VISIBLE
+        ) {
 
-        btnOptions.visibility = View.GONE
-        chIsSelected.visibility = View.VISIBLE
+            TransitionManager.beginDelayedTransition(
+                cardHost,
+                buildSelectionModeTransitionSet()
+            )
+
+            btnOptions.visibility = View.GONE
+            chIsSelected.visibility = View.VISIBLE
+
+        }
     }
 
 
     open fun disableSelectionMode() {
-        TransitionManager.beginDelayedTransition(
-            cardHost,
-            buildSelectionModeTransitionSet()
-        )
 
-        btnOptions.visibility = View.VISIBLE
-        chIsSelected.visibility = View.GONE
+        if (btnOptions.visibility != View.VISIBLE &&
+            chIsSelected.visibility != View.GONE
+        ) {
+
+            TransitionManager.beginDelayedTransition(
+                cardHost,
+                buildSelectionModeTransitionSet()
+            )
+
+            btnOptions.visibility = View.VISIBLE
+            chIsSelected.visibility = View.GONE
+        }
     }
 
     fun setOnDropListener(listener: (from: BaseDomain, to: BaseDomain) -> Unit) {

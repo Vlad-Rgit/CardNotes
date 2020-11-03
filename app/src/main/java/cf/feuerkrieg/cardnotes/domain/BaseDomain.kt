@@ -22,7 +22,6 @@ abstract class BaseDomain(
 
     val isSelected = MutableLiveData<Boolean>(false)
 
-
     open val dateCreatedString: String
         get() {
             var dateComparator = DateTimeComparator.getDateOnlyInstance()

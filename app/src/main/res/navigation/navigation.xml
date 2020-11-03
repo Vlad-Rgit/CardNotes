@@ -40,5 +40,9 @@
     <fragment
         android:id="@+id/searchNotesFragment"
         android:name="cf.feuerkrieg.cardnotes.fragments.SearchNotesFragment"
-        android:label="SearchNotesFragment" />
+        android:label="SearchNotesFragment">
+        <action
+            android:id="@+id/action_searchNotesFragment_to_noteDetailFragment"
+            app:destination="@id/noteDetailFragment" />
+    </fragment>
 </navigation>

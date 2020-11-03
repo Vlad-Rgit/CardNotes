@@ -51,9 +51,12 @@
             android:layout_height="wrap_content"
             app:layout_constrainedWidth="true"
             app:layout_constraintBottom_toTopOf="@id/tvModifiedAt"
-            app:layout_constraintStart_toEndOf="@id/img_folder"
             app:layout_constraintStart_toStartOf="@id/tvFolderName"
             app:layout_constraintTop_toBottomOf="@id/tvFolderName" />
+
+        <include
+            android:id="@+id/card_options_host"
+            layout="@layout/card_options" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

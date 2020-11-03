@@ -3,6 +3,7 @@ package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 import android.view.View
 import androidx.annotation.CallSuper
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
+import cf.feuerkrieg.cardnotes.domain.NoteDomain
 
 abstract class BaseDomainViewHolder<T : BaseDomain>
     (view: View) : BaseCardViewHolder(view) {
@@ -18,6 +19,9 @@ abstract class BaseDomainViewHolder<T : BaseDomain>
     @CallSuper
     open fun performBind(model: T) {
         this.model = model
+        if (model is NoteDomain) {
+            cardHost.transitionName = model.id.toString()
+        }
     }
 
     @CallSuper

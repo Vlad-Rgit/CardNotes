@@ -20,9 +20,9 @@ abstract class BaseNotesMainCardViewHolder
 
 
     @CallSuper
-    override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
+    override fun performBind(model: NoteDomain, isSelectionMode: Boolean, isSelected: Boolean) {
 
-        super.performBind(model, isSelectionMode)
+        super.performBind(model, isSelectionMode, isSelected)
 
         if (model.name.isBlank()) {
             tvNoteName.visibility = View.GONE

@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
+import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
@@ -20,15 +21,12 @@ import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 import cf.feuerkrieg.cardnotes.interfaces.ListAccessor
+import kotlinx.coroutines.selects.select
 import java.util.*
 
 
-class NotesAdapter(
-    private val selectedNotes: ListAccessor<BaseDomain>
-) : BaseAdapter<BaseMainCardViewHolder<BaseDomain>>() {
-
-
-    lateinit var recyclerView: RecyclerView
+class NotesAdapter
+    : BaseAdapter<BaseMainCardViewHolder<BaseDomain>>() {
 
     var lifecycleOwner: LifecycleOwner? = null
 
@@ -39,6 +37,20 @@ class NotesAdapter(
     private var onDropListener:
             ((from: BaseDomain, to: BaseDomain) -> Unit)? = null
 
+    var selectionTracker: SelectionTracker<Long>? = null
+        set(value) {
+
+            field = value
+
+            field?.let {
+                it.addObserver(object : SelectionTracker.SelectionObserver<Long>() {
+                    override fun onItemStateChanged(key: Long, selected: Boolean) {
+                        items[key.toInt()].isSelected.value = selected
+                    }
+                })
+            }
+        }
+
     private var noteUpdatedCallback
             : ((note: NoteDomain) -> Unit)? = null
 
@@ -48,49 +60,16 @@ class NotesAdapter(
     private var onItemDeleteCallback:
             ((model: BaseDomain, root: View) -> Unit)? = null
 
-    private val itemsUpdateCallback = object : ListUpdateCallback {
-
-        override fun onInserted(position: Int, count: Int) {
-            notifyItemRangeInserted(position, count)
-            for (i in position until position + count) {
-                val item = items[i]
-                item.isSelected.observe(requireLifecycleOwner()) { isSelected ->
-                    if (isSelected && !selectedNotes.contains(item)) {
-                        selectedNotes.add(item)
-                    } else if (!isSelected) {
-                        selectedNotes.remove(item)
-                    }
-                }
-            }
-        }
-
-        override fun onRemoved(position: Int, count: Int) {
-            notifyItemRangeRemoved(position, count)
-            for (i in position until position + count) {
-                val item = oldItems!![i]
-                item.isSelected.removeObservers(requireLifecycleOwner())
-            }
-        }
-
-        override fun onMoved(fromPosition: Int, toPosition: Int) {
-            notifyItemMoved(fromPosition, toPosition)
-        }
-
-        override fun onChanged(position: Int, count: Int, payload: Any?) {
-            notifyItemRangeChanged(position, count, payload)
-        }
-    }
-
-
     fun setOnItemDeleteCallback(callback: (model: BaseDomain, root: View) -> Unit) {
         onItemDeleteCallback = callback
     }
 
-
-    private var oldItems: List<BaseDomain>? = null
-
     var isSelectionMode: Boolean = false
         private set
+
+    init {
+        setHasStableIds(true)
+    }
 
     private fun requireLifecycleOwner(): LifecycleOwner {
         return requireNotNull(
@@ -143,7 +122,14 @@ class NotesAdapter(
 
         holder.setOnModelClickedCallback { model, root ->
             if (isSelectionMode) {
-                model.isSelected.value = !(model.isSelected.value!!)
+
+                holder.isSelected = !holder.isSelected
+
+                if(holder.isSelected)
+                    selectionTracker?.select(holder.itemId)
+                else
+                    selectionTracker?.deselect(holder.itemId)
+
             } else {
                 when (model) {
                     is NoteDomain -> onNoteClickCallback?.invoke(model, root)
@@ -163,17 +149,12 @@ class NotesAdapter(
         return holder
     }
 
-    fun setOnItemMoveCallback(callback: (model: BaseDomain, root: View) -> Unit) {
-        onItemMoveCallback = callback
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    override fun setAllItems(newItems: List<BaseDomain>) {
-        val diffCallback = NotesDiffUtilCallback(items, newItems)
-        val diffResult = DiffUtil.calculateDiff(diffCallback)
-        oldItems = items
-        items = newItems
-        diffResult.dispatchUpdatesTo(itemsUpdateCallback)
-        oldItems = null
+    fun setOnItemMoveCallback(callback: (model: BaseDomain, root: View) -> Unit) {
+        onItemMoveCallback = callback
     }
 
     fun setOnDropListener(listener: (from: BaseDomain, to: BaseDomain) -> Unit) {
@@ -181,8 +162,17 @@ class NotesAdapter(
     }
 
     override fun onBindViewHolder(holderMain: BaseMainCardViewHolder<BaseDomain>, position: Int) {
+
         val item = items[position]
-        holderMain.performBind(item, isSelectionMode)
+
+        var isSelected = false
+
+        selectionTracker?.let {
+            isSelected = it.isSelected(position.toLong())
+        }
+
+        holderMain.performBind(item, isSelectionMode, isSelected)
+
         boundViewHolders.add(holderMain)
     }
 
@@ -200,6 +190,16 @@ class NotesAdapter(
 
     fun dispose() {
         boundViewHolders.clear()
+    }
+
+    fun clearSelection() {
+        selectionTracker?.clearSelection()
+    }
+
+    fun getSelectedItems(): List<BaseDomain> {
+        val selected =  selectionTracker!!.selection
+            .map { items[it.toInt()] }
+        return selected
     }
 
     /**
@@ -249,9 +249,7 @@ class NotesAdapter(
 
     fun setIsSelectedForAllItems(isSelected: Boolean) {
         for (item in items) {
-            if (item.isSelected.value != isSelected) {
-                item.isSelected.value = isSelected
-            }
+
         }
     }
 
@@ -316,8 +314,8 @@ class NotesAdapter(
             }
         }
 
-        override fun performBind(model: NoteDomain, isSelectionMode: Boolean) {
-            super.performBind(model, isSelectionMode)
+        override fun performBind(model: NoteDomain, isSelectionMode: Boolean, isSelected: Boolean) {
+            super.performBind(model, isSelectionMode, isSelected)
 
             if (model.name.isBlank() || model.value.isBlank()) {
                 titleSeparator.visibility = View.GONE

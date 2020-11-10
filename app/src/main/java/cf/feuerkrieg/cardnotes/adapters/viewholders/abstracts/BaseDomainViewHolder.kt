@@ -2,6 +2,7 @@ package cf.feuerkrieg.cardnotes.adapters.viewholders.abstracts
 
 import android.view.View
 import androidx.annotation.CallSuper
+import androidx.recyclerview.selection.ItemDetailsLookup
 import cf.feuerkrieg.cardnotes.domain.BaseDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
 
@@ -37,6 +38,18 @@ abstract class BaseDomainViewHolder<T : BaseDomain>
         super.onCardLongClicked()
         model?.let {
             onModelLongClickCallback?.invoke(it, itemView)
+        }
+    }
+
+    fun getItemDetails(): ItemDetailsLookup.ItemDetails<Long> {
+        return object : ItemDetailsLookup.ItemDetails<Long>() {
+            override fun getPosition(): Int {
+                return adapterPosition
+            }
+
+            override fun getSelectionKey(): Long? {
+                return itemId
+            }
         }
     }
 

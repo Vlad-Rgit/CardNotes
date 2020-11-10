@@ -20,7 +20,7 @@ abstract class BaseDomain(
     var modifiedAt: Timestamp
 ) : SortedItem<BaseDomain> {
 
-    val isSelected = MutableLiveData<Boolean>(false)
+    open var isSelected = MutableLiveData(false)
 
     open val dateCreatedString: String
         get() {

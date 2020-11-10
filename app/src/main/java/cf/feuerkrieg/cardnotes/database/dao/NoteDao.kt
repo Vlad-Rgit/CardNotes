@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 import cf.feuerkrieg.cardnotes.database.models.NoteDatabase
 import cf.feuerkrieg.cardnotes.database.models.NoteWithGroupDatabase
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NoteDao {
@@ -30,13 +31,22 @@ interface NoteDao {
     suspend fun deleteAll(notes: Iterable<NoteDatabase>)
 
     @Query("Select * from notes where folderId = :folderId")
-    suspend fun getByFolder(folderId: Int?): List<NoteDatabase>
+    suspend fun getByFolder(folderId: Int): List<NoteDatabase>
 
     @Query("Select * from notes where folderId is NULL")
     suspend fun getWithoutFolder(): List<NoteDatabase>
 
+    @Query("Select * from notes where folderId = :folderId")
+    fun getByFolderLive(folderId: Int): LiveData<List<NoteDatabase>>
+
+    @Query("Select * from notes where folderId is NULL")
+    fun getWithoutFolderLive(): LiveData<List<NoteDatabase>>
+
     @Query("Select * from notes")
-    fun getAll(): LiveData<List<NoteDatabase>>
+    fun getAll(): Flow<List<NoteDatabase>>
+
+    @Query("Select * from notes")
+    fun getAllLive(): LiveData<List<NoteDatabase>>
 
     @Query("Select * from notes order by position")
     suspend fun getAllPositionSorted(): List<NoteDatabase>

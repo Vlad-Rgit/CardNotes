@@ -14,6 +14,8 @@ class FolderRepo {
 
     val filteredFolders = MutableLiveData<MutableList<FolderDomain>>()
 
+    val foldersFlow = database.folderDao.getAllFlow()
+
     val allFolders: LiveData<List<FolderDomain>> =
         Transformations.map(database.folderDao.getAll()) {
             it.map { it.asDomain() }
@@ -26,6 +28,8 @@ class FolderRepo {
         }
     }
 
+
+
     suspend fun refreshWithoutParentFolder() {
         withContext(Dispatchers.IO) {
             filteredFolders.postValue(database.folderDao
@@ -35,6 +39,22 @@ class FolderRepo {
             )
         }
     }
+
+
+    suspend fun getByParentId(parentFolderId: Int): List<FolderDomain> {
+        return database.folderDao
+            .getByParentId(parentFolderId)
+            .map {
+                it.asDomain()
+            }
+    }
+
+
+    suspend fun getWithoutParent(): List<FolderDomain> {
+        return database.folderDao.getWithoutParentFolder()
+            .map { it.asDomain() }
+    }
+
 
     suspend fun refreshByParentFolderId(folderId: Int) {
         withContext(Dispatchers.IO) {

@@ -35,7 +35,7 @@ data class FolderDatabase(
             name = this.folderName,
             parentFolderId = this.parentFolderId,
             colorHex = this.colorHex,
-            notesCount = MutableLiveData(notesCount)
+            notesCount = this.notesCount
         )
     }
 }

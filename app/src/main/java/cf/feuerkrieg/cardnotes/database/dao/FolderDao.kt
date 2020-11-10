@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 import cf.feuerkrieg.cardnotes.database.models.FolderDatabase
 import cf.feuerkrieg.cardnotes.database.models.GroupWithNotesDatabase
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FolderDao {
@@ -23,14 +24,32 @@ interface FolderDao {
     @Delete
     suspend fun delete(folder: FolderDatabase)
 
+    @Query("Select * from folder where parentFolderId = :parentFolderId")
+    suspend fun getByParentId(parentFolderId: Int): List<FolderDatabase>
+
     @Delete
     suspend fun deleteAll(groups: Iterable<FolderDatabase>)
 
     @Query("Select * from `folder` where folderId = :groupId")
     suspend fun getById(groupId: Int): FolderDatabase
 
+    @Query("""Select * from `folder` where parentFolderId is NULL""")
+    suspend fun getWithoutParentFolder(): List<FolderDatabase>
+
+    @Query("""Select * from `folder` where parentFolderId is NULL""")
+    fun getWithoutParentFolderLive(): LiveData<List<FolderDatabase>>
+
+    @Query("""Select * from `folder` where parentFolderId = :parentFolderId""")
+    suspend fun getByParentFolderId(parentFolderId: Int): List<FolderDatabase>
+
+    @Query("""Select * from `folder` where parentFolderId = :parentFolderId""")
+    fun getByParentFolderIdLive(parentFolderId: Int): LiveData<List<FolderDatabase>>
+
     @Query("Select * from `folder`")
     fun getAll(): LiveData<List<FolderDatabase>>
+
+    @Query("Select * from `folder`")
+    fun getAllFlow(): Flow<List<FolderDatabase>>
 
     @Transaction
     @Query(
@@ -61,9 +80,5 @@ interface FolderDao {
     @Query("""Select * from `folder` where folderName = :groupName""")
     suspend fun getByName(groupName: String): List<FolderDatabase>
 
-    @Query("""Select * from `folder` where parentFolderId is NULL""")
-    suspend fun getWithoutParentFolder(): List<FolderDatabase>
 
-    @Query("""Select * from `folder` where parentFolderId = :parentFolderId""")
-    suspend fun getByParentFolderId(parentFolderId: Int): List<FolderDatabase>
 }

@@ -1,6 +1,7 @@
 package cf.feuerkrieg.cardnotes.repos
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import cf.feuerkrieg.cardnotes.database.NotesDB
 import cf.feuerkrieg.cardnotes.domain.FolderDomain
 import cf.feuerkrieg.cardnotes.domain.NoteDomain
@@ -11,7 +12,12 @@ class NotesRepo {
 
     private val database = NotesDB.getInstance()
 
+    val notesFlow = database.noteDao.getAll()
     val notes = MutableLiveData<MutableList<NoteDomain>>()
+
+    val allNotes = Transformations.map(database.noteDao.getAllLive()) {
+        it.map { it.asDomain() }
+    }
 
     suspend fun getById(noteId: Int): NoteDomain {
         return withContext(Dispatchers.IO) {
@@ -45,7 +51,7 @@ class NotesRepo {
         }
     }
 
-    suspend fun refreshByFolderId(folderId: Int?) {
+    suspend fun refreshByFolderId(folderId: Int) {
         withContext(Dispatchers.IO) {
             notes.postValue(database.noteDao
                 .getByFolder(folderId)
@@ -64,6 +70,20 @@ class NotesRepo {
             )
 
         }
+    }
+
+    suspend fun getByFolderId(folderId: Int): List<NoteDomain> {
+        return database.noteDao.getByFolder(folderId)
+            .map {
+                it.asDomain()
+            }
+    }
+
+    suspend fun getWithoutFolder(): List<NoteDomain> {
+        return database.noteDao.getWithoutFolder()
+            .map {
+                it.asDomain()
+            }
     }
 
     suspend fun removeByGroupId(groupId: Int) {

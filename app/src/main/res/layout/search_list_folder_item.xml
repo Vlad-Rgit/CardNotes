@@ -61,7 +61,7 @@
                 style="@style/CardNotes.TextView.NoteContent"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{model.notesCount.toString()}"
+                android:text="@{String.valueOf(model.notesCount)}"
                 app:layout_constrainedWidth="true"
                 app:layout_constraintBottom_toTopOf="@id/tvModifiedAt"
                 app:layout_constraintStart_toEndOf="@id/img_folder"

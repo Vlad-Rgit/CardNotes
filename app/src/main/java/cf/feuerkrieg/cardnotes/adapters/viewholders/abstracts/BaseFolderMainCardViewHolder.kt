@@ -42,17 +42,11 @@ abstract class BaseFolderMainCardViewHolder
     }
 
 
-    override fun performBind(model: FolderDomain, isSelectionMode: Boolean) {
-        super.performBind(model, isSelectionMode)
-        model.notesCount.observe(lifecycleOwner, countObserver)
+    override fun performBind(model: FolderDomain, isSelectionMode: Boolean, isSelected: Boolean) {
+        super.performBind(model, isSelectionMode, isSelected)
+        tvNotesCount.text = model.notesCount.toString()
         tvFolderName.text = model.name
         tvModifiedAt.text = model.dateCreatedString
     }
-
-    override fun detachObservers() {
-        super.detachObservers()
-        model?.notesCount?.removeObserver(countObserver)
-    }
-
 
 }

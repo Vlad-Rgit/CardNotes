@@ -93,6 +93,15 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
                 disableSelectionMode()
         }
 
+    open var isSelected: Boolean = false
+        set(value) {
+            field = value
+
+            if(field != chIsSelected.isChecked) {
+                chIsSelected.isChecked = field
+            }
+        }
+
     private val isSelectedObserver = Observer<Boolean> {
         if (chIsSelected.isChecked != it) {
             chIsSelected.isChecked = it
@@ -100,14 +109,6 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
     }
 
     init {
-
-        chIsSelected.setOnCheckedChangeListener { buttonView, isChecked ->
-            model?.let {
-                if (it.isSelected.value!! != isChecked) {
-                    it.isSelected.value = isChecked
-                }
-            }
-        }
 
         cardHost.setOnDragListener { v, event ->
 
@@ -237,16 +238,14 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
     }
 
     @CallSuper
-    override fun performBind(model: T) {
-        detachObservers()
-        super.performBind(model)
-        model.isSelected.observe(lifecycleOwner, isSelectedObserver)
-    }
-
-    @CallSuper
-    open fun performBind(model: T, isSelectionMode: Boolean) {
+    open fun performBind(model: T, isSelectionMode: Boolean, isSelected: Boolean) {
         performBind(model)
         this.isSelectionMode = isSelectionMode
+        model.isSelected.observe(lifecycleOwner, Observer {
+            if(chIsSelected.isChecked != it) {
+                chIsSelected.isChecked = it
+            }
+        })
     }
 
     protected fun highlight(color: Int) {
@@ -260,9 +259,9 @@ abstract class BaseMainCardViewHolder<T : BaseDomain>(
         }
     }
 
+
     @CallSuper
     open fun detachObservers() {
-        model?.isSelected?.removeObserver(isSelectedObserver)
     }
 
     fun stopHighlight() {

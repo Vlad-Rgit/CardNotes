@@ -16,6 +16,8 @@ class MainActivity : AppCompatActivity() {
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN)
     }
 
+
+
     override fun attachBaseContext(newBase: Context?) {
         super.attachBaseContext(newBase)
         LocaleHelper.overrideLocaleFromAppContext(this)
